@@ -47,7 +47,7 @@ function App() {
         }
 
         try {
-            await axios.post('http://localhost:3433/upload', formData);
+            await axios.post('http://api.seanmabli.com:3433/upload', formData);
             alert('Files uploaded successfully');
         } catch (error) {
             alert('Error uploading files');
