@@ -34,5 +34,5 @@ app.post('/upload', upload.array('files'), (req, res) => {
 });
 
 app.listen(port, () => {
-    console.log(`Server started on http://localhost:${port}`);
+    console.log(`Server started on https://localhost:${port}`);
 });
