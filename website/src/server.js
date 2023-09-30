@@ -1,9 +1,12 @@
-// npm install express multer cors
+// npm install express multer cors https fs
+// openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -days 365
+
 const express = require('express');
 const multer = require('multer');
 const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
+const https = require('https');
 
 const app = express();
 const port = 3433;
@@ -33,6 +36,14 @@ app.post('/upload', upload.array('files'), (req, res) => {
     res.status(200).send('Files uploaded');
 });
 
-app.listen(port, () => {
-    console.log(`Server started on http://localhost:${port}`);
+const httpsOptions = {
+    key: fs.readFileSync(path.join(__dirname, 'key.pem')),
+    cert: fs.readFileSync(path.join(__dirname, 'cert.pem')),
+    passphrase: 'warriorrobotics'
+};
+
+const server = https.createServer(httpsOptions, app);
+
+server.listen(port, () => {
+    console.log(`Server started on https://localhost:${port}`);
 });
