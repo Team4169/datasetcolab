@@ -1,5 +1,5 @@
 import axios from 'axios';
-import React, { Component, useState } from 'react';
+import React, { useState } from 'react';
 import styled from 'styled-components';
 
 const Container = styled.div`
@@ -47,8 +47,8 @@ function App() {
         }
 
         try {
-            await axios.post('https://api.seanmabli.com:3433/upload', formData);
-            //await axios.post('https://localhost:3433/upload', formData);
+            //await axios.post('https://api.seanmabli.com:3433/upload', formData);
+            await axios.post('https://localhost:3433/upload', formData);
             alert('Files uploaded successfully');
         } catch (error) {
             alert('Error uploading files');
