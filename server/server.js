@@ -12,6 +12,7 @@ const app = express();
 const port = 3433;
 
 app.use(cors());
+app.use(express.static('static'));
 
 // Storage shit
 const storage = multer.diskStorage({
@@ -37,9 +38,8 @@ app.post('/upload', upload.array('files'), (req, res) => {
 });
 
 const httpsOptions = {
-    key: fs.readFileSync(path.join(__dirname, 'key.pem')),
-    cert: fs.readFileSync(path.join(__dirname, 'cert.pem')),
-    passphrase: 'warriorrobotics'
+    cert: fs.readFileSync(path.join(__dirname, './fullchain.pem')),
+    key: fs.readFileSync(path.join(__dirname, './privkey.pem'))
 };
 
 const server = https.createServer(httpsOptions, app);
