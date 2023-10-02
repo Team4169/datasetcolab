@@ -1,5 +1,7 @@
 // npm install express multer cors https fs
 // openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -days 365
+// Instructions for SSL certbot: https://certbot.eff.org/instructions
+// Medium Post for SSL: https://medium.com/@yash.kulshrestha/using-lets-encrypt-with-express-e069c7abe625
 
 const express = require('express');
 const multer = require('multer');
