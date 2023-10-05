@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { Link, useNavigate } from "react-router-dom";
 import axios from 'axios';
+import { auth } from "../firebase";
 
 export default function Dashboard() {
   const [error, setError] = useState("");
@@ -35,7 +36,13 @@ export default function Dashboard() {
       }
 
       try {
-          await axios.post('https://api.seanmabli.com:3433/upload', formData);
+          let config = {
+            headers: {
+              uid: auth.currentUser.uid,
+            }
+          }
+          console.log(config);      
+          await axios.post('https://api.seanmabli.com:3433/upload', formData, config);
           //await axios.post('https://localhost:3433/upload', formData);
           alert('Files uploaded successfully');
       } catch (error) {
@@ -51,7 +58,7 @@ export default function Dashboard() {
         Update Profile
       </Link>
       <br />
-      <button onclick={handleLogout}>Log Out</button>
+      <button onClick={handleLogout}>Log Out</button>
       <br />
       <input type="file" onChange={onFileChange} multiple />
       <button onClick={onUpload}>Upload</button>
