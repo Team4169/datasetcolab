@@ -37,7 +37,7 @@ export default function Login() {
         <br />
         <label>
           Password:
-          <input type="text" name="password" ref={passwordRef} required />
+          <input type="password" name="password" ref={passwordRef} required />
         </label>{" "}
         <br />
         <input type="submit" value="Log In" disabled={loading} />

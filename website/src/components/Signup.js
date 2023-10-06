@@ -42,13 +42,13 @@ export default function Signup() {
         <br />
         <label>
           Password:
-          <input type="text" name="password" ref={passwordRef} required />
+          <input type="password" name="password" ref={passwordRef} required />
         </label>{" "}
         <br />
         <label>
           Password Confirmation:
           <input
-            type="text"
+            type="password"
             name="password"
             ref={passwordConfirmRef}
             required
