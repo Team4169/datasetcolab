@@ -6,6 +6,7 @@ import {
   sendPasswordResetEmail,
   updateEmail,
   updatePassword,
+  sendEmailVerification
 } from "firebase/auth";
 import { auth } from "../firebase";
 
@@ -20,7 +21,13 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   function signup(email, password) {
-    return createUserWithEmailAndPassword(auth, email, password);
+    return createUserWithEmailAndPassword(auth, email, password)
+      .then((userCredentials) => {
+        sendEmailVerification(auth.currentUser)
+          .then(() => {
+            alert("Email verification link sent");
+          })
+      });
   }
 
   function login(email, password) {
@@ -60,7 +67,7 @@ export function AuthProvider({ children }) {
     logout,
     resetPassword,
     updateEmail_,
-    updatePassword_,
+    updatePassword_
   };
 
   return (
