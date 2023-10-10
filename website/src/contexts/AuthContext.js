@@ -23,10 +23,7 @@ export function AuthProvider({ children }) {
   function signup(email, password) {
     return createUserWithEmailAndPassword(auth, email, password)
       .then((userCredentials) => {
-        sendEmailVerification(auth.currentUser)
-          .then(() => {
-            alert("Email verification link sent");
-          })
+        sendEmailVerification(auth.currentUser);
       });
   }
 

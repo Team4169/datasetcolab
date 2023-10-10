@@ -10,6 +10,7 @@ import Dashboard from "./components/Dashboard";
 import Login from "./components/Login";
 import ForgotPassword from "./components/ForgotPassword";
 import UpdateProfile from "./components/UpdateProfile";
+import EmailVerification from "./components/EmailVerification"
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
@@ -37,6 +38,7 @@ root.render(
           <Route path="/signup" element={<Signup />} />
           <Route path="/login" element={<Login />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/email-verification" element={<EmailVerification />} />
         </Routes>
       </AuthProvider>
     </BrowserRouter>

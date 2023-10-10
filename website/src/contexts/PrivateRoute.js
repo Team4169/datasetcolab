@@ -4,10 +4,16 @@ import { useAuth } from "./AuthContext"
 
 export default function PrivateRoute({ children }) {
   const { currentUser } = useAuth();
+
   console.log(currentUser);
-  if (currentUser && currentUser.emailVerified) {
-    return <Navigate to="/login" />;
+
+  if (currentUser) {
+    if (currentUser.emailVerified) {
+      return children;
+    } else {
+      return <Navigate to="/email-verification" />;
+    }
   } else {
-    return children;
+    return <Navigate to="/login" />;
   }
 }
