@@ -3,6 +3,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { Link, useNavigate } from "react-router-dom";
 import axios from 'axios';
 import { auth } from "../firebase";
+import 'bootstrap/dist/css/bootstrap.css';
 
 export default function Dashboard() {
   const [error, setError] = useState("");
@@ -51,17 +52,35 @@ export default function Dashboard() {
   };
 
   return (
-    <>
-      {error && alert(error)}
-      <p>Email: {currentUser.email}</p>
-      <Link to="/update-profile" className="btn btn-primary w-100 mt-3">
-        Update Profile
-      </Link>
-      <br />
-      <button onClick={handleLogout}>Log Out</button>
-      <br />
-      <input type="file" onChange={onFileChange} multiple />
-      <button onClick={onUpload}>Upload</button>
-    </>
+    <div className="container mt-5">
+      <div className="row">
+        <div className="col-md-6 offset-md-3">
+          <div className="card">
+            <div className="card-body">
+              <h2 className="card-title">Welcome, {currentUser.email}</h2>
+              {error && <div className="alert alert-danger">{error}</div>}
+              <div className="mb-3">
+                <Link to="/update-profile" className="btn btn-primary btn-block">
+                  Update Profile
+                </Link>
+              </div>
+              <div className="mb-3">
+                <button className="btn btn-secondary btn-block" onClick={handleLogout}>
+                  Log Out
+                </button>
+              </div>
+              <div className="form-group">
+                <input type="file" className="form-control-file" onChange={onFileChange} multiple />
+              </div>
+              <div className="text-center">
+                <button className="btn btn-primary" onClick={onUpload}>
+                  Upload
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }

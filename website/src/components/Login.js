@@ -1,6 +1,7 @@
 import React, { useRef, useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { Link, useNavigate } from "react-router-dom";
+//import 'bootstrap/dist/css/bootstrap.css';
 
 export default function Login() {
   const emailRef = useRef();
@@ -27,23 +28,38 @@ export default function Login() {
   }
 
   return (
-    <>
-      {error && alert(error)}
-      <form onSubmit={handleSubmit}>
-        <label>
-          Email:
-          <input type="text" name="email" ref={emailRef} required />
-        </label>{" "}
-        <br />
-        <label>
-          Password:
-          <input type="password" name="password" ref={passwordRef} required />
-        </label>{" "}
-        <br />
-        <input type="submit" value="Log In" disabled={loading} />
-      </form>
-      <Link to="/forgot-password">Forgot Password?</Link> <br />
-      <Link to="/signup">Sign Up</Link>
-    </>
+    <div className="container mt-5">
+      <div className="row">
+        <div className="col-md-6 offset-md-3">
+          <div className="card">
+            <div className="card-body">
+              <h2 className="card-title">Log In</h2>
+              {error && <div className="alert alert-danger">{error}</div>}
+              <form onSubmit={handleSubmit}>
+                <div className="form-group">
+                  <label htmlFor="email">Email:</label>
+                  <input type="text" name="email" id="email" className="form-control" ref={emailRef} required />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="password">Password:</label>
+                  <input type="password" name="password" id="password" className="form-control" ref={passwordRef} required />
+                </div>
+                <div className="mb-3 pt-2">
+                  <button type="submit" className="btn btn-primary btn-block" disabled={loading}>
+                    Log In
+                  </button>
+                </div>
+              </form>
+              <div className="mt-3">
+                <Link to="/forgot-password">Forgot Password?</Link>
+              </div>
+              <div className="mt-2">
+                Don't have an account? <Link to="/signup">Sign Up</Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }

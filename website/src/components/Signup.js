@@ -32,32 +32,39 @@ export default function Signup() {
   }
 
   return (
-    <>
-      {error && alert(error)}
-      <form onSubmit={handleSubmit}>
-        <label>
-          Email:
-          <input type="text" name="email" ref={emailRef} required />
-        </label>{" "}
-        <br />
-        <label>
-          Password:
-          <input type="password" name="password" ref={passwordRef} required />
-        </label>{" "}
-        <br />
-        <label>
-          Password Confirmation:
-          <input
-            type="password"
-            name="password"
-            ref={passwordConfirmRef}
-            required
-          />
-        </label>{" "}
-        <br />
-        <input type="submit" value="Sign Up" disabled={loading} />
-      </form>
-      <Link to="/login">Log In</Link>
-    </>
+    <div className="container mt-5">
+      <div className="row">
+        <div className="col-md-6 offset-md-3">
+          <div className="card">
+            <div className="card-body">
+              <h2 className="card-title">Sign Up</h2>
+              {error && <div className="alert alert-danger">{error}</div>}
+              <form onSubmit={handleSubmit}>
+                <div className="form-group">
+                  <label>Email:</label>
+                  <input type="email" className="form-control" ref={emailRef} required />
+                </div>
+                <div className="form-group">
+                  <label>Password:</label>
+                  <input type="password" className="form-control" ref={passwordRef} required />
+                </div>
+                <div className="form-group">
+                  <label>Password Confirmation:</label>
+                  <input type="password" className="form-control" ref={passwordConfirmRef} required />
+                </div>
+                <div className="mb-3 pt-2">
+                  <button type="submit" className="btn btn-primary btn-block" disabled={loading}>
+                    Sign Up
+                  </button>
+                </div>
+              </form>
+              <div className="mt-3">
+                Already have an account? <Link to="/login">Log In</Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
