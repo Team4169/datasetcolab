@@ -42,8 +42,8 @@ export default function Dashboard() {
             }
           }
           console.log(config);      
-          //await axios.post('https://api.seanmabli.com:3433/upload', formData, config);
-          await axios.post('http://localhost:7070/upload', formData);
+          await axios.post('https://api.seanmabli.com:3433/upload', formData, config);
+          //await axios.post('http://localhost:7070/upload', formData);
           alert('Files uploaded successfully');
       } catch (error) {
           alert('Error uploading files');
