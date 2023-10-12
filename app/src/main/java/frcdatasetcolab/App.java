@@ -6,6 +6,8 @@ package frcdatasetcolab;
 import io.javalin.Javalin;
 import io.javalin.util.FileUtil;
 import io.javalin.http.UploadedFile;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 
 public class App {
@@ -20,25 +22,13 @@ public class App {
         })
             .get("/", ctx -> ctx.result("Hello World"))
             .start(7070);
-        /* 
-        Javalin.create(config -> {
-            config.plugins.enableCors(cors -> {
-                cors.add(it -> {
-                    it.anyHost();
-                });
-            });
-        });
         
-        app.options("/upload", ctx -> {
-            ctx.header("Access-Control-Allow-Origin", "*");
-            ctx.header("Access-Control-Allow-Methods", "POST");
-            //ßSuperTokens.setRelevantHeadersForOptionsAPI(ctx);
-            ctx.result("success");
-        });
-        */
         app.post("/upload", ctx -> {
+            Date date = new Date();
+            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd_HH:mm");
+            String formattedDate = dateFormat.format(date);
             ctx.uploadedFiles("files").forEach(uploadedFile ->
-                FileUtil.streamToFile(uploadedFile.content(), "upload/" + uploadedFile.filename()));
+                FileUtil.streamToFile(uploadedFile.content(), "upload/" + formattedDate + '_' + uploadedFile.filename())); // uploadedFile.filename()
         });
     }
     
