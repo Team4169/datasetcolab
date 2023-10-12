@@ -23,8 +23,13 @@ export function AuthProvider({ children }) {
   function signup(email, password) {
     return createUserWithEmailAndPassword(auth, email, password)
       .then((userCredentials) => {
-        sendEmailVerification(auth.currentUser);
+        sendEmailVerification_();
       });
+  }
+
+  function sendEmailVerification_() {
+    console.log("fsd");
+    return sendEmailVerification(currentUser);
   }
 
   function login(email, password) {
@@ -64,7 +69,8 @@ export function AuthProvider({ children }) {
     logout,
     resetPassword,
     updateEmail_,
-    updatePassword_
+    updatePassword_,
+    sendEmailVerification_
   };
 
   return (
