@@ -8,20 +8,26 @@ import io.javalin.util.FileUtil;
 import io.javalin.http.UploadedFile;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-
+import io.javalin.community.ssl.SSLPlugin;
 
 public class App {
     public static void main(String[] args) {
-        Javalin app = Javalin.create(config -> {
+	Javalin app = Javalin.create(config -> {
             config.plugins.enableCors(cors -> {
                 cors.add(corsConfig -> {
                     //replacement for enableCorsForAllOrigins()
                     corsConfig.anyHost();
                 });
             });
+	    config.plugins.register(new SSLPlugin(ssl->{
+	    ssl.host = "10.0.0.142";
+	    ssl.insecurePort=7070;
+	    ssl.securePort=3433;
+            ssl.pemFromPath("fullchain.pem","privkey.pem");
+    }));
         })
             .get("/", ctx -> ctx.result("Hello World"))
-            .start(7070);
+            .start();
         
         app.post("/upload", ctx -> {
             Date date = new Date();
