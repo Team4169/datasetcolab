@@ -23,7 +23,7 @@ public class App {
 	    ssl.host = "10.0.0.142";
 	    ssl.insecurePort=7070;
 	    ssl.securePort=3433;
-            ssl.pemFromPath("fullchain.pem","privkey.pem");
+            ssl.pemFromPath("fullchain.pem", "privkey.pem");
     }));
         })
             .get("/", ctx -> ctx.result("Hello World"))
@@ -39,15 +39,3 @@ public class App {
     }
     
 }
-
-/* 
-public class App {
-    public String getGreeting() {
-        return "Hello World!";
-    }
-
-    public static void main(String[] args) {
-        System.out.println(new App().getGreeting());
-    }
-}
-*/
