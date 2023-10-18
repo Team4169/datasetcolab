@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { Link, useNavigate } from "react-router-dom";
 import axios from 'axios';
-import { auth } from "../firebase";
 import 'bootstrap/dist/css/bootstrap.css';
 
 export default function Dashboard() {
@@ -37,17 +36,18 @@ export default function Dashboard() {
       }
 
       try {
-          let config = {
-            headers: {
-              uid: auth.currentUser.uid,
-            }
+        const idToken = await currentUser.getIdToken();
+        let config = {
+          headers: {
+            idToken: idToken,
           }
-          console.log(config);      
-          await axios.post('https://api.seanmabli.com:3433/upload', formData, config);
-          //await axios.post('http://localhost:7070/upload', formData);
-          alert('Files uploaded successfully');
+        };
+        console.log(config);
+            
+        await axios.post('https://api.seanmabli.com:3433/upload', formData, config);
+        alert('Files uploaded successfully');
       } catch (error) {
-          alert('Error uploading files');
+        alert('Error uploading files');
       }
   };
 
