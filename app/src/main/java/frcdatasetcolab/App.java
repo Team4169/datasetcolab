@@ -37,30 +37,23 @@ public class App {
         app.post("/upload", ctx -> {
             try {
                 FileInputStream serviceAccount = new FileInputStream("/home/team4169/frcdatasetcolab/app/src/main/java/frcdatasetcolab/admin.json");
-
-                FirebaseOptions options = new FirebaseOptions.Builder()
-                        .setCredentials(GoogleCredentials.fromStream(serviceAccount))
-                        .build();
-
+                FirebaseOptions options = new FirebaseOptions.Builder().setCredentials(GoogleCredentials.fromStream(serviceAccount)).build();
                 FirebaseApp.initializeApp(options);
 
                 try {
                     FirebaseToken decodedToken = FirebaseAuth.getInstance().verifyIdToken(ctx.header("idToken"));
                     String uid = decodedToken.getUid();
-                    System.out.println("UID: " + uid);
+                    
+                    Date date = new Date();
+                    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd_HH:mm");
+                    String formattedDate = dateFormat.format(date);
+                    ctx.uploadedFiles("files").forEach(uploadedFile -> FileUtil.streamToFile(uploadedFile.content(), "upload/" + formattedDate + '_' + uploadedFile.filename()));
                 } catch (FirebaseAuthException e) {
-                    // Handle error appropriately
                     e.printStackTrace();
                 }
             } catch (IOException e) {
                 e.printStackTrace();
             }
-
-            Date date = new Date();
-            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd_HH:mm");
-            String formattedDate = dateFormat.format(date);
-            ctx.uploadedFiles("files").forEach(uploadedFile ->
-                FileUtil.streamToFile(uploadedFile.content(), "upload/" + formattedDate + '_' + uploadedFile.filename()));
         });
     }
     
