@@ -9,13 +9,20 @@ import io.javalin.http.UploadedFile;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import io.javalin.community.ssl.SSLPlugin;
+import com.google.firebase.*;
+import com.google.firebase.auth.*;
+import com.google.auth.oauth2.GoogleCredentials;
 
 public class App {
     public static void main(String[] args) {
+    
+    /*
+    FirebaseOptions options = FirebaseOptions.builder().setCredentials(GoogleCredentials.getApplicationDefault()).build();
+    FirebaseApp.initializeApp(options);
+*/
 	Javalin app = Javalin.create(config -> {
             config.plugins.enableCors(cors -> {
                 cors.add(corsConfig -> {
-                    //replacement for enableCorsForAllOrigins()
                     corsConfig.anyHost();
                 });
             });
@@ -30,24 +37,14 @@ public class App {
             .start();
         
         app.post("/upload", ctx -> {
+            FirebaseToken decodedToken = FirebaseAuth.getInstance().verifyIdToken(ctx.header("uid"));
+            System.out.println(decodedToken);
             Date date = new Date();
             SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd_HH:mm");
             String formattedDate = dateFormat.format(date);
             ctx.uploadedFiles("files").forEach(uploadedFile ->
-                FileUtil.streamToFile(uploadedFile.content(), "upload/" + formattedDate + '_' + uploadedFile.filename())); // uploadedFile.filename()
+                FileUtil.streamToFile(uploadedFile.content(), "upload/" + formattedDate + '_' + uploadedFile.filename()));
         });
     }
     
 }
-
-/* 
-public class App {
-    public String getGreeting() {
-        return "Hello World!";
-    }
-
-    public static void main(String[] args) {
-        System.out.println(new App().getGreeting());
-    }
-}
-*/
