@@ -1,0 +1,33 @@
+JSON:
+
+COCO
+COCO-MMDetection
+CreateML
+
+XML:
+
+Pascal VOC
+
+TXT:
+
+YOLO Darknet
+YOLO v3 Keras
+YOLO v4 PyTorch
+Scaled-YOLOv4
+YOLOv5 Oriented Bounding Boxes
+meituan/YOLOv6
+YOLO v5 PyTorch
+YOLO v7 PyTorch
+YOLOv8
+
+CSV:
+
+Tensorflow Object Detection
+RetinaNet Keras
+Multi-Label Classification
+
+Other:
+
+OpenAI Clip Classification
+Tensorflow TFRecord
+Server Benchmark
