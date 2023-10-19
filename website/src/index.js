@@ -9,6 +9,7 @@ import Navbar from "./components/Navbar";
 
 import Signup from "./pages/Signup";
 import Dashboard from "./pages/Dashboard";
+import Upload from "./pages/Upload";
 import Login from "./pages/Login";
 import ForgotPassword from "./pages/ForgotPassword";
 import UpdateProfile from "./pages/UpdateProfile";
@@ -33,6 +34,15 @@ root.render(
                     </PrivateRoute>
                   }
                 />
+                  <Route
+                    exact
+                    path="/upload"
+                    element={
+                      <PrivateRoute>
+                        <Upload />
+                      </PrivateRoute>
+                    }
+                  />
                 <Route
                   path="/update-profile"
                   element={
