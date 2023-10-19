@@ -1,6 +1,7 @@
-import React, {useState} from "react";
+import React, { useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
-import { useNavigate, Navigate } from "react-router-dom"
+import { useNavigate, Navigate } from "react-router-dom";
+import Button from 'react-bootstrap/Button';
 
 export default function EmailVerification() {
   const { currentUser, sendEmailVerification_ } = useAuth();
@@ -23,20 +24,22 @@ export default function EmailVerification() {
 
     setLoading(false);
   }
-  
+
   if (currentUser) {
     if (!currentUser.emailVerified) {
-        return (
-          <>
-            {error && alert(error)}
-            <form onSubmit={handleSubmit}>
-              <p>Email verification link sent to {currentUser.email}</p>
-              <input type="submit" value="Resent Email" disabled={loading} />
-            </form>
-          </>
-        );
+      return (
+        <>
+          {error && <div className="alert alert-danger">{error}</div>}
+          <form onSubmit={handleSubmit}>
+            <p>Email verification link sent to {currentUser.email}</p>
+            <Button variant="primary" type="submit" disabled={loading}>
+              Resend Email
+            </Button>
+          </form>
+        </>
+      );
     } else {
-        return <Navigate to="/" />;
+      return <Navigate to="/" />;
     }
   } else {
     return <Navigate to="/login" />;

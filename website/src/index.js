@@ -5,41 +5,53 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import PrivateRoute from "./contexts/PrivateRoute";
 
-import Signup from "./components/Signup";
-import Dashboard from "./components/Dashboard";
-import Login from "./components/Login";
-import ForgotPassword from "./components/ForgotPassword";
-import UpdateProfile from "./components/UpdateProfile";
-import EmailVerification from "./components/EmailVerification"
+import Navbar from "./components/Navbar";
+
+import Signup from "./pages/Signup";
+import Dashboard from "./pages/Dashboard";
+import Login from "./pages/Login";
+import ForgotPassword from "./pages/ForgotPassword";
+import UpdateProfile from "./pages/UpdateProfile";
+import EmailVerification from "./pages/EmailVerification";
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
   <React.StrictMode>
     <BrowserRouter>
       <AuthProvider>
-        <Routes>
-          <Route
-            exact
-            path="/"
-            element={
-              <PrivateRoute>
-                <Dashboard />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/update-profile"
-            element={
-              <PrivateRoute>
-                <UpdateProfile />
-              </PrivateRoute>
-            }
-          />
-          <Route path="/signup" element={<Signup />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/email-verification" element={<EmailVerification />} />
-        </Routes>
+        <div className="container mt-2">
+          <Navbar />
+          <div className="row">
+            <div className="col-md-6 offset-md-3">
+              <Routes>
+                <Route
+                  exact
+                  path="/"
+                  element={
+                    <PrivateRoute>
+                      <Dashboard />
+                    </PrivateRoute>
+                  }
+                />
+                <Route
+                  path="/update-profile"
+                  element={
+                    <PrivateRoute>
+                      <UpdateProfile />
+                    </PrivateRoute>
+                  }
+                />
+                <Route path="/signup" element={<Signup />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/forgot-password" element={<ForgotPassword />} />
+                <Route
+                  path="/email-verification"
+                  element={<EmailVerification />}
+                />
+              </Routes>
+            </div>
+          </div>
+        </div>
       </AuthProvider>
     </BrowserRouter>
   </React.StrictMode>
