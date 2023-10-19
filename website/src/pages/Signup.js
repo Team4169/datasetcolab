@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import Form from 'react-bootstrap/Form';
 import Button from 'react-bootstrap/Button';
-import Card from 'react-bootstrap/Card';
+import Alert from 'react-bootstrap/Alert';
 
 export default function Signup() {
   const emailRef = useRef();
@@ -19,7 +19,8 @@ export default function Signup() {
     e.preventDefault();
 
     if (passwordRef.current.value !== passwordConfirmRef.current.value) {
-      return setError("Passwords do not match");
+      setError("Passwords do not match");
+      return;
     }
 
     try {
@@ -37,7 +38,7 @@ export default function Signup() {
   return (
     <div style={{ padding: "20px" }}>
       <h2 style={{ marginBottom: "20px" }}>Sign Up</h2>
-      {error && <div className="alert alert-danger">{error}</div>}
+      {error && <Alert variant="danger">{error}</Alert>}
       <Form onSubmit={handleSubmit}>
         <Form.Group controlId="email" style={{ marginBottom: "20px" }}>
           <Form.Label>Email:</Form.Label>

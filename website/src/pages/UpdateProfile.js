@@ -3,6 +3,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { Link, useNavigate } from "react-router-dom";
 import Form from 'react-bootstrap/Form';
 import Button from 'react-bootstrap/Button';
+import Alert from 'react-bootstrap/Alert';
 
 export default function UpdateProfile() {
   const emailRef = useRef();
@@ -17,7 +18,8 @@ export default function UpdateProfile() {
   function handleSubmit(e) {
     e.preventDefault();
     if (passwordRef.current.value !== passwordConfirmRef.current.value) {
-      return setError("Passwords do not match");
+      setError("Passwords do not match");
+      return;
     }
 
     const promises = [];
@@ -46,7 +48,7 @@ export default function UpdateProfile() {
   return (
     <div style={{ padding: "20px" }}>
       <h2>Update Profile</h2>
-      {error && <div className="alert alert-danger">{error}</div>}
+      {error && <Alert variant="danger">{error}</Alert>}
       <Form onSubmit={handleSubmit}>
         <Form.Group controlId="email" style={{ marginBottom: "20px" }}>
           <Form.Label>Email:</Form.Label>

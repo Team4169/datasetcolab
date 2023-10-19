@@ -43,21 +43,21 @@ export default function Dashboard() {
       };
 
       await axios.post('https://api.seanmabli.com:3433/upload', formData, config);
-      alert('Files uploaded successfully');
+      setError('Files uploaded successfully');
     } catch (error) {
       if (error.response) {
         // The request was made, but the server responded with an error status
         if (error.response.status === 500) {
-          alert('Server error: Failed to save the file on the server.');
+          setError('Server error: Failed to save the file on the server.');
         } else {
-          alert('Error: ' + error.message);
+          setError('Error: ' + error.message);
         }
       } else if (error.request) {
         // The request was made, but no response was received (network error)
-        alert('Network error: Unable to communicate with the server.');
+        setError('Network error: Unable to communicate with the server.');
       } else {
         // Something happened in setting up the request (request configuration error)
-        alert('Request error: Unable to send the request.');
+        setError('Request error: Unable to send the request.');
       }
     } finally {
       setLoading(false);
