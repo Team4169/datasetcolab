@@ -9,7 +9,7 @@ export default function Login() {
   const emailRef = useRef();
   const passwordRef = useRef();
   const { login } = useAuth();
-  const [error, setError] = useState("");
+  const [errors, setErrors] = useState([]);
   const [loading, setLoading] = useState(false);
 
   let navigate = useNavigate();
@@ -18,35 +18,45 @@ export default function Login() {
     e.preventDefault();
 
     try {
-      setError("");
       setLoading(true);
       await login(emailRef.current.value, passwordRef.current.value);
       navigate("/");
+      setErrors([]);
     } catch (error) {
-      console.log(error);
+      let errorMessage = "";
       switch (error.code) {
         case "auth/user-not-found":
-          setError("User not found. Please check your email and try again.");
+          errorMessage = "User not found. Please check your email and try again.";
           break;
         case "auth/wrong-password":
-          setError("Incorrect password. Please try again.");
+          errorMessage = "Incorrect password. Please try again.";
           break;
         case "auth/invalid-email":
-          setError("Invalid email format. Please provide a valid email address.");
+          errorMessage = "Invalid email format. Please provide a valid email address.";
           break;
         default:
-          setError("Failed to log in. Please try again.");
+          errorMessage = "Failed to log in. Please try again.";
           break;
       }
+      setErrors([...errors, errorMessage]);
     }
 
     setLoading(false);
   }
 
+  function handleDismiss(index) {
+    const updatedErrors = errors.filter((_, i) => i !== index);
+    setErrors(updatedErrors);
+  }
+
   return (
     <div style={{ padding: "20px" }}>
-      <h2 style={{ marginBottom: "20px" }}>Log In</h2>
-      {error && <Alert variant="danger">{error}</Alert>}
+      <h2 style={{ marginBottom: "20px" }}>Login</h2>
+      {errors.map((error, index) => (
+        <Alert key={index} variant="danger" onClose={() => handleDismiss(index)} dismissible>
+          {error}
+        </Alert>
+      ))}
       <Form onSubmit={handleSubmit}>
         <Form.Group controlId="email" style={{ marginBottom: "20px" }}>
           <Form.Label>Email:</Form.Label>
@@ -57,7 +67,7 @@ export default function Login() {
           <Form.Control type="password" ref={passwordRef} required />
         </Form.Group>
         <Button variant="primary" type="submit" disabled={loading}>
-          Log In
+          Login
         </Button>
       </Form>
       <div style={{ marginTop: "20px" }}>
