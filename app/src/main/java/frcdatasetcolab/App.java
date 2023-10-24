@@ -61,7 +61,7 @@ public class App {
 
                 // Save each uploaded file with original folder structure preserved
                 for (UploadedFile uploadedFile : ctx.uploadedFiles("files")) {
-                    String filePath = "upload/" + formattedDate + uploadedFile.filename();
+                    String filePath = "upload/" + uid + "/" + formattedDate + "/" + ctx.header("") + "/" + uploadedFile.filename();
                     System.out.println(filePath);
 
                     try (InputStream fileContent = uploadedFile.content();

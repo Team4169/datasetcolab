@@ -46,7 +46,6 @@ export default function Upload() {
     }
   };
   
-  
   const onUpload = async () => {
     if (isLoading) {
       return;
@@ -65,11 +64,10 @@ export default function Upload() {
       let config = {
         headers: {
           idToken: idToken, // Add the idToken as a header
+          name: uploadName,
           "Content-Type": "multipart/form-data",
         },
       };
-
-      formData.append("uploadName", uploadName); // Add upload name to form data
 
       await axios.post(
         "https://api.seanmabli.com:3433/upload",
