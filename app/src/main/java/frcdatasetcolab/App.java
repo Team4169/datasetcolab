@@ -15,6 +15,7 @@ import com.google.firebase.auth.FirebaseAuthException;
 import com.google.firebase.auth.FirebaseToken;
 
 import java.io.File;
+import java.io.FileUtil;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -48,6 +49,56 @@ public class App {
                 ssl.pemFromPath("fullchain.pem", "privkey.pem");
             }));
         }).start();
+
+	app.get("/files/:fileName", ctx -> {
+    try {
+        // The Firebase initialization is done outside the route handler
+
+        FirebaseToken decodedToken = FirebaseAuth.getInstance().verifyIdToken(ctx.header("idToken"));
+        String uid = decodedToken.getUid();
+
+        String fileName = ctx.pathParam("fileName");
+        String filePath = "upload/" + uid + "/" + fileName;
+
+        File file = new File(filePath);
+        if (file.exists() && !file.isDirectory()) {
+            ctx.contentType(FileUtil.detectFileType(file.getName())); // Set the appropriate content type
+            ctx.result(file);
+        } else {
+            ctx.result("File not found.");
+        }
+    } catch (FirebaseAuthException e) {
+        e.printStackTrace();
+        ctx.status(401).result("Error: Authentication failed.");
+    }
+});
+
+app.get("/files", ctx -> {
+    try {
+        // The Firebase initialization is done outside the route handler
+
+        FirebaseToken decodedToken = FirebaseAuth.getInstance().verifyIdToken(ctx.header("idToken"));
+        String uid = decodedToken.getUid();
+
+        String directoryPath = "upload/" + uid; // Assuming the directory structure starts from the user's unique ID
+        File directory = new File(directoryPath);
+        if (directory.exists() && directory.isDirectory()) {
+            String[] fileNames = directory.list();
+            if (fileNames != null) {
+                for (String fileName : fileNames) {
+                    ctx.result(fileName + "\n"); // Return each file name as a response
+                }
+            } else {
+                ctx.result("No files found in the directory."); // If no files are found
+            }
+        } else {
+            ctx.result("Directory does not exist for the user."); // If the directory doesn't exist
+        }
+    } catch (FirebaseAuthException e) {
+        e.printStackTrace();
+        ctx.status(401).result("Error: Authentication failed.");
+    }
+});
 
         app.post("/upload", ctx -> {
             try {
