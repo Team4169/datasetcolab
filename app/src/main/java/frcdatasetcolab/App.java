@@ -14,6 +14,7 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthException;
 import com.google.firebase.auth.FirebaseToken;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -61,8 +62,14 @@ public class App {
 
                 // Save each uploaded file with original folder structure preserved
                 for (UploadedFile uploadedFile : ctx.uploadedFiles("files")) {
-                    String filePath = "upload/" + uid + "/" + formattedDate + "/" + ctx.header("") + "/" + uploadedFile.filename();
+                    String filePath = "upload/" + uid + "/" + formattedDate + "/" + ctx.header("name").replace(" ", "_") + "/" + uploadedFile.filename();
                     System.out.println(filePath);
+
+		    File directory = new File(filePath).getParentFile();
+    		    if (!directory.exists()) {
+        		directory.mkdirs(); // creates the directory including any necessary but nonexistent parent directories
+		    }
+
 
                     try (InputStream fileContent = uploadedFile.content();
                          OutputStream output = new FileOutputStream(filePath)) {
