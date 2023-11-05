@@ -6,37 +6,36 @@ import Alert from 'react-bootstrap/Alert';
 export default function Dashboard() {
   const { currentUser } = useAuth();
 
-  const [folderNames, setFolderNames] = useState([]);
+  const [folderMetadata, setFolderMetadata] = useState([]);
   const [isLoading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const fetchFolderNames = async () => {
+  const fetchFolderMetadata = async () => {
     try {
       setLoading(true);
 
-      // Get the user's ID token
       const idToken = await currentUser.getIdToken();
 
-      // Make an HTTP GET request to the server for folder names
-      const response = await axios.get("https://api.seanmabli.com:3433/files", {
+      let config = {
         headers: {
-          Authorization: `Bearer ${idToken}`,
+          idToken: idToken,
         },
-      });
+      };
 
-      // Update the state with the folder names
-      setFolderNames(response.data);
+      const response = await axios.get("https://api.seanmabli.com:3433/files", config);
+
+      setFolderMetadata(response.data);
 
     } catch (err) {
-      setError("Error fetching folder names.");
+      setError("Error fetching folder metadata.");
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    // Fetch the folder names when the component mounts
-    fetchFolderNames();
+    // Fetch the folder metadata when the component mounts
+    fetchFolderMetadata();
   }, []);
 
   return (
@@ -45,13 +44,16 @@ export default function Dashboard() {
         {error}
       </Alert>
       <div className="files-preview">
-        <h2>Folder List</h2>
+        <h2>Past Uploads</h2>
         {isLoading ? (
-          <p>Loading folder names...</p>
+          <p>Loading folder metadata...</p>
         ) : (
           <ul>
-            {folderNames.map((folderName, index) => (
-              <li key={index}>{folderName}</li>
+            {folderMetadata.map((metadata, index) => (
+              <li key={index}>
+                <strong>Folder Name:</strong> {metadata.uploadName}<br />
+                <strong>Upload Time:</strong> {metadata.uploadTime}<br />
+              </li>
             ))}
           </ul>
         )}

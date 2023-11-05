@@ -27,6 +27,8 @@ dependencies {
     implementation 'com.google.firebase:firebase-admin:9.2.0'
     //implementation 'com.google.oauth-client:google-oauth-client:1.19.0'
     implementation 'com.google.auth:google-auth-library-credentials:0.23.0'
+    implementation group: 'com.googlecode.json-simple', name: 'json-simple', version: '1.1.1'
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.15.0'
 }
 
 // Apply a specific Java toolchain to ease working on different environments.
