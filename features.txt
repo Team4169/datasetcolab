@@ -3,6 +3,4 @@
 - viewing images before upload (conferming valid dataset type on website side)
 - nicer website
     - home page
-    - seeing uploads
-    - 
 - add obstruction to final dataset

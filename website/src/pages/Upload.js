@@ -179,7 +179,7 @@ export default function Upload() {
           style={{ marginBottom: "10px" }}
         >
           <option value="COCO">COCO</option>
-          <option value="YOLOv5">YOLOv5</option>
+          <option value="YOLOv5">YOLO v5 PyTorch</option>
         </Form.Control>
         <label htmlFor="dataset" style={{ marginTop: "10px" }}>
           Dataset
