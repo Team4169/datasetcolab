@@ -8,7 +8,7 @@ export default function Dashboard() {
 
   const [folderMetadata, setFolderMetadata] = useState([]);
   const [isLoading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState(null);
 
   const fetchFolderMetadata = async () => {
     try {
@@ -24,8 +24,11 @@ export default function Dashboard() {
 
       const response = await axios.get("https://api.seanmabli.com:3433/files", config);
 
-      setFolderMetadata(response.data);
-
+      if (Array.isArray(response.data)) {
+        setFolderMetadata(response.data);
+      } else {
+        setFolderMetadata([]); // Set to an empty array if response.data is not an array
+      }
     } catch (err) {
       setError("Error fetching folder metadata.");
     } finally {
@@ -40,22 +43,28 @@ export default function Dashboard() {
 
   return (
     <div style={{ padding: "20px" }}>
-      <Alert variant="danger" show={error} onClose={() => setError("")} dismissible>
-        {error}
-      </Alert>
+      {error && (
+        <Alert variant="danger" onClose={() => setError(null)} dismissible>
+          {error}
+        </Alert>
+      )}
       <div className="files-preview">
         <h2>Past Uploads</h2>
         {isLoading ? (
           <p>Loading folder metadata...</p>
         ) : (
           <ul>
-            {folderMetadata.map((metadata, index) => (
-              <li key={index}>
-                <strong>Folder Name:</strong> {metadata.uploadName}<br />
-                <strong>Upload Time:</strong> {metadata.uploadTime}<br />
-                <strong>Dataset Type:</strong> {metadata.datasetType}<br />
-              </li>
-            ))}
+            {folderMetadata.length > 0 ? (
+              folderMetadata.map((metadata, index) => (
+                <li key={index}>
+                  <strong>Folder Name:</strong> {metadata.uploadName}<br />
+                  <strong>Upload Time:</strong> {metadata.uploadTime}<br />
+                  <strong>Dataset Type:</strong> {metadata.datasetType}<br />
+                </li>
+              ))
+            ) : (
+              <p>No uploads available.</p>
+            )}
           </ul>
         )}
       </div>
