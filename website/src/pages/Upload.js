@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
-import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import Form from "react-bootstrap/Form";
 import Button from "react-bootstrap/Button";
@@ -9,16 +8,15 @@ import Alert from "react-bootstrap/Alert";
 export default function Upload() {
   const [error, setError] = useState("");
   const { currentUser } = useAuth();
-
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [isLoading, setLoading] = useState(false);
-  const [imageSrcs, setImageSrcs] = useState([]); // To store the image sources for all files
-  const [activeImage, setActiveImage] = useState(null); // To track the active image
+  const [imageSrcs, setImageSrcs] = useState([]);
+  const [activeImage, setActiveImage] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(25); // Default value
-  const [uploadSuccess, setUploadSuccess] = useState(false); // New variable to track upload success
-
-  const [uploadName, setUploadName] = useState(generateRandomName()); // Default to an empty string
+  const [itemsPerPage, setItemsPerPage] = useState(25);
+  const [uploadSuccess, setUploadSuccess] = useState(false);
+  const [uploadName, setUploadName] = useState(generateRandomName());
+  const [datasetType, setDatasetType] = useState("COCO");
 
   const onFileChange = (event) => {
     setSelectedFiles(event.target.files);
@@ -27,20 +25,18 @@ export default function Upload() {
     for (let i = 0; i < event.target.files.length; i++) {
       const file = event.target.files[i];
       if (file.type.startsWith("image/")) {
-        // Process image files
         const reader = new FileReader();
         reader.onload = () => {
-          imageSrcArray.push({ src: reader.result, name: file.name }); // Store both image source and name
+          imageSrcArray.push({ src: reader.result, name: file.name });
           if (imageSrcArray.length === event.target.files.length) {
-            setImageSrcs(imageSrcArray); // Set the image sources array
+            setImageSrcs(imageSrcArray);
           }
         };
         reader.readAsDataURL(file);
       } else {
-        // Handle non-image files
-        imageSrcArray.push({ src: null, name: file.name }); // Add a placeholder for non-image files
+        imageSrcArray.push({ src: null, name: file.name });
         if (imageSrcArray.length === event.target.files.length) {
-          setImageSrcs(imageSrcArray); // Set the image sources array
+          setImageSrcs(imageSrcArray);
         }
       }
     }
@@ -66,35 +62,19 @@ export default function Upload() {
         headers: {
           idToken: idToken,
           name: uploadName,
+          datasetType: datasetType, // Include datasetType in headers
         },
       };
 
-      await axios.post(
-        "https://api.seanmabli.com:3433/upload",
-        formData,
-        config
-      );
+      await axios.post("https://api.seanmabli.com:3433/upload", formData, config);
       setError("Files uploaded successfully");
       setUploadSuccess(true);
 
       setSelectedFiles([]);
       setImageSrcs([]);
     } catch (error) {
-      if (error.response) {
-        // The request was made, but the server responded with an error status
-        if (error.response.status === 500) {
-          setError("Server error: Failed to save the file on the server.");
-        } else {
-          setError("Error: " + error.message);
-        }
-      } else if (error.request) {
-        // The request was made, but no response was received (network error)
-        setError("Network error: Unable to communicate with the server.");
-      } else {
-        // Something happened in setting up the request (request configuration error)
-        setError("Request error: Unable to send the request.");
-      }
-
+      // Handle errors
+      setError("Error: " + error.message);
       setUploadSuccess(false);
     } finally {
       setLoading(false);
@@ -107,7 +87,7 @@ export default function Upload() {
 
   const handleChangeItemsPerPage = (event) => {
     setItemsPerPage(parseInt(event.target.value));
-    setCurrentPage(1); // Reset to the first page when changing items per page
+    setCurrentPage(1);
   };
 
   function generateRandomName() {
@@ -175,31 +155,44 @@ export default function Upload() {
 
   return (
     <div style={{ padding: "20px" }}>
+    <h2>Upload</h2>
       {error && (
         <Alert variant={alertVariant} onClose={() => setError("")} dismissible>
           {error}
         </Alert>
       )}
       <div className="form-group" style={{ marginBottom: "20px" }}>
-        <label htmlFor="uploadName" >Upload Name</label>
-        <div className="input-group">
-          <div className="custom-file">
-            <Form.Control
-              type="text"
-              value={uploadName}
-              onChange={(e) => setUploadName(e.target.value)}
-              style={{ marginBottom: "10px" }}
-            />
-            <input
-              type="file"
-              id="fileInput" // Add an id for the file input
-              className="custom-file-input"
-              onChange={onFileChange}
-              multiple
-              style={{ content: "Browse" }}
-            />
-          </div>
-        </div>
+        <label htmlFor="uploadName">Upload Name</label>
+        <Form.Control
+          type="text"
+          value={uploadName}
+          onChange={(e) => setUploadName(e.target.value)}
+          style={{ marginBottom: "10px" }}
+        />
+        <label htmlFor="datasetType" style={{ marginTop: "10px" }}>
+          Dataset Type
+        </label>
+        <Form.Control
+          as="select"
+          value={datasetType}
+          onChange={(e) => setDatasetType(e.target.value)}
+          style={{ marginBottom: "10px" }}
+        >
+          <option value="COCO">COCO</option>
+          <option value="YOLOv5">YOLOv5</option>
+        </Form.Control>
+        <label htmlFor="dataset" style={{ marginTop: "10px" }}>
+          Dataset
+        </label>
+        <br />
+        <input
+          type="file"
+          id="fileInput"
+          className="custom-file-input"
+          onChange={onFileChange}
+          multiple
+          style={{ content: "Browse" }}
+        />
         <p style={{ marginTop: "10px", color: "gray", fontSize: 10 }}>
           Note: Folders should be uploaded as ZIP files.
         </p>

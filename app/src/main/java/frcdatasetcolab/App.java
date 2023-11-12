@@ -119,6 +119,7 @@ app.get(
           JSONObject metadata = new JSONObject();
           metadata.put("uploadTime", formattedDate);
           metadata.put("uploadName", ctx.header("name"));
+          metadata.put("datasetType", ctx.header("datasetType"));
 
           File metadataDirectory = new File("upload/" + uid + "/" + folderName);
           metadataDirectory.mkdirs();

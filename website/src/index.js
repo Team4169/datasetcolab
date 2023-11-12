@@ -14,6 +14,8 @@ import Login from "./pages/Login";
 import ForgotPassword from "./pages/ForgotPassword";
 import UpdateProfile from "./pages/UpdateProfile";
 import EmailVerification from "./pages/EmailVerification";
+import Docs from "./pages/Docs";
+import DownloadDataset from "./pages/DownloadDataset";
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
@@ -40,6 +42,22 @@ root.render(
                     element={
                       <PrivateRoute>
                         <Upload />
+                      </PrivateRoute>
+                    }
+                  />
+                  <Route
+                    exact
+                    path="/docs"
+                    element={
+                        <Docs />
+                    }
+                  />
+                  <Route
+                    exact
+                    path="/download"
+                    element={
+                      <PrivateRoute>
+                        <DownloadDataset />
                       </PrivateRoute>
                     }
                   />

@@ -53,6 +53,7 @@ export default function Dashboard() {
               <li key={index}>
                 <strong>Folder Name:</strong> {metadata.uploadName}<br />
                 <strong>Upload Time:</strong> {metadata.uploadTime}<br />
+                <strong>Dataset Type:</strong> {metadata.datasetType}<br />
               </li>
             ))}
           </ul>
