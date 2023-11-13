@@ -29,6 +29,7 @@ export default function NavbarComponent() {
           <Navbar.Toggle aria-controls="basic-navbar-nav" />
           <Navbar.Collapse id="basic-navbar-nav" className="justify-content-end">
             <Nav>
+              <Nav.Link onClick={() => navigate("/download")} style={{ cursor: "pointer" }}>Download Dataset</Nav.Link>
               <Nav.Link onClick={() => navigate("/docs")} style={{ cursor: "pointer" }}>Docs</Nav.Link>
               <Nav.Link onClick={() => navigate("/login")} style={{ cursor: "pointer" }}>Login</Nav.Link>
             </Nav>

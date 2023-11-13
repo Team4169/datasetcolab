@@ -8,6 +8,7 @@ import {
   ButtonGroup,
   ToggleButton,
 } from "react-bootstrap";
+import { useAuth } from "../contexts/AuthContext";
 
 const styles = {
   padding: "20px",
@@ -55,16 +56,23 @@ const styles = {
 };
 
 export default function DownloadDataset() {
+  const { currentUser } = useAuth();
+
   const [error, setError] = useState("");
   const [selectedOptions, setSelectedOptions] = useState({
-    'FRC 2023': ['Cone', 'Cube', 'Robot', 'Other Robots'],
-    'FRC 2024': ['Cone', 'Cube', 'Robot', 'Other Robots'],
+    "FRC 2023": ["Cone", "Cube", "Robot", "Other Robots"],
+    "FRC 2024": ["Cone", "Cube", "Robot", "Other Robots"],
   });
-  
-  const [selectedDatasetType, setSelectedDatasetType] = useState({[ 'FRC 2023' ]: "COCO", [ 'FRC 2024' ]: "COCO"});
-  const [downloadMethod, setDownloadMethod] = useState({[ 'FRC 2023' ]: "direct", [ 'FRC 2024' ]: "direct"});
+  const [selectedDatasetType, setSelectedDatasetType] = useState({
+    ["FRC 2023"]: "COCO",
+    ["FRC 2024"]: "COCO",
+  });
+  const [downloadMethod, setDownloadMethod] = useState({
+    ["FRC 2023"]: "direct",
+    ["FRC 2024"]: "direct",
+  });
   const [showCopyAlert, setShowCopyAlert] = useState(false);
-  
+
   const datasets = [
     { name: "FRC 2024", images: 1200, annotations: 600, size: "1.8GB" },
     { name: "FRC 2023", images: 1000, annotations: 500, size: "1.5GB" },
@@ -75,9 +83,8 @@ export default function DownloadDataset() {
     `curl -O https://api.seanmabli.com:3443/download`;
 
   const handleDownloadMethodChange = (dataset, value) => {
-    console.log("fd");
     setDownloadMethod((prevMethods) => ({ ...prevMethods, [dataset]: value }));
-  }
+  };
 
   const handleOptionSelect = (dataset, option) => {
     setSelectedOptions((prevOptions) => {
@@ -86,15 +93,17 @@ export default function DownloadDataset() {
       if (index !== -1) {
         selectedOptionsCopy[dataset].splice(index, 1);
       } else {
-        selectedOptionsCopy[dataset] = [...(selectedOptionsCopy[dataset] || []), option];
+        selectedOptionsCopy[dataset] = [
+          ...(selectedOptionsCopy[dataset] || []),
+          option,
+        ];
       }
-  
+
       return selectedOptionsCopy;
     });
   };
 
   const handleCopyToClipboard = () => {
-    console.log("adfds");
     const curlCommand = handleDownloadCurl();
     navigator.clipboard.writeText(curlCommand);
     setShowCopyAlert(true);
@@ -107,7 +116,6 @@ export default function DownloadDataset() {
     const alertTimeout = setTimeout(() => setShowCopyAlert(false), 5000);
     return () => clearTimeout(alertTimeout);
   }, [showCopyAlert]);
-
 
   return (
     <div style={styles}>
@@ -127,102 +135,111 @@ export default function DownloadDataset() {
               <Card.Body>
                 <h3>{dataset.name}</h3>
                 <small>Images: {dataset.images}</small>
-                <br/>
+                <br />
                 <small>Annotations: {dataset.annotations}</small>
-                <br/>
+                <br />
                 <small>Size: {dataset.size}</small>
-                  <h5 style={{paddingTop: "10px"}}>Dataset Classes</h5>
-                  <div style={styles.checkboxGroup}>
-                    {classes.map((opt, i) => (
-                      <Form.Check
-                        key={i}
-                        type="checkbox"
-                        label={opt}
-                        onChange={() => handleOptionSelect(dataset.name, opt)}
-                        checked={
-                          selectedOptions[dataset.name]?.includes(opt) || false
-                        }
-                      />
-                    ))}
-                  </div>
-                  <h5 style={{paddingTop: "10px"}}>Dataset Type</h5>
-                  <Dropdown
-                    onSelect={(type) =>
-                      setSelectedDatasetType((prevTypes) => ({
-                        ...prevTypes,
-                        [dataset.name]: type,
-                      }))
-                    }
-                  >
-                    <Dropdown.Toggle variant="blue" id="dropdown-basic">
-                      {selectedDatasetType[dataset.name] || "Select Type"}
-                    </Dropdown.Toggle>
-                    <Dropdown.Menu>
-                      <Dropdown.Item eventKey="COCO">COCO</Dropdown.Item>
-                      <Dropdown.Item eventKey="YOLOv5 Pytorch">
-                        YOLOv5 Pytorch
-                      </Dropdown.Item>
-                    </Dropdown.Menu>
-                  </Dropdown>
-                  <h5 style={{paddingTop: "10px"}}>Download Method</h5>
-                  <Form.Group>
-                    <ButtonGroup toggle>
-                      <ToggleButton
-                        type="radio"
-                        variant="outline-primary"
-                        name={`downloadMethod-${dataset.name}`}
-                        value="direct"
-                        checked={downloadMethod[dataset.name] === "direct"}
-                        onClick={() =>
-                          handleDownloadMethodChange(dataset.name, "direct")
-                        }
-                      >
-                        Download Directly
-                      </ToggleButton>
-                      <ToggleButton
-                        type="radio"
-                        variant="outline-primary"
-                        name={`downloadMethod-${dataset.name}`}
-                        value="curl"
-                        checked={downloadMethod[dataset.name] === "curl"}
-                        onClick={() =>
-                          handleDownloadMethodChange(dataset.name, "curl")
-                        }
-                      >
-                        Download via Curl
-                      </ToggleButton>
-                    </ButtonGroup>
-                  </Form.Group>
-                  <div
-                    style={{
-                      ...styles.downloadButtonsContainer,
-                      paddingTop: "10px",
-                    }}
-                  >
-                    {downloadMethod[dataset.name] === "curl" ? (
-                      <div>
-                        <p>Curl Command:</p>
-                        <div style={styles.codeBlock}>
-                          <code>{handleDownloadCurl()}</code>
-                          <div
-                            style={styles.copyButton}
-                            onClick={handleCopyToClipboard}
-                          >
-                            <span role="img" aria-label="Copy">
-                              📋
-                            </span>
+                <h5 style={{ paddingTop: "10px" }}>Dataset Classes</h5>
+                <div style={styles.checkboxGroup}>
+                  {classes.map((opt, i) => (
+                    <Form.Check
+                      key={i}
+                      type="checkbox"
+                      label={opt}
+                      onChange={() => handleOptionSelect(dataset.name, opt)}
+                      checked={
+                        selectedOptions[dataset.name]?.includes(opt) || false
+                      }
+                    />
+                  ))}
+                </div>
+                <h5 style={{ paddingTop: "10px" }}>Dataset Type</h5>
+                <Dropdown
+                  onSelect={(type) =>
+                    setSelectedDatasetType((prevTypes) => ({
+                      ...prevTypes,
+                      [dataset.name]: type,
+                    }))
+                  }
+                >
+                  <Dropdown.Toggle variant="blue" id="dropdown-basic">
+                    {selectedDatasetType[dataset.name] || "Select Type"}
+                  </Dropdown.Toggle>
+                  <Dropdown.Menu>
+                    <Dropdown.Item eventKey="COCO">COCO</Dropdown.Item>
+                    <Dropdown.Item eventKey="YOLOv5 Pytorch">
+                      YOLOv5 Pytorch
+                    </Dropdown.Item>
+                  </Dropdown.Menu>
+                </Dropdown>
+                {currentUser ? (
+                  <>
+                    <h5 style={{ paddingTop: "10px" }}>Download Method</h5>
+                    <Form.Group>
+                      <ButtonGroup toggle>
+                        <ToggleButton
+                          type="radio"
+                          variant="outline-primary"
+                          name={`downloadMethod-${dataset.name}`}
+                          value="direct"
+                          checked={downloadMethod[dataset.name] === "direct"}
+                          onClick={() =>
+                            handleDownloadMethodChange(dataset.name, "direct")
+                          }
+                        >
+                          Download Directly
+                        </ToggleButton>
+                        <ToggleButton
+                          type="radio"
+                          variant="outline-primary"
+                          name={`downloadMethod-${dataset.name}`}
+                          value="curl"
+                          checked={downloadMethod[dataset.name] === "curl"}
+                          onClick={() =>
+                            handleDownloadMethodChange(dataset.name, "curl")
+                          }
+                        >
+                          Download via Curl
+                        </ToggleButton>
+                      </ButtonGroup>
+                    </Form.Group>
+                    <div style={{ paddingTop: "10px" }}>
+                      {downloadMethod[dataset.name] === "curl" ? (
+                        <div>
+                          <div style={styles.codeBlock}>
+                            <code>{handleDownloadCurl()}</code>
+                            <div
+                              style={styles.copyButton}
+                              onClick={handleCopyToClipboard}
+                            >
+                              <span role="img" aria-label="Copy">
+                                📋
+                              </span>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ) : (
-                      <Button
-                        variant="primary"
-                        onClick={() => handleDirectDownload(dataset.name)}
-                      >
-                        Download Directly
-                      </Button>
-                    )}
-                </div>
+                      ) : (
+                        <div style={{ width: "100%" }}>
+                          <Button
+                            variant="primary"
+                            onClick={() => handleDirectDownload(dataset.name)}
+                            style={{ width: "55%" }}
+                          >
+                            Download Directly
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <h5 style={{ paddingTop: "10px" }}>Download</h5>
+                    <Button variant="primary" disabled>
+                      {" "}
+                      Login or Signup to Download{" "}
+                    </Button>
+                  </>
+                )}
               </Card.Body>
             </Card>
           ))}

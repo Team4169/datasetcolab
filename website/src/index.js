@@ -56,9 +56,7 @@ root.render(
                     exact
                     path="/download"
                     element={
-                      <PrivateRoute>
-                        <DownloadDataset />
-                      </PrivateRoute>
+                      <DownloadDataset />
                     }
                   />
                 <Route
