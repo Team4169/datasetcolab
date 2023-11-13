@@ -6,7 +6,7 @@ import Nav from 'react-bootstrap/Nav';
 import NavDropdown from 'react-bootstrap/NavDropdown';
 import "bootstrap/dist/css/bootstrap.min.css"; // Import Bootstrap CSS
 
-export default function EmailVerification() {
+export default function NavbarComponent() {
   const { currentUser, logout } = useAuth();
   const navigate = useNavigate();
 

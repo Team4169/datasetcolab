@@ -64,12 +64,11 @@ export default function DownloadDataset() {
   const [selectedDatasetType, setSelectedDatasetType] = useState({[ 'FRC 2023' ]: "COCO", [ 'FRC 2024' ]: "COCO"});
   const [downloadMethod, setDownloadMethod] = useState({[ 'FRC 2023' ]: "direct", [ 'FRC 2024' ]: "direct"});
   const [showCopyAlert, setShowCopyAlert] = useState(false);
-
+  
   const datasets = [
-    { name: "FRC 2023", images: 1000, annotations: 500, size: "1.5GB" },
     { name: "FRC 2024", images: 1200, annotations: 600, size: "1.8GB" },
+    { name: "FRC 2023", images: 1000, annotations: 500, size: "1.5GB" },
   ];
-
   const classes = ["Cone", "Cube", "Robot", "Other Robots"];
 
   const handleDownloadCurl = () =>
