@@ -223,7 +223,7 @@ export default function DownloadDataset() {
                           <Button
                             variant="primary"
                             onClick={() => handleDirectDownload(dataset.name)}
-                            style={{ width: "55%" }}
+                            style={{ width: "100%" }}
                           >
                             Download Directly
                           </Button>
