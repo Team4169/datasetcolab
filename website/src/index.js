@@ -12,7 +12,7 @@ import Dashboard from "./pages/Dashboard";
 import Upload from "./pages/Upload";
 import Login from "./pages/Login";
 import ForgotPassword from "./pages/ForgotPassword";
-import UpdateProfile from "./pages/UpdateProfile";
+import Settings from "./pages/Settings";
 import EmailVerification from "./pages/EmailVerification";
 import Docs from "./pages/Docs";
 import DownloadDataset from "./pages/DownloadDataset";
@@ -60,10 +60,10 @@ root.render(
                     }
                   />
                 <Route
-                  path="/update-profile"
+                  path="/settings"
                   element={
                     <PrivateRoute>
-                      <UpdateProfile />
+                      <Settings />
                     </PrivateRoute>
                   }
                 />

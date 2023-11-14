@@ -5,7 +5,7 @@ import Form from 'react-bootstrap/Form';
 import Button from 'react-bootstrap/Button';
 import Alert from 'react-bootstrap/Alert';
 
-export default function UpdateProfile() {
+export default function Settings() {
   const emailRef = useRef();
   const passwordRef = useRef();
   const passwordConfirmRef = useRef();
@@ -47,7 +47,7 @@ export default function UpdateProfile() {
 
   return (
     <div style={{ padding: "20px" }}>
-      <h2>Update Profile</h2>
+      <h2>Settings</h2>
       {error && <Alert variant="danger">{error}</Alert>}
       <Form onSubmit={handleSubmit}>
         <Form.Group controlId="email" style={{ marginBottom: "20px" }}>
@@ -66,9 +66,6 @@ export default function UpdateProfile() {
           Update
         </Button>
       </Form>
-      <div style={{ marginTop: "20px" }}>
-        <Link to="/">Cancel</Link>
-      </div>
     </div>
   );
 }

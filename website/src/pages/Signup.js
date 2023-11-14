@@ -1,5 +1,5 @@
-import React, { useRef, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import React, { useRef, useState, useEffect } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import Form from 'react-bootstrap/Form';
 import Button from 'react-bootstrap/Button';
@@ -27,13 +27,23 @@ export default function Signup() {
       setError("");
       setLoading(true);
       await signup(emailRef.current.value, passwordRef.current.value);
-      navigate("/email-verification");
+      navigate("/email-verification?to=" + destination);
     } catch {
       setError("Failed to create an account");
     }
 
     setLoading(false);
   }
+
+  const location = useLocation();
+  const [destination, setDestination] = useState("/"); 
+
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    if (searchParams.get("to") != null) {
+      setDestination(searchParams.get("to"));
+    }
+  }, [location.search]);
 
   return (
     <div style={{ padding: "20px" }}>

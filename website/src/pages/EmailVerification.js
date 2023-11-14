@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import Button from 'react-bootstrap/Button';
 import Alert from 'react-bootstrap/Alert';
 
@@ -14,7 +14,7 @@ export default function EmailVerification() {
     const checkEmailVerified = async () => {
       if (currentUser) {
         if (currentUser.emailVerified) {
-          navigate("/");
+          navigate(destination);
         } else {
           try {
             await currentUser.reload();
@@ -24,7 +24,7 @@ export default function EmailVerification() {
         }
       }
     };
-    const interval = setInterval(checkEmailVerified, 3000); // Check every 3 seconds
+    const interval = setInterval(checkEmailVerified, 1000);
     return () => clearInterval(interval);
   }, [currentUser, navigate]);
 
@@ -39,6 +39,16 @@ export default function EmailVerification() {
       setLoading(false);
     }
   };
+
+  const location = useLocation();
+  const [destination, setDestination] = useState("/"); 
+
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    if (searchParams.get("to") != null) {
+      setDestination("/" + searchParams.get("to"));
+    }
+  }, [location.search]);
 
   return (
     <div style={{ padding: "20px" }}>

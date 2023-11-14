@@ -9,6 +9,7 @@ import {
   ToggleButton,
 } from "react-bootstrap";
 import { useAuth } from "../contexts/AuthContext";
+import { Link } from "react-router-dom";
 
 const styles = {
   padding: "20px",
@@ -172,7 +173,7 @@ export default function DownloadDataset() {
                     </Dropdown.Item>
                   </Dropdown.Menu>
                 </Dropdown>
-                {currentUser ? (
+                {currentUser && currentUser.emailVerified ? (
                   <>
                     <h5 style={{ paddingTop: "10px" }}>Download Method</h5>
                     <Form.Group>
@@ -234,10 +235,11 @@ export default function DownloadDataset() {
                 ) : (
                   <>
                     <h5 style={{ paddingTop: "10px" }}>Download</h5>
-                    <Button variant="primary" disabled>
+                    <div>
                       {" "}
-                      Login or Signup to Download{" "}
-                    </Button>
+                      <Link to="/login?to=download">Login</Link> or{" "}
+                      <Link to="/signup?to=download">Sign Up</Link> to Dowload{" "}
+                    </div>
                   </>
                 )}
               </Card.Body>

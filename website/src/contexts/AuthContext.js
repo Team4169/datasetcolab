@@ -28,8 +28,7 @@ export function AuthProvider({ children }) {
   }
 
   function sendEmailVerification_() {
-    console.log("fsd");
-    return sendEmailVerification(currentUser);
+    return sendEmailVerification(auth.currentUser);
   }
 
   function login(email, password) {
@@ -49,8 +48,11 @@ export function AuthProvider({ children }) {
   }
 
   function updatePassword_(password) {
-    console.log(password);
     return updatePassword(auth.currentUser, password);
+  }
+
+  function deleteAccount() {
+    return auth.currentUser.delete();
   }
 
   useEffect(() => {
@@ -70,7 +72,8 @@ export function AuthProvider({ children }) {
     resetPassword,
     updateEmail_,
     updatePassword_,
-    sendEmailVerification_
+    sendEmailVerification_,
+    deleteAccount
   };
 
   return (

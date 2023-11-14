@@ -49,7 +49,7 @@ export default function Dashboard() {
         </Alert>
       )}
       <div className="files-preview">
-        <h2>Past Uploads</h2>
+        <h2>Dashboard</h2>
         {isLoading ? (
           <p>Loading folder metadata...</p>
         ) : (
