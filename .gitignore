@@ -34,7 +34,9 @@ replay_pid*
 # Ignore Gradle project-specific cache directory
 .gradle
 app/src/main/java/frcdatasetcolab/admin.json
+app/src/main/java/frcdatasetcolab/roboflow.txt
 app/upload
+roboflow.txt
 
 # Ignore Gradle build output directory
 build
