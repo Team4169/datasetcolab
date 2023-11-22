@@ -19,155 +19,154 @@ import org.json.simple.JSONArray;
 
 public class App {
 
-  public static void main(String[] args) {
-    // Initialize Firebase outside of the route handler
-    try {
-      FileInputStream serviceAccount = new FileInputStream(
-        "/home/team4169/frcdatasetcolab/app/src/main/java/frcdatasetcolab/admin.json"
-      );
-      FirebaseOptions options = new FirebaseOptions.Builder()
-        .setCredentials(GoogleCredentials.fromStream(serviceAccount))
-        .build();
-      FirebaseApp.initializeApp(options);
-    } catch (IOException e) {
-      e.printStackTrace();
-      return; // Exit if there's an error with the service account file
-    }
-
-    Javalin app = Javalin
-      .create(config -> {
-        config.plugins.enableCors(cors -> {
-          cors.add(corsConfig -> {
-            corsConfig.anyHost();
-          });
-        });
-        config.plugins.register(
-          new SSLPlugin(ssl -> {
-            ssl.host = "10.0.0.142";
-            ssl.insecurePort = 7070;
-            ssl.securePort = 3433;
-            ssl.pemFromPath("fullchain.pem", "privkey.pem");
-          })
-        );
-      })
-      .start();
-
-app.get(
-    "/files",
-    ctx -> {
+    public static void main(String[] args) {
+        // Initialize Firebase outside of the route handler
         try {
-            FirebaseToken decodedToken = FirebaseAuth
-                .getInstance()
-                .verifyIdToken(ctx.header("idToken"));
-            String uid = decodedToken.getUid();
+            FileInputStream serviceAccount = new FileInputStream(
+                "/home/team4169/frcdatasetcolab/app/src/main/java/frcdatasetcolab/admin.json"
+            );
+            FirebaseOptions options = new FirebaseOptions.Builder()
+                .setCredentials(GoogleCredentials.fromStream(serviceAccount))
+                .build();
+            FirebaseApp.initializeApp(options);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return; // Exit if there's an error with the service account file
+        }
 
-            String directoryPath = "upload/" + uid; // Assuming the directory structure starts from the user's unique ID
-            File directory = new File(directoryPath);
-            if (directory.exists() && directory.isDirectory()) {
-                String[] fileNames = directory.list();
-                if (fileNames != null) {
-                    // Create a JSON array to store file information
-                    JSONArray filesArray = new JSONArray();
+        Javalin app = Javalin
+            .create(config - > {
+                config.plugins.enableCors(cors - > {
+                    cors.add(corsConfig - > {
+                        corsConfig.anyHost();
+                    });
+                });
+                config.plugins.register(
+                    new SSLPlugin(ssl - > {
+                        ssl.host = "10.0.0.142";
+                        ssl.insecurePort = 7070;
+                        ssl.securePort = 3433;
+                        ssl.pemFromPath("fullchain.pem", "privkey.pem");
+                    })
+                );
+            })
+            .start();
 
-                    for (String fileName : fileNames) {
-                        // Check if metadata.json exists and add its contents to the JSON array
-                        String metadataFilePath = "upload/" + uid + "/" + fileName + "/metadata.json";
-                        File metadataFile = new File(metadataFilePath);
-                        if (metadataFile.exists() && metadataFile.isFile()) {
-                            // Read the contents of metadata.json
-                            try (FileReader fileReader = new FileReader(metadataFile)) {
-                                JSONParser parser = new JSONParser();
-                                JSONObject metadata = (JSONObject) parser.parse(fileReader);
-                                filesArray.add(metadata);
+        app.get(
+            "/files",
+            ctx - > {
+                try {
+                    FirebaseToken decodedToken = FirebaseAuth
+                        .getInstance()
+                        .verifyIdToken(ctx.header("idToken"));
+                    String uid = decodedToken.getUid();
+
+                    String directoryPath = "upload/" + uid; // Assuming the directory structure starts from the user's unique ID
+                    File directory = new File(directoryPath);
+                    if (directory.exists() && directory.isDirectory()) {
+                        String[] fileNames = directory.list();
+                        if (fileNames != null) {
+                            // Create a JSON array to store file information
+                            JSONArray filesArray = new JSONArray();
+
+                            for (String fileName: fileNames) {
+                                // Check if metadata.json exists and add its contents to the JSON array
+                                String metadataFilePath = "upload/" + uid + "/" + fileName + "/metadata.json";
+                                File metadataFile = new File(metadataFilePath);
+                                if (metadataFile.exists() && metadataFile.isFile()) {
+                                    // Read the contents of metadata.json
+                                    try (FileReader fileReader = new FileReader(metadataFile)) {
+                                        JSONParser parser = new JSONParser();
+                                        JSONObject metadata = (JSONObject) parser.parse(fileReader);
+                                        filesArray.add(metadata);
+                                    }
+                                }
                             }
+
+                            ctx.json(filesArray);
+                        } else {
+                            ctx.result("No metadata files found in the directory."); // If no metadata files are found
                         }
+                    } else {
+                        ctx.result("Directory does not exist for the user."); // If the directory doesn't exist
+                    }
+                } catch (FirebaseAuthException | ParseException e) {
+                    e.printStackTrace();
+                    ctx.status(401).result("Error: Authentication failed.");
+                }
+            }
+        );
+
+
+        app.post(
+            "/upload",
+            ctx - > {
+                try {
+                    // The Firebase initialization is done outside the route handler
+
+                    FirebaseToken decodedToken = FirebaseAuth
+                        .getInstance()
+                        .verifyIdToken(ctx.header("idToken"));
+                    String uid = decodedToken.getUid();
+
+                    Date date = new Date();
+                    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd_HH:mm");
+                    String formattedDate = dateFormat.format(date);
+
+                    String folderName = ctx.header("name").replace(" ", "_");
+
+                    // Create a JSON object to store metadata
+                    JSONObject metadata = new JSONObject();
+                    metadata.put("uploadTime", formattedDate);
+                    metadata.put("uploadName", ctx.header("name"));
+                    metadata.put("datasetType", ctx.header("datasetType"));
+
+                    File metadataDirectory = new File("upload/" + uid + "/" + folderName);
+                    metadataDirectory.mkdirs();
+
+                    String metadataFilePath = metadataDirectory.getPath() + "/metadata.json";
+
+                    // Save the metadata to the JSON file
+                    try (FileWriter file = new FileWriter(metadataFilePath)) {
+                        file.write(metadata.toJSONString());
+                        file.flush();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        // Sending an error response to the client
+                        ctx.status(500).result("Error: Failed to save metadata on the server.");
+                        return; // Exit the loop and return an error response
                     }
 
-                    ctx.json(filesArray);
-                } else {
-                    ctx.result("No metadata files found in the directory."); // If no metadata files are found
+                    // Save each uploaded file with the folder name matching the upload name
+                    for (UploadedFile uploadedFile: ctx.uploadedFiles("files")) {
+                        String filePath = "upload/" + uid + "/" + folderName + "/" + uploadedFile.filename();
+                        System.out.println(filePath);
+
+                        File directory = new File(filePath).getParentFile();
+                        if (!directory.exists()) {
+                            directory.mkdirs(); // creates the directory including any necessary but nonexistent parent directories
+                        }
+
+                        try (
+                            InputStream fileContent = uploadedFile.content(); OutputStream output = new FileOutputStream(filePath)
+                        ) {
+                            byte[] buffer = new byte[8192];
+                            int bytesRead;
+                            while ((bytesRead = fileContent.read(buffer)) != -1) {
+                                output.write(buffer, 0, bytesRead);
+                            }
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                            // Sending an error response to the client
+                            ctx.status(500).result("Error: Failed to save the file on the server.");
+                            return; // Exit the loop and return an error response
+                        }
+                    }
+                } catch (FirebaseAuthException e) {
+                    e.printStackTrace();
+                    ctx.status(401).result("Error: Authentication failed.");
                 }
-            } else {
-                ctx.result("Directory does not exist for the user."); // If the directory doesn't exist
             }
-        } catch (FirebaseAuthException | ParseException e) {
-            e.printStackTrace();
-            ctx.status(401).result("Error: Authentication failed.");
-        }
+        );
     }
-);
-
-
-    app.post(
-      "/upload",
-      ctx -> {
-        try {
-          // The Firebase initialization is done outside the route handler
-
-          FirebaseToken decodedToken = FirebaseAuth
-            .getInstance()
-            .verifyIdToken(ctx.header("idToken"));
-          String uid = decodedToken.getUid();
-
-          Date date = new Date();
-          SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd_HH:mm");
-          String formattedDate = dateFormat.format(date);
-
-          String folderName = ctx.header("name").replace(" ", "_");
-
-          // Create a JSON object to store metadata
-          JSONObject metadata = new JSONObject();
-          metadata.put("uploadTime", formattedDate);
-          metadata.put("uploadName", ctx.header("name"));
-          metadata.put("datasetType", ctx.header("datasetType"));
-
-          File metadataDirectory = new File("upload/" + uid + "/" + folderName);
-          metadataDirectory.mkdirs();
-
-          String metadataFilePath = metadataDirectory.getPath() + "/metadata.json";
-
-          // Save the metadata to the JSON file
-          try (FileWriter file = new FileWriter(metadataFilePath)) {
-            file.write(metadata.toJSONString());
-            file.flush();
-          } catch (IOException e) {
-            e.printStackTrace();
-            // Sending an error response to the client
-            ctx.status(500).result("Error: Failed to save metadata on the server.");
-            return; // Exit the loop and return an error response
-          }
-
-          // Save each uploaded file with the folder name matching the upload name
-          for (UploadedFile uploadedFile : ctx.uploadedFiles("files")) {
-            String filePath = "upload/" + uid + "/" + folderName + "/" + uploadedFile.filename();
-            System.out.println(filePath);
-
-            File directory = new File(filePath).getParentFile();
-            if (!directory.exists()) {
-              directory.mkdirs(); // creates the directory including any necessary but nonexistent parent directories
-            }
-
-            try (
-              InputStream fileContent = uploadedFile.content();
-              OutputStream output = new FileOutputStream(filePath)
-            ) {
-              byte[] buffer = new byte[8192];
-              int bytesRead;
-              while ((bytesRead = fileContent.read(buffer)) != -1) {
-                output.write(buffer, 0, bytesRead);
-              }
-            } catch (IOException e) {
-              e.printStackTrace();
-              // Sending an error response to the client
-              ctx.status(500).result("Error: Failed to save the file on the server.");
-              return; // Exit the loop and return an error response
-            }
-          }
-        } catch (FirebaseAuthException e) {
-          e.printStackTrace();
-          ctx.status(401).result("Error: Authentication failed.");
-        }
-      }
-    );
-  }
 }
