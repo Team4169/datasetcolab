@@ -16,6 +16,7 @@ import Settings from "./pages/Settings";
 import EmailVerification from "./pages/EmailVerification";
 import Docs from "./pages/Docs";
 import DownloadDataset from "./pages/DownloadDataset";
+import DeleteAccount from "./pages/DeleteAccount";
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
@@ -36,29 +37,36 @@ root.render(
                     </PrivateRoute>
                   }
                 />
-                  <Route
-                    exact
-                    path="/upload"
-                    element={
-                      <PrivateRoute>
-                        <Upload />
-                      </PrivateRoute>
-                    }
-                  />
-                  <Route
-                    exact
-                    path="/docs"
-                    element={
-                        <Docs />
-                    }
-                  />
-                  <Route
-                    exact
-                    path="/download"
-                    element={
-                      <DownloadDataset />
-                    }
-                  />
+                <Route
+                  exact
+                  path="/upload"
+                  element={
+                    <PrivateRoute>
+                      <Upload />
+                    </PrivateRoute>
+                  }
+                />
+                <Route
+                  exact
+                  path="/docs"
+                  element={
+                    <Docs />
+                  }
+                />
+                <Route
+                  exact
+                  path="/download"
+                  element={
+                    <DownloadDataset />
+                  }
+                />
+                <Route
+                  exact
+                  path="/delete"
+                  element={
+                    <DeleteAccount />
+                  }
+                />
                 <Route
                   path="/settings"
                   element={

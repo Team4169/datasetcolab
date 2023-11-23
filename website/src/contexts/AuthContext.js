@@ -6,7 +6,8 @@ import {
   sendPasswordResetEmail,
   updateEmail,
   updatePassword,
-  sendEmailVerification
+  sendEmailVerification,
+  deleteUser
 } from "firebase/auth";
 import { auth } from "../firebase";
 
@@ -21,10 +22,7 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   function signup(email, password) {
-    return createUserWithEmailAndPassword(auth, email, password)
-      .then((userCredentials) => {
-        sendEmailVerification_();
-      });
+    return createUserWithEmailAndPassword(auth, email, password);
   }
 
   function sendEmailVerification_() {
@@ -52,7 +50,8 @@ export function AuthProvider({ children }) {
   }
 
   function deleteAccount() {
-    return auth.currentUser.delete();
+    console.log("delete");
+    return deleteUser(auth.currentUser);
   }
 
   useEffect(() => {

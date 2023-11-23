@@ -1,9 +1,7 @@
 import React, { useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import axios from "axios";
-import Form from "react-bootstrap/Form";
-import Button from "react-bootstrap/Button";
-import Alert from "react-bootstrap/Alert";
+import { Form, Button, ButtonGroup, ToggleButton, Alert } from "react-bootstrap";
 
 export default function Upload() {
   const [error, setError] = useState("");
@@ -17,6 +15,8 @@ export default function Upload() {
   const [uploadSuccess, setUploadSuccess] = useState(false);
   const [uploadName, setUploadName] = useState(generateRandomName());
   const [datasetType, setDatasetType] = useState("COCO");
+  const [uploadWithRoboflow, setUploadWithRoboflow] = useState(false);
+  const [roboflowUrl, setRoboflowUrl] = useState("");
 
   const onFileChange = (event) => {
     setSelectedFiles(event.target.files);
@@ -62,11 +62,16 @@ export default function Upload() {
         headers: {
           idToken: idToken,
           name: uploadName,
-          datasetType: datasetType, // Include datasetType in headers
+          datasetType: datasetType,
+          roboflowUrl: roboflowUrl,
         },
       };
 
-      await axios.post("https://api.seanmabli.com:3433/upload", formData, config);
+      await axios.post(
+        "https://api.seanmabli.com:3433/upload",
+        formData,
+        config
+      );
       setError("Files uploaded successfully");
       setUploadSuccess(true);
 
@@ -103,7 +108,7 @@ export default function Upload() {
       "Zany",
       "Cheerful",
     ];
-  
+
     const nouns = [
       "Banana",
       "Pancake",
@@ -116,10 +121,11 @@ export default function Upload() {
       "GummyBear",
       "Bumblebee",
     ];
-  
-    const randomAdjective = adjectives[Math.floor(Math.random() * adjectives.length)];
+
+    const randomAdjective =
+      adjectives[Math.floor(Math.random() * adjectives.length)];
     const randomNoun = nouns[Math.floor(Math.random() * nouns.length)];
-  
+
     return `${randomAdjective}-${randomNoun}`;
   }
 
@@ -155,47 +161,77 @@ export default function Upload() {
 
   return (
     <div style={{ padding: "20px" }}>
-    <h2>Upload</h2>
+      <h2>Upload</h2>
       {error && (
         <Alert variant={alertVariant} onClose={() => setError("")} dismissible>
           {error}
         </Alert>
       )}
       <div className="form-group" style={{ marginBottom: "20px" }}>
-        <label htmlFor="uploadName">Upload Name</label>
-        <Form.Control
-          type="text"
-          value={uploadName}
-          onChange={(e) => setUploadName(e.target.value)}
-          style={{ marginBottom: "10px" }}
-        />
-        <label htmlFor="datasetType" style={{ marginTop: "10px" }}>
-          Dataset Type
-        </label>
-        <Form.Control
-          as="select"
-          value={datasetType}
-          onChange={(e) => setDatasetType(e.target.value)}
-          style={{ marginBottom: "10px" }}
-        >
-          <option value="COCO">COCO</option>
-          <option value="YOLOv5">YOLO v5 PyTorch</option>
-        </Form.Control>
-        <label htmlFor="dataset" style={{ marginTop: "10px" }}>
-          Dataset
-        </label>
-        <br />
-        <input
-          type="file"
-          id="fileInput"
-          className="custom-file-input"
-          onChange={onFileChange}
-          multiple
-          style={{ content: "Browse" }}
-        />
-        <p style={{ marginTop: "10px", color: "gray", fontSize: 10 }}>
-          Note: Folders should be uploaded as ZIP files.
-        </p>
+        <label htmlFor="uploadName">Upload Method</label>
+        <Form.Group>
+          <ButtonGroup toggle>
+            <ToggleButton
+              type="radio"
+              variant="outline-primary"
+              checked={!uploadWithRoboflow}
+              onClick={() => setUploadWithRoboflow(false)}
+            >
+              Upload Directly
+            </ToggleButton>
+            <ToggleButton
+              type="radio"
+              variant="outline-primary"
+              checked={uploadWithRoboflow}
+              onClick={() => setUploadWithRoboflow(true)}
+            >
+              Upload With Roboflow
+            </ToggleButton>
+          </ButtonGroup>
+        </Form.Group>
+        {(uploadWithRoboflow === false) ? (<><label htmlFor="uploadName" style={{ marginTop: "10px" }}>Upload Name</label>
+          <Form.Control
+            type="text"
+            value={uploadName}
+            onChange={(e) => setUploadName(e.target.value)}
+            style={{ marginBottom: "10px" }}
+          />
+          <label htmlFor="datasetType" style={{ marginTop: "10px" }}>
+            Dataset Type
+          </label>
+          <Form.Control
+            as="select"
+            value={datasetType}
+            onChange={(e) => setDatasetType(e.target.value)}
+            style={{ marginBottom: "10px" }}
+          >
+            <option value="COCO">COCO</option>
+            <option value="YOLOv5">YOLO v5 PyTorch</option>
+          </Form.Control>
+          <label htmlFor="dataset" style={{ marginTop: "10px" }}>
+            Dataset
+          </label>
+          <br />
+          <input
+            type="file"
+            id="fileInput"
+            className="custom-file-input"
+            onChange={onFileChange}
+            multiple
+            style={{ content: "Browse" }}
+          />
+          <p style={{ marginTop: "10px", color: "gray", fontSize: 10 }}>
+            Note: Folders should be uploaded as ZIP files.
+          </p></>) : (<>
+            <label htmlFor="roboflowUrl" style={{ marginTop: "10px" }}>Roboflow Url</label>
+            <Form.Control
+              type="text"
+              value={roboflowUrl}
+              onChange={(e) => setRoboflowUrl(e.target.value)}
+              style={{ marginBottom: "10px" }}
+            /></>
+        )}
+
         <div className="input-group-append">
           <Button variant="primary" onClick={onUpload} disabled={isLoading}>
             {isLoading ? "Uploading..." : "Upload"}
@@ -222,9 +258,8 @@ export default function Upload() {
           {currentItems.map((imageData, index) => (
             <div key={index}>
               <li
-                className={`list-group-item ${
-                  activeImage === index ? "active" : ""
-                }`}
+                className={`list-group-item ${activeImage === index ? "active" : ""
+                  }`}
                 onClick={() => toggleImageCollapse(index)}
               >
                 {imageData.name}
@@ -262,9 +297,8 @@ export default function Upload() {
             }).map((_, index) => (
               <li
                 key={index}
-                className={`page-item ${
-                  currentPage === index + 1 ? "active" : ""
-                }`}
+                className={`page-item ${currentPage === index + 1 ? "active" : ""
+                  }`}
               >
                 <button
                   className="page-link"
