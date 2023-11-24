@@ -38,14 +38,14 @@ public class App {
         }
 
         Javalin app = Javalin
-            .create(config - > {
-                config.plugins.enableCors(cors - > {
-                    cors.add(corsConfig - > {
+            .create(config -> {
+                config.plugins.enableCors(cors -> {
+                    cors.add(corsConfig -> {
                         corsConfig.anyHost();
                     });
                 });
                 config.plugins.register(
-                    new SSLPlugin(ssl - > {
+                    new SSLPlugin(ssl -> {
                         ssl.host = "10.0.0.142";
                         ssl.insecurePort = 7070;
                         ssl.securePort = 3433;
@@ -57,7 +57,7 @@ public class App {
 
         app.get(
             "/files",
-            ctx - > {
+            ctx -> {
                 try {
                     FirebaseToken decodedToken = FirebaseAuth
                         .getInstance()
@@ -103,7 +103,7 @@ public class App {
 
         app.post(
             "/upload",
-            ctx - > {
+            ctx -> {
                 try {
                     // The Firebase initialization is done outside the route handler
 
@@ -184,13 +184,13 @@ public class App {
                     JSONObject apiJsonObject;
                     try {
                         String content = Files.readString(Path.of("api.json"));
-                        apiJsonObject = new JSONObject(content);
-                    } catch (IOException e) {
+                        apiJsonObject = new JSONObject((Map<?, ?>) new JSONParser().parse(content));
+                    } catch (IOException | ParseException e) {
                         e.printStackTrace();
                         apiJsonObject = new JSONObject();
                     }
 
-                    if (apiJsonObject.has(uid)) {
+                    if (apiJsonObject.containsKey(uid)) {
                         String newApiKey = generateRandomApiKey();
                         apiJsonObject.put(uid, newApiKey);
                     } else {
@@ -199,7 +199,7 @@ public class App {
                     }
 
                     try {
-                        String jsonString = apiJsonObject.toString(2)
+                        String jsonString = apiJsonObject.toJSONString();
                         Files.write(Path.of("api.json"), jsonString.getBytes(), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
                     } catch (IOException e) {
                         e.printStackTrace();
@@ -212,16 +212,6 @@ public class App {
             }
         );
 
-        private static String generateRandomApiKey() {
-            String characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-            StringBuilder apiKey = new StringBuilder();
-            Random random = new Random();
-            for (int i = 0; i < 12; i++) {
-                apiKey.append(characters.charAt(random.nextInt(characters.length())));
-            }
-            return apiKey.toString();
-        }
-
         app.post(
             "/getApiKey",
             ctx -> {
@@ -233,16 +223,16 @@ public class App {
 
                     JSONObject apiJsonObject;
                     try {
-                        String content = Files.readString(Path.of("path/to/api.json"));
-                        apiJsonObject = new JSONObject(content);
-                    } catch (IOException e) {
+                        String content = Files.readString(Path.of("api.json"));
+                        apiJsonObject = new JSONObject((Map<?, ?>) new JSONParser().parse(content));
+                    } catch (IOException | ParseException e) {
                         e.printStackTrace();
                         ctx.status(500).result("Error: Unable to read API keys.");
                         return;
                     }
 
-                    if (apiJsonObject.has(uid)) {
-                        String apiKey = apiJsonObject.getString(uid);
+                    if (apiJsonObject.containsKey(uid)) {
+                        String apiKey = (String) apiJsonObject.get(uid);
                         ctx.result(apiKey);
                     } else {
                         ctx.status(404).result("Error: API key not found for the user.");
@@ -255,5 +245,15 @@ public class App {
             }
         );
 
+    }
+
+    public static String generateRandomApiKey() {
+        String characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+        StringBuilder apiKey = new StringBuilder();
+        Random random = new Random();
+        for (int i = 0; i < 12; i++) {
+            apiKey.append(characters.charAt(random.nextInt(characters.length())));
+        }
+        return apiKey.toString();
     }
 }
