@@ -16,6 +16,9 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import org.json.simple.JSONArray;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 
 public class App {
 
@@ -23,7 +26,7 @@ public class App {
         // Initialize Firebase outside of the route handler
         try {
             FileInputStream serviceAccount = new FileInputStream(
-                "/home/team4169/frcdatasetcolab/app/src/main/java/frcdatasetcolab/admin.json"
+                "admin.json"
             );
             FirebaseOptions options = new FirebaseOptions.Builder()
                 .setCredentials(GoogleCredentials.fromStream(serviceAccount))
@@ -168,5 +171,89 @@ public class App {
                 }
             }
         );
+
+        app.post(
+            "/newApiKey",
+            ctx -> {
+                try {
+                    FirebaseToken decodedToken = FirebaseAuth
+                        .getInstance()
+                        .verifyIdToken(ctx.header("idToken"));
+                    String uid = decodedToken.getUid();
+
+                    JSONObject apiJsonObject;
+                    try {
+                        String content = Files.readString(Path.of("api.json"));
+                        apiJsonObject = new JSONObject(content);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        apiJsonObject = new JSONObject();
+                    }
+
+                    if (apiJsonObject.has(uid)) {
+                        String newApiKey = generateRandomApiKey();
+                        apiJsonObject.put(uid, newApiKey);
+                    } else {
+                        String apiKey = generateRandomApiKey();
+                        apiJsonObject.put(uid, apiKey);
+                    }
+
+                    try {
+                        String jsonString = apiJsonObject.toString(2)
+                        Files.write(Path.of("api.json"), jsonString.getBytes(), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+
+                } catch (FirebaseAuthException e) {
+                    e.printStackTrace();
+                    ctx.status(401).result("Error: Authentication failed.");
+                }
+            }
+        );
+
+        private static String generateRandomApiKey() {
+            String characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+            StringBuilder apiKey = new StringBuilder();
+            Random random = new Random();
+            for (int i = 0; i < 12; i++) {
+                apiKey.append(characters.charAt(random.nextInt(characters.length())));
+            }
+            return apiKey.toString();
+        }
+
+        app.post(
+            "/getApiKey",
+            ctx -> {
+                try {
+                    FirebaseToken decodedToken = FirebaseAuth
+                        .getInstance()
+                        .verifyIdToken(ctx.header("idToken"));
+                    String uid = decodedToken.getUid();
+
+                    JSONObject apiJsonObject;
+                    try {
+                        String content = Files.readString(Path.of("path/to/api.json"));
+                        apiJsonObject = new JSONObject(content);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        ctx.status(500).result("Error: Unable to read API keys.");
+                        return;
+                    }
+
+                    if (apiJsonObject.has(uid)) {
+                        String apiKey = apiJsonObject.getString(uid);
+                        ctx.result(apiKey);
+                    } else {
+                        ctx.status(404).result("Error: API key not found for the user.");
+                    }
+
+                } catch (FirebaseAuthException e) {
+                    e.printStackTrace();
+                    ctx.status(401).result("Error: Authentication failed.");
+                }
+            }
+        );
+
     }
 }

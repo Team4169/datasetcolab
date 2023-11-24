@@ -17,6 +17,7 @@ import EmailVerification from "./pages/EmailVerification";
 import Docs from "./pages/Docs";
 import DownloadDataset from "./pages/DownloadDataset";
 import DeleteAccount from "./pages/DeleteAccount";
+import Home from "./pages/Home";
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
@@ -32,7 +33,7 @@ root.render(
                   exact
                   path="/"
                   element={
-                    <PrivateRoute>
+                    <PrivateRoute noAuth={<Home />}>
                       <Dashboard />
                     </PrivateRoute>
                   }

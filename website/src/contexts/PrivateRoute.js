@@ -1,8 +1,8 @@
-import React from "react"
-import { Navigate } from "react-router-dom"
-import { useAuth } from "./AuthContext"
+import React from "react";
+import { Navigate } from "react-router-dom";
+import { useAuth } from "./AuthContext";
 
-export default function PrivateRoute({ children }) {
+export default function PrivateRoute({ children, noAuth }) {
   const { currentUser } = useAuth();
 
   console.log(currentUser);
@@ -14,6 +14,10 @@ export default function PrivateRoute({ children }) {
       return <Navigate to="/email-verification" />;
     }
   } else {
-    return <Navigate to="/login" />;
+    if (noAuth) {
+      return noAuth;
+    } else { 
+      return <Navigate to="/" />;
+    }
   }
 }
