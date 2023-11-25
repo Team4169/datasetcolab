@@ -1,17 +1,29 @@
 import React, { useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import axios from "axios";
-import { Form, Button, ButtonGroup, ToggleButton, Alert } from "react-bootstrap";
+import { Form, Button, ButtonGroup, ToggleButton, Alert, Pagination, Card } from "react-bootstrap";
+
+const fileUploadStyles = {
+  customFileUpload: {
+    display: 'inline-block',
+    padding: '0.375rem 0.75rem',
+    cursor: 'pointer',
+    color: '#fff',
+    backgroundColor: '#0d6efd',
+    border: '1px solid #0d6efd',
+    borderRadius: '0.375rem',
+    fontSize: '1rem',
+  },
+  customFileInput: {
+    display: 'none',
+  },
+};
 
 export default function Upload() {
   const [error, setError] = useState("");
   const { currentUser } = useAuth();
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [isLoading, setLoading] = useState(false);
-  const [imageSrcs, setImageSrcs] = useState([]);
-  const [activeImage, setActiveImage] = useState(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(25);
   const [uploadSuccess, setUploadSuccess] = useState(false);
   const [uploadName, setUploadName] = useState(generateRandomName());
   const [datasetType, setDatasetType] = useState("COCO");
@@ -20,26 +32,6 @@ export default function Upload() {
 
   const onFileChange = (event) => {
     setSelectedFiles(event.target.files);
-    const imageSrcArray = [];
-
-    for (let i = 0; i < event.target.files.length; i++) {
-      const file = event.target.files[i];
-      if (file.type.startsWith("image/")) {
-        const reader = new FileReader();
-        reader.onload = () => {
-          imageSrcArray.push({ src: reader.result, name: file.name });
-          if (imageSrcArray.length === event.target.files.length) {
-            setImageSrcs(imageSrcArray);
-          }
-        };
-        reader.readAsDataURL(file);
-      } else {
-        imageSrcArray.push({ src: null, name: file.name });
-        if (imageSrcArray.length === event.target.files.length) {
-          setImageSrcs(imageSrcArray);
-        }
-      }
-    }
   };
 
   const onUpload = async () => {
@@ -76,7 +68,6 @@ export default function Upload() {
       setUploadSuccess(true);
 
       setSelectedFiles([]);
-      setImageSrcs([]);
     } catch (error) {
       // Handle errors
       setError("Error: " + error.message);
@@ -84,15 +75,6 @@ export default function Upload() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const toggleImageCollapse = (index) => {
-    setActiveImage(activeImage === index ? null : index);
-  };
-
-  const handleChangeItemsPerPage = (event) => {
-    setItemsPerPage(parseInt(event.target.value));
-    setCurrentPage(1);
   };
 
   function generateRandomName() {
@@ -129,35 +111,78 @@ export default function Upload() {
     return `${randomAdjective}-${randomNoun}`;
   }
 
-  // Pagination
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = imageSrcs.slice(indexOfFirstItem, indexOfLastItem);
-
-  const paginate = (pageNumber) => {
-    setCurrentPage(pageNumber);
-  };
-
-  const topPaginationStyle = {
-    display:
-      selectedFiles.length > 0 && imageSrcs.length > itemsPerPage
-        ? "block"
-        : "none",
-    marginBottom: "20px",
-  };
-
-  const bottomPaginationStyle = {
-    padding: "20px",
-    display: imageSrcs.length > itemsPerPage ? "block" : "none",
-  };
-
-  const centerPaginationStyle = {
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-  };
-
   const alertVariant = uploadSuccess ? "success" : "danger";
+
+  const getSelectedFileNames = () => {
+    return Array.from(selectedFiles).map(file => file.name);
+  };
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [filesPerPage] = useState(10);
+
+  // Get current files for pagination
+  const indexOfLastFile = currentPage * filesPerPage;
+  const indexOfFirstFile = indexOfLastFile - filesPerPage;
+  const selectedFileNames = getSelectedFileNames();
+  const currentFiles = selectedFileNames.slice(indexOfFirstFile, indexOfLastFile);
+
+  // Change page
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
+
+  // Pagination display logic
+  const pageNumbers = Array.from({ length: Math.ceil(selectedFileNames.length / filesPerPage) });
+  const maxPageLinks = 5; // Maximum number of page links to display
+
+  let paginationItems = [];
+
+  if (pageNumbers.length <= maxPageLinks) {
+    paginationItems = pageNumbers.map((_, index) => (
+      <Pagination.Item
+        key={index}
+        active={index + 1 === currentPage}
+        onClick={() => paginate(index + 1)}
+      >
+        {index + 1}
+      </Pagination.Item>
+    ));
+  } else {
+    const startPage = Math.max(currentPage - Math.floor(maxPageLinks / 2), 1);
+    const endPage = Math.min(startPage + maxPageLinks - 1, pageNumbers.length);
+
+    if (startPage > 1) {
+      paginationItems.push(
+        <Pagination.Item key="start" onClick={() => paginate(1)}>
+          1
+        </Pagination.Item>
+      );
+      paginationItems.push(<Pagination.Ellipsis key="ellipsis-start" disabled />);
+    }
+
+    for (let i = startPage; i <= endPage; i++) {
+      paginationItems.push(
+        <Pagination.Item
+          key={i}
+          active={i === currentPage}
+          onClick={() => paginate(i)}
+        >
+          {i}
+        </Pagination.Item>
+      );
+    }
+
+    if (endPage < pageNumbers.length) {
+      paginationItems.push(<Pagination.Ellipsis key="ellipsis-end" disabled />);
+      paginationItems.push(
+        <Pagination.Item
+          key="end"
+          onClick={() => paginate(pageNumbers.length)}
+        >
+          {pageNumbers.length}
+        </Pagination.Item>
+      );
+    }
+  }
 
   return (
     <div style={{ padding: "20px" }}>
@@ -167,7 +192,6 @@ export default function Upload() {
           {error}
         </Alert>
       )}
-      <div className="form-group" style={{ marginBottom: "20px" }}>
         <label htmlFor="uploadName">Upload Method</label>
         <Form.Group>
           <ButtonGroup toggle>
@@ -212,18 +236,42 @@ export default function Upload() {
             Dataset
           </label>
           <br />
-          <input
-            type="file"
-            id="fileInput"
-            className="custom-file-input"
-            onChange={onFileChange}
-            multiple
-            style={{ content: "Browse" }}
-          />
+          <label htmlFor="fileInput" style={fileUploadStyles.customFileUpload}>
+            <input
+              type="file"
+              id="fileInput"
+              className="custom-file-input"
+              onChange={onFileChange}
+              multiple
+              style={fileUploadStyles.customFileInput}
+            />
+            Choose File(s)
+          </label>
           <p style={{ marginTop: "10px", color: "gray", fontSize: 10 }}>
             Note: Folders should be uploaded as ZIP files.
-          </p></>) : (<>
-            <label htmlFor="roboflowUrl" style={{ marginTop: "10px" }}>Roboflow Url</label>
+          </p>
+          <div>
+        {selectedFiles.length > 0 && (
+          <div>
+            <div className="card-columns">
+              {currentFiles.map((fileName, index) => (
+                <Card key={index} className="text-center" style={{ padding: "10px", marginTop: "10px"}}>
+                  <Card.Text style={{ fontSize: "14px", fontWeight: "normal" }}>
+                    {fileName}
+                  </Card.Text>
+                </Card>
+              ))}
+            </div>
+            {(selectedFiles.length > 10) ? (<Pagination className="justify-content-center" style={{ marginTop: "10px" }}>
+              {paginationItems}
+            </Pagination>) : (<div style={{marginBottom: "10px"}}/>)
+            
+            
+            }
+          </div>
+        )}
+      </div></>) : (<>
+            <label htmlFor="roboflowUrl" style={{ marginTop: "10px" }}>Roboflow URL</label>
             <Form.Control
               type="text"
               value={roboflowUrl}
@@ -238,79 +286,5 @@ export default function Upload() {
           </Button>
         </div>
       </div>
-      <div className="files-preview">
-        {selectedFiles.length > 0 && <p>Selected Files:</p>}
-        <div style={topPaginationStyle}>
-          <Form.Group style={{ marginBottom: "20px" }}>
-            <Form.Label>Items per page:</Form.Label>
-            <Form.Control
-              as="select"
-              onChange={handleChangeItemsPerPage}
-              value={itemsPerPage}
-            >
-              <option value={25}>25</option>
-              <option value={50}>50</option>
-              <option value={100}>100</option>
-            </Form.Control>
-          </Form.Group>
-        </div>
-        <ul className="list-group">
-          {currentItems.map((imageData, index) => (
-            <div key={index}>
-              <li
-                className={`list-group-item ${activeImage === index ? "active" : ""
-                  }`}
-                onClick={() => toggleImageCollapse(index)}
-              >
-                {imageData.name}
-              </li>
-              <div className="text-center">
-                <div
-                  className={`collapse ${activeImage === index ? "show" : ""}`}
-                >
-                  {imageData.src ? (
-                    <img
-                      src={imageData.src}
-                      alt={`Uploaded Image ${index}`}
-                      style={{ maxWidth: "300px" }}
-                    />
-                  ) : (
-                    <div
-                      style={{
-                        width: "300px",
-                        height: "200px",
-                        backgroundColor: "lightgray",
-                      }}
-                    >
-                      {/* Display an empty rectangle for non-image files */}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          ))}
-        </ul>
-        <nav style={bottomPaginationStyle}>
-          <ul className="pagination" style={centerPaginationStyle}>
-            {Array.from({
-              length: Math.ceil(imageSrcs.length / itemsPerPage),
-            }).map((_, index) => (
-              <li
-                key={index}
-                className={`page-item ${currentPage === index + 1 ? "active" : ""
-                  }`}
-              >
-                <button
-                  className="page-link"
-                  onClick={() => paginate(index + 1)}
-                >
-                  {index + 1}
-                </button>
-              </li>
-            ))}
-          </ul>
-        </nav>
-      </div>
-    </div>
   );
 }
