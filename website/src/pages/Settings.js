@@ -59,6 +59,7 @@ export default function Settings() {
   const { currentUser, updatePassword_, updateEmail_, logout } = useAuth();
   const [error, setError] = useState("");
   const [loadingProfile, setLoadingProfile] = useState(false);
+  const [loadingNewApiKey, setLoadingNewApiKey] = useState(false);
   const [apiKey, setApiKey] = useState("API_KEY");
   const [showCopyAlert, setShowCopyAlert] = useState(false);
 
@@ -94,7 +95,7 @@ export default function Settings() {
       });
   }
 
-  const fetchApiKey = async () => {
+  const fetchApiKeyOnMount = async () => {
     try {
       const idToken = await currentUser.getIdToken();
 
@@ -104,23 +105,50 @@ export default function Settings() {
         },
       };
 
-      const response = await axios.get("https://api.seanmabli.com:3433/getApiKey", config);
+      const response = await axios.get("https://api.seanmabli.com:3433/getapikey", config);
       setApiKey(response.data);
-
     } catch (err) {
-      setError("Error API key.");
+      setError("Error fetching API key.");
     }
   };
+
+  const fetchNewApiKey = async () => {
+    try {
+      setLoadingNewApiKey(true);
+
+      const idToken = await currentUser.getIdToken();
+      console.log(idToken);
+
+      let config = {
+        headers: {
+          idToken: idToken,
+        },
+      };
+      console.log(config);
+
+      const response = await axios.get("https://api.seanmabli.com:3433/newapikey", config);
+      setApiKey(response.data);
+      setShowCopyAlert(false);
+    } catch (err) {
+      setError("Error generating a new API key.");
+    } finally {
+      setLoadingNewApiKey(false);
+    }
+  };
+
+  useEffect(() => {
+    // Call the function when the component mounts
+    fetchApiKeyOnMount();
+
+    const alertTimeout = setTimeout(() => setShowCopyAlert(false), 5000);
+    return () => clearTimeout(alertTimeout);
+  }, [currentUser]); // Include currentUser in the dependency array if it's used inside the effect
+
 
   const handleCopyToClipboard = () => {
     navigator.clipboard.writeText(apiKey);
     setShowCopyAlert(true);
   };
-
-  useEffect(() => {
-    const alertTimeout = setTimeout(() => setShowCopyAlert(false), 5000);
-    return () => clearTimeout(alertTimeout);
-  }, [showCopyAlert]);
 
   return (
     <div style={{ padding: "20px" }}>
@@ -157,8 +185,14 @@ export default function Settings() {
             </span>
           </div>
         </div>
-        <Button variant="primary" type="submit" style={{ marginLeft: "10px", minWidth: "120px"}}>
-          New API Key
+        <Button
+          variant="primary"
+          type="submit"
+          onClick={fetchNewApiKey}
+          style={{ marginLeft: "10px", minWidth: "120px"}}
+          disabled={loadingNewApiKey}
+        >
+          {loadingNewApiKey ? "Loading..." : "New API Key"}
         </Button>
       </div>
       <h4>Delete Account</h4>

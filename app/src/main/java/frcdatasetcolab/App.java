@@ -56,7 +56,7 @@ public class App {
             .start();
 
         app.get(
-            "/files",
+            "/view",
             ctx -> {
                 try {
                     FirebaseToken decodedToken = FirebaseAuth
@@ -106,7 +106,7 @@ public class App {
             ctx -> {
                 try {
                     // The Firebase initialization is done outside the route handler
-
+                
                     FirebaseToken decodedToken = FirebaseAuth
                         .getInstance()
                         .verifyIdToken(ctx.header("idToken"));
@@ -172,8 +172,8 @@ public class App {
             }
         );
 
-        app.post(
-            "/newApiKey",
+        app.get(
+            "/newapikey",
             ctx -> {
                 try {
                     FirebaseToken decodedToken = FirebaseAuth
@@ -190,12 +190,11 @@ public class App {
                         apiJsonObject = new JSONObject();
                     }
 
+                    String newApiKey = generateRandomApiKey();
                     if (apiJsonObject.containsKey(uid)) {
-                        String newApiKey = generateRandomApiKey();
                         apiJsonObject.put(uid, newApiKey);
                     } else {
-                        String apiKey = generateRandomApiKey();
-                        apiJsonObject.put(uid, apiKey);
+                        apiJsonObject.put(uid, newApiKey);
                     }
 
                     try {
@@ -205,6 +204,7 @@ public class App {
                         e.printStackTrace();
                     }
 
+                    ctx.result(newApiKey);
                 } catch (FirebaseAuthException e) {
                     e.printStackTrace();
                     ctx.status(401).result("Error: Authentication failed.");
@@ -212,8 +212,8 @@ public class App {
             }
         );
 
-        app.post(
-            "/getApiKey",
+        app.get(
+            "/getapikey",
             ctx -> {
                 try {
                     FirebaseToken decodedToken = FirebaseAuth
@@ -251,7 +251,7 @@ public class App {
         String characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
         StringBuilder apiKey = new StringBuilder();
         Random random = new Random();
-        for (int i = 0; i < 12; i++) {
+        for (int i = 0; i < 24; i++) {
             apiKey.append(characters.charAt(random.nextInt(characters.length())));
         }
         return apiKey.toString();

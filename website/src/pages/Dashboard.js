@@ -22,7 +22,7 @@ export default function Dashboard() {
         },
       };
 
-      const response = await axios.get("https://api.seanmabli.com:3433/files", config);
+      const response = await axios.get("https://api.seanmabli.com:3433/view", config);
 
       if (Array.isArray(response.data)) {
         setFolderMetadata(response.data);
