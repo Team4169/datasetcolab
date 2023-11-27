@@ -27,6 +27,7 @@ export default function Upload() {
   const [uploadSuccess, setUploadSuccess] = useState(false);
   const [uploadName, setUploadName] = useState(generateRandomName());
   const [datasetType, setDatasetType] = useState("COCO");
+  const [targetDataset, setTargetDataset] = useState("FRC2023");
   const [uploadWithRoboflow, setUploadWithRoboflow] = useState(false);
   const [roboflowUrl, setRoboflowUrl] = useState("");
 
@@ -56,6 +57,7 @@ export default function Upload() {
           name: uploadName,
           datasetType: datasetType,
           roboflowUrl: roboflowUrl,
+          targetDataset: targetDataset,
         },
       };
 
@@ -230,7 +232,18 @@ export default function Upload() {
             style={{ marginBottom: "10px" }}
           >
             <option value="COCO">COCO</option>
-            <option value="YOLOv5">YOLO v5 PyTorch</option>
+          </Form.Control>
+          <label htmlFor="datasetType" style={{ marginTop: "10px" }}>
+            Target Dataset
+          </label>
+          <Form.Control
+            as="select"
+            value={targetDataset}
+            onChange={(e) => setTargetDataset(e.target.value)}
+            style={{ marginBottom: "10px" }}
+          >
+            <option value="FRC2023">FRC 2023</option>
+            <option value="FRC2024">FRC 2024</option>
           </Form.Control>
           <label htmlFor="dataset" style={{ marginTop: "10px" }}>
             Dataset
@@ -277,7 +290,19 @@ export default function Upload() {
               value={roboflowUrl}
               onChange={(e) => setRoboflowUrl(e.target.value)}
               style={{ marginBottom: "10px" }}
-            /></>
+            />
+            <label htmlFor="datasetType" style={{ marginTop: "10px" }}>
+              Target Dataset
+            </label>
+            <Form.Control
+              as="select"
+              value={targetDataset}
+              onChange={(e) => setTargetDataset(e.target.value)}
+              style={{ marginBottom: "10px" }}
+            >
+              <option value="FRC2023">FRC 2023</option>
+              <option value="FRC2024">FRC 2024</option>
+            </Form.Control></>
         )}
 
         <div className="input-group-append">

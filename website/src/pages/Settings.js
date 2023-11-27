@@ -54,18 +54,44 @@ const styles = {
 
 export default function Settings() {
   const emailRef = useRef();
+  const emailConfirmRef = useRef();
   const passwordRef = useRef();
   const passwordConfirmRef = useRef();
-  const { currentUser, updatePassword_, updateEmail_, logout } = useAuth();
-  const [error, setError] = useState("");
-  const [loadingProfile, setLoadingProfile] = useState(false);
+  const { currentUser, updateEmail_, updatePassword_, logout } = useAuth();
+  const [error, setError] = useState(null);
+  const [loadingEmail, setLoadingEmail] = useState(false);
+  const [loadingPassword, setLoadingPassword] = useState(false)
   const [loadingNewApiKey, setLoadingNewApiKey] = useState(false);
   const [apiKey, setApiKey] = useState("API_KEY");
   const [showCopyAlert, setShowCopyAlert] = useState(false);
 
   let navigate = useNavigate();
 
-  function handleProfile(e) {
+  function handleEmail(e) {
+    e.preventDefault();
+    if (emailRef.current.value !== emailConfirmRef.current.value) {
+      setError("Emails do not match");
+      return;
+    }
+
+    const promises = [];
+    setLoadingEmail(true);
+    setError("");
+
+    if (emailRef.current.value !== currentUser.email && emailRef.current.value) {
+      promises.push(updateEmail_(emailRef.current.value));
+    }
+
+    Promise.all(promises)
+      .catch(() => {
+        setError("Failed to update account");
+      })
+      .finally(() => {
+        setLoadingEmail(false);
+      });
+  }
+
+  function handlePassword(e) {
     e.preventDefault();
     if (passwordRef.current.value !== passwordConfirmRef.current.value) {
       setError("Passwords do not match");
@@ -73,25 +99,19 @@ export default function Settings() {
     }
 
     const promises = [];
-    setLoadingProfile(true);
+    setLoadingPassword(true);
     setError("");
 
-    if (emailRef.current.value !== currentUser.email) {
-      promises.push(updateEmail_(emailRef.current.value));
-    }
     if (passwordRef.current.value) {
       promises.push(updatePassword_(passwordRef.current.value));
     }
 
     Promise.all(promises)
-      .then(() => {
-        navigate("/");
-      })
       .catch(() => {
         setError("Failed to update account");
       })
       .finally(() => {
-        setLoadingProfile(false);
+        setLoadingPassword(false);
       });
   }
 
@@ -151,13 +171,27 @@ export default function Settings() {
   return (
     <div style={{ padding: "20px" }}>
       <h2>Settings</h2>
-      {error && <Alert variant="danger">{error}</Alert>}
-      <h4>Profile</h4>
-      <Form onSubmit={handleProfile}>
+      {error && (
+        <Alert variant="danger" onClose={() => setError(null)} dismissible>
+          {error}
+        </Alert>
+      )}
+      <h4>Update Email</h4>
+      <Form onSubmit={handleEmail}>
         <Form.Group controlId="email" style={{ marginBottom: "20px" }}>
           <Form.Label>Email:</Form.Label>
           <Form.Control type="email" ref={emailRef} required />
         </Form.Group>
+        <Form.Group controlId="emailConfirm" style={{ marginBottom: "20px" }}>
+          <Form.Label>Email Confirmation:</Form.Label>
+          <Form.Control type="email" ref={emailConfirmRef} required />
+        </Form.Group>
+        <Button variant="primary" type="submit" disabled={loadingEmail} style={{ marginBottom: "20px" }}>
+          Update
+        </Button>
+      </Form>
+      <h4>Update Password</h4>
+      <Form onSubmit={handlePassword}>
         <Form.Group controlId="password" style={{ marginBottom: "20px" }}>
           <Form.Label>Password:</Form.Label>
           <Form.Control type="password" ref={passwordRef} required />
@@ -166,7 +200,7 @@ export default function Settings() {
           <Form.Label>Password Confirmation:</Form.Label>
           <Form.Control type="password" ref={passwordConfirmRef} required />
         </Form.Group>
-        <Button variant="primary" type="submit" disabled={loadingProfile} style={{ marginBottom: "20px" }}>
+        <Button variant="primary" type="submit" disabled={loadingPassword} style={{ marginBottom: "20px" }}>
           Update
         </Button>
       </Form>

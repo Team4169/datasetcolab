@@ -30,7 +30,6 @@ export default function NavbarComponent() {
           <Navbar.Collapse id="basic-navbar-nav" className="justify-content-end">
             <Nav>
               <Nav.Link onClick={() => navigate("/download")} style={{ cursor: "pointer" }}>Download Dataset</Nav.Link>
-              <Nav.Link onClick={() => navigate("/docs")} style={{ cursor: "pointer" }}>Docs</Nav.Link>
               <Nav.Link onClick={() => navigate("/login")} style={{ cursor: "pointer" }}>Login</Nav.Link>
             </Nav>
           </Navbar.Collapse>
@@ -50,7 +49,6 @@ export default function NavbarComponent() {
           <Nav>
             <Nav.Link onClick={() => navigate("/upload")} style={{ cursor: "pointer" }}>Upload</Nav.Link>
             <Nav.Link onClick={() => navigate("/download")} style={{ cursor: "pointer" }}>Download Dataset</Nav.Link>
-              <Nav.Link onClick={() => navigate("/docs")} style={{ cursor: "pointer" }}>Docs</Nav.Link>
             <NavDropdown title="Account" id="basic-nav-dropdown">
               <NavDropdown.Item onClick={() => navigate("/settings")} style={{ cursor: "pointer" }}>Settings</NavDropdown.Item>
               <NavDropdown.Item onClick={handleLogout} style={{ cursor: "pointer" }}>Logout</NavDropdown.Item>
@@ -61,3 +59,6 @@ export default function NavbarComponent() {
     </div>
   );
 }
+/*
+              <Nav.Link onClick={() => navigate("/docs")} style={{ cursor: "pointer" }}>Docs</Nav.Link>
+*/

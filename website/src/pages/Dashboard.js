@@ -43,13 +43,13 @@ export default function Dashboard() {
 
   return (
     <div style={{ padding: "20px" }}>
+      <div className="files-preview">
+        <h2>Dashboard</h2>
       {error && (
         <Alert variant="danger" onClose={() => setError(null)} dismissible>
           {error}
         </Alert>
       )}
-      <div className="files-preview">
-        <h2>Dashboard</h2>
         {isLoading ? (
           <p>Loading folder metadata...</p>
         ) : (

@@ -1,5 +1,5 @@
 package frcdatasetcolab;
-import roboflow.Downloader;
+import roboflow.RoboflowDownloader;
 
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.firebase.FirebaseApp;
@@ -118,6 +118,7 @@ public class App {
                         metadata.put("uploadTime", formattedDate);
                         metadata.put("uploadName", ctx.header("name"));
                         metadata.put("datasetType", ctx.header("datasetType"));
+                        metadata.put("targetDataset", ctx.header("targetDataset"));
 
                         File metadataDirectory = new File("upload/" + uid + "/" + folderName);
                         metadataDirectory.mkdirs();
@@ -157,8 +158,28 @@ public class App {
                             }
                         }
                     } else {
-                        Downloader roboflowDownloader = new Downloader();
-                        roboflowDownloader.downloadDataset(ctx.header("roboflowUrl"), uid);
+                        RoboflowDownloader downloader = new RoboflowDownloader();
+                        String folderName = downloader.downloadDataset(ctx.header("roboflowUrl"), uid);
+                    
+                        JSONObject metadata = new JSONObject();
+                        metadata.put("uploadTime", formattedDate);
+                        metadata.put("uploadName", folderName);
+                        metadata.put("datasetType", "COCO");
+                        metadata.put("targetDataset", ctx.header("targetDataset"));
+
+                        File metadataDirectory = new File("upload/" + uid + "/" + folderName);
+                        metadataDirectory.mkdirs();
+
+                        String metadataFilePath = metadataDirectory.getPath() + "/metadata.json";
+
+                        try (FileWriter file = new FileWriter(metadataFilePath)) {
+                            file.write(metadata.toJSONString());
+                            file.flush();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                            ctx.status(500).result("Error: Failed to save metadata on the server.");
+                            return;
+                        }
                     }
                 } catch (FirebaseAuthException e) {
                     e.printStackTrace();
