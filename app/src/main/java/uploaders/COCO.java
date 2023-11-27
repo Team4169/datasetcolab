@@ -29,6 +29,7 @@ import java.util.zip.ZipInputStream;
 public class COCO {
 
     private Utils utils = new Utils();
+    public Set<String> parsedNames = new HashSet<>();
 
     public void upload(String folderName, List<UploadedFile> files, String uid) {
         for (UploadedFile uploadedFile : files) {
@@ -56,6 +57,8 @@ public class COCO {
             }
 
         }
+
+        parseFiles("upload/" + uid + "/" + folderName);
     }
 
     private void unzip(String zipFilePath, String destDirectory) {
@@ -64,7 +67,13 @@ public class COCO {
 
             while (entry != null) {
                 String entryFilePath = destDirectory + File.separator + entry.getName();
+                
                 if (!entry.isDirectory()) {
+                    File directory = new File(entryFilePath).getParentFile();
+                    if (!directory.exists()) {
+                        directory.mkdirs();
+                    }
+                    
                     try (OutputStream entryOutputStream = new FileOutputStream(entryFilePath)) {
                         byte[] buffer = new byte[8192];
                         int bytesRead;
@@ -84,4 +93,45 @@ public class COCO {
             e.printStackTrace();
         }
     }
+
+    private void parseFiles(String parentPath) {
+        File parentFolder = new File(parentPath);
+
+        if (parentFolder.exists() && parentFolder.isDirectory()) {
+            parseFilesRecursive(parentFolder);
+        } else {
+            System.out.println("Invalid parent path or not a directory.");
+        }
+    }
+
+    private void parseFilesRecursive(File folder) {
+        File[] files = folder.listFiles();
+
+        if (files != null) {
+            for (File file : files) {
+                if (file.isDirectory()) {
+                    parseFilesRecursive(file);
+                } else {
+                    if (file.getName().toLowerCase().endsWith(".coco.json")) {
+                        parseJsonFile(file);
+                    }
+                }
+            }
+        }
+    }
+
+    private void parseJsonFile(File jsonFile) {
+        try (FileReader reader = new FileReader(jsonFile)) {
+            JsonObject jsonObject = JsonParser.parseReader(reader).getAsJsonObject();
+            String categoryName = jsonObject.getAsJsonArray("categories").get(0).getAsJsonObject().get("name").getAsString();
+
+            if (!parsedNames.contains(categoryName)) {
+                parsedNames.add(categoryName);
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
 }

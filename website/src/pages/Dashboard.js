@@ -2,6 +2,54 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from "../contexts/AuthContext";
 import axios from "axios";
 import Alert from 'react-bootstrap/Alert';
+import { Card, Button } from 'react-bootstrap';
+import { useNavigate } from 'react-router-dom';
+
+const styles = {
+  padding: "20px",
+  downloadContainer: { maxWidth: "800px", margin: "0 auto" },
+  datasetCard: { marginBottom: "20px", border: "1px solid #e9ecef" },
+  optionsContainer: {
+    padding: "10px",
+    borderRadius: "5px",
+    backgroundColor: "#f8f9fa",
+    position: "relative",
+  },
+  downloadMethodContainer: { display: "flex", gap: "10px" },
+  downloadButtonsContainer: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "10px",
+    marginTop: "10px",
+    border: "none",
+    padding: "0",
+  },
+  codeBlock: {
+    backgroundColor: "#e9ecef",
+    padding: "10px",
+    borderRadius: "5px",
+    overflow: "auto",
+    position: "relative",
+  },
+  copyButton: {
+    position: "absolute",
+    top: "5px",
+    right: "5px",
+    cursor: "pointer",
+  },
+  alertContainer: {
+    position: "fixed",
+    bottom: "10px",
+    left: "10px",
+    zIndex: 999,
+    display: "flex",
+    gap: "10px",
+    alignItems: "center",
+  },
+  closeButton: { cursor: "pointer" },
+  checkboxGroup: { display: "flex", gap: "10px", flexWrap: "wrap" },
+};
+
 
 export default function Dashboard() {
   const { currentUser } = useAuth();
@@ -37,9 +85,28 @@ export default function Dashboard() {
   };
 
   useEffect(() => {
-    // Fetch the folder metadata when the component mounts
     fetchFolderMetadata();
   }, []);
+
+  function formatUploadTime(uploadTime) {
+    const [datePart, timePart] = uploadTime.split('_');
+    const [year, month, day] = datePart.split('-');
+    const [hour, minute] = timePart.split(':');
+  
+    const formattedDate = new Date(year, month - 1, day, hour, minute).toLocaleString();
+    return formattedDate;
+  }
+
+  function formatTargetDataset(targetDataset) {
+    const formattedTargetDataset = targetDataset.replace(/FRC(\d{4})/, 'FRC $1');
+    return formattedTargetDataset;
+  }
+
+  const navigate = useNavigate();
+
+  const redirectToView = (folderName) => {
+    navigate(`/view/${folderName}`);
+  };
 
   return (
     <div style={{ padding: "20px" }}>
@@ -53,19 +120,39 @@ export default function Dashboard() {
         {isLoading ? (
           <p>Loading folder metadata...</p>
         ) : (
-          <ul>
+          <div>
             {folderMetadata.length > 0 ? (
-              folderMetadata.map((metadata, index) => (
-                <li key={index}>
-                  <strong>Upload Name:</strong> {metadata.uploadName}<br />
-                  <strong>Upload Time:</strong> {metadata.uploadTime}<br />
-                  <strong>Dataset Type:</strong> {metadata.datasetType}<br />
-                </li>
-              ))
+              folderMetadata.map((metadata, index) => {
+                const formattedUploadTime = formatUploadTime(metadata.uploadTime);
+                const formattedTargetDataset = formatTargetDataset(metadata.targetDataset);
+      
+                return (
+                  <div key={index}>
+                    <Card key={index} style={styles.datasetCard}>
+                      <Card.Body>
+                        <h3>{metadata.uploadName}</h3>
+                        <small><strong>Upload Time:</strong> {formattedUploadTime}</small>
+                        <br />
+                        <small><strong>Dataset Type:</strong> {metadata.datasetType}</small>
+                        <br />
+                        <small><strong>Target Dataset:</strong> {formattedTargetDataset}</small>
+                        <br />
+                        <Button
+                          variant="primary"
+                          className="position-absolute top-0 end-0 m-3"  // Added m-2 for margin
+                          onClick={() => redirectToView(metadata.folderName)}
+                        >
+                          View
+                        </Button>
+                      </Card.Body>
+                    </Card>
+                  </div>
+                );
+              })
             ) : (
               <p>No uploads available.</p>
             )}
-          </ul>
+          </div>
         )}
       </div>
     </div>

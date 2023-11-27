@@ -25,6 +25,26 @@ import java.nio.file.StandardOpenOption;
 
 public class App {
 
+        public static void populateTree(String folderPath, JSONObject result) {
+            File folder = new File(folderPath);
+            if (folder.exists() && folder.isDirectory()) {
+                File[] files = folder.listFiles();
+                if (files != null) {
+                    for (File file : files) {
+                        if (file.isDirectory()) {
+                            JSONObject subFolder = new JSONObject();
+                            result.put(file.getName(), subFolder);
+                            populateTree(file.getPath(), subFolder);
+                        } else {
+                            result.put(file.getName(), "File");
+                        }
+                    }
+                }
+            } else {
+                result.put("error", "Invalid folder path or not a directory.");
+            }
+        }
+
     public static void main(String[] args) {
         try {
             FileInputStream serviceAccount = new FileInputStream(
@@ -99,6 +119,57 @@ public class App {
             }
         );
 
+        app.get(
+            "/view/{folderName}",
+            ctx -> {
+                try {
+                    FirebaseToken decodedToken = FirebaseAuth
+                        .getInstance()
+                        .verifyIdToken(ctx.header("idToken"));
+                    String uid = decodedToken.getUid();
+
+                    String folderName = ctx.pathParam("folderName");
+                    String metadataFilePath = "upload/" + uid + "/" + folderName + "/metadata.json";
+                    File metadataFile = new File(metadataFilePath);
+
+                    if (metadataFile.exists() && metadataFile.isFile()) {
+                        try (FileReader fileReader = new FileReader(metadataFile)) {
+                            JSONParser parser = new JSONParser();
+                            JSONObject metadata = (JSONObject) parser.parse(fileReader);
+                            ctx.json(metadata);
+                        }
+                    } else {
+                        ctx.result("Metadata file not found for the specified project.");
+                    }
+                } catch (FirebaseAuthException | ParseException e) {
+                    e.printStackTrace();
+                    ctx.status(401).result("Error: Authentication failed.");
+                }
+            }
+        );
+
+        app.get(
+            "/files/{folderName}",
+            ctx -> {
+                try {
+                    FirebaseToken decodedToken = FirebaseAuth
+                        .getInstance()
+                        .verifyIdToken(ctx.header("idToken"));
+                    String uid = decodedToken.getUid();
+
+                    String folderName = ctx.pathParam("folderName");
+                    String folderPath = "upload/" + uid + "/" + folderName;
+
+                    JSONObject result = new JSONObject();
+                    populateTree(folderPath, result);
+
+                    ctx.json(result);
+                } catch (FirebaseAuthException e) {
+                    e.printStackTrace();
+                    ctx.status(401).result("Error: Authentication failed.");
+                }
+            }
+        );
 
         app.post(
             "/upload",
@@ -120,9 +191,16 @@ public class App {
                     String datasetType = ctx.header("datasetType");
                     String targetDataset = ctx.header("targetDataset");
 
+                    JSONObject metadata = new JSONObject();
+
                     if (ctx.header("datasetType").equals("COCO")) {
                         COCO uploader = new COCO();
                         uploader.upload(folderName, ctx.uploadedFiles("files"), uid);
+                        /*
+                        Set<String> parsedNames = uploader.parsedNames;
+                        JsonArray parsedNamesUpload = new JSONArray(parsedNames);
+                        metadata.put("parsedNames", parsedNamesUpload);
+                        */
                     } else if (ctx.header("datasetType").equals("ROBOFLOW")) {
                         Roboflow uploader = new Roboflow();
                         uploader.upload(folderName, ctx.header("roboflowUrl"), uid);
@@ -130,11 +208,11 @@ public class App {
                         datasetType = "COCO";
                     }
 
-                    JSONObject metadata = new JSONObject();
                     metadata.put("uploadTime", uploadTime);
                     metadata.put("uploadName", uploadName);
                     metadata.put("datasetType", datasetType);
                     metadata.put("targetDataset", targetDataset);
+                    metadata.put("folderName", folderName);
 
                     File metadataDirectory = new File("upload/" + uid + "/" + folderName);
                     metadataDirectory.mkdirs();
@@ -148,6 +226,16 @@ public class App {
                         e.printStackTrace();
                         ctx.status(500).result("Error: Failed to save metadata on the server.");
                         return;
+                    }
+
+                    if (targetDataset.equals("FRC2023")) {
+                        utils.executeCommand("python3 /home/team4169/frcdatasetcolab/app/combineDatasets.py FRC2023/" + "test " + uid + "/" + folderName + "/test");
+                        utils.executeCommand("python3 /home/team4169/frcdatasetcolab/app/combineDatasets.py FRC2023/" + "train " + uid + "/" + folderName + "/train");
+                        utils.executeCommand("python3 /home/team4169/frcdatasetcolab/app/combineDatasets.py FRC2023/" + "valid " + uid + "/" + folderName + "/valid");
+                    } else if (targetDataset.equals("FRC2024")) {
+                        utils.executeCommand("python3 /home/team4169/frcdatasetcolab/app/combineDatasets.py FRC2024/" + "test " + uid + "/" + folderName + "/test");
+                        utils.executeCommand("python3 /home/team4169/frcdatasetcolab/app/combineDatasets.py FRC2024/" + "train " + uid + "/" + folderName + "/train");
+                        utils.executeCommand("python3 /home/team4169/frcdatasetcolab/app/combineDatasets.py FRC2024/" + "valid " + uid + "/" + folderName + "/valid");
                     }
                 } catch (FirebaseAuthException e) {
                     e.printStackTrace();
@@ -174,8 +262,9 @@ public class App {
                         apiJsonObject = new JSONObject();
                     }
 
-                    Utils random = new Utils();
-                    String newApiKey = random.generateRandomString(24);
+                    Utils utils = new Utils();
+
+                    String newApiKey = utils.generateRandomString(24);
                     if (apiJsonObject.containsKey(uid)) {
                         apiJsonObject.put(uid, newApiKey);
                     } else {

@@ -18,6 +18,7 @@ import Docs from "./pages/Docs";
 import DownloadDataset from "./pages/DownloadDataset";
 import DeleteAccount from "./pages/DeleteAccount";
 import Home from "./pages/Home";
+import View from "./pages/View";
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
@@ -83,6 +84,8 @@ root.render(
                   path="/email-verification"
                   element={<EmailVerification />}
                 />
+                
+                <Route path="/view/:folderName" element={<View />} />
               </Routes>
             </div>
           </div>
