@@ -245,6 +245,11 @@ public class App {
             }
         );
 
+	app.get(
+	    "/test",
+    	ctx -> ctx.status(200)
+);
+
     }
 
     public static String generateRandomApiKey() {
