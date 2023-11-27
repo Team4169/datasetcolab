@@ -1,4 +1,5 @@
 package frcdatasetcolab;
+import roboflow.Downloader;
 
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.firebase.FirebaseApp;
@@ -110,7 +111,7 @@ public class App {
                     SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd_HH:mm");
                     String formattedDate = dateFormat.format(date);
 
-                    if (roboflowUrl.equals("")) {
+                    if (ctx.header("roboflowUrl").equals("")) {
                         String folderName = ctx.header("name").replace(" ", "_");
 
                         JSONObject metadata = new JSONObject();
@@ -156,7 +157,8 @@ public class App {
                             }
                         }
                     } else {
-                        downloadDataset(roboflowUrl, uid);
+                        Downloader roboflowDownloader = new Downloader();
+                        roboflowDownloader.downloadDataset(ctx.header("roboflowUrl"), uid);
                     }
                 } catch (FirebaseAuthException e) {
                     e.printStackTrace();
