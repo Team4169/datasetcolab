@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { Form, Button, ButtonGroup, ToggleButton, Alert, Pagination, Card } from "react-bootstrap";
 
@@ -31,6 +32,8 @@ export default function Upload() {
   const [uploadWithRoboflow, setUploadWithRoboflow] = useState(false);
   const [roboflowUrl, setRoboflowUrl] = useState("");
 
+  let navigate = useNavigate();
+
   const onFileChange = (event) => {
     setSelectedFiles(event.target.files);
   };
@@ -54,8 +57,8 @@ export default function Upload() {
       let config = {
         headers: {
           idToken: idToken,
-          name: uploadName,
-          datasetType: datasetType,
+          uploadName: uploadName,
+          datasetType: (roboflowUrl == "" ? datasetType : "ROBOFLOW"),
           roboflowUrl: roboflowUrl,
           targetDataset: targetDataset,
         },
@@ -68,8 +71,7 @@ export default function Upload() {
       );
       setError("Files uploaded successfully");
       setUploadSuccess(true);
-
-      setSelectedFiles([]);
+      navigate("/");
     } catch (error) {
       // Handle errors
       setError("Error: " + error.message);

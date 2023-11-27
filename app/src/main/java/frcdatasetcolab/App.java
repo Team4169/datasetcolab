@@ -1,6 +1,7 @@
 package frcdatasetcolab;
-import roboflow.RoboflowDownloader;
-import utils.RandomString;
+import uploaders.Roboflow;
+import uploaders.COCO;
+import utils.Utils;
 
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.firebase.FirebaseApp;
@@ -110,78 +111,43 @@ public class App {
 
                     Date date = new Date();
                     SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd_HH:mm");
-                    String formattedDate = dateFormat.format(date);
 
-                    if (ctx.header("roboflowUrl").equals("")) {
-                        RandomString random = new RandomString();
-                        String folderName = random.generateRandomString(8);
+                    Utils utils = new Utils();
 
-                        JSONObject metadata = new JSONObject();
-                        metadata.put("uploadTime", formattedDate);
-                        metadata.put("uploadName", ctx.header("name"));
-                        metadata.put("datasetType", ctx.header("datasetType"));
-                        metadata.put("targetDataset", ctx.header("targetDataset"));
+                    String uploadTime = dateFormat.format(date);
+                    String uploadName = ctx.header("uploadName");
+                    String folderName = utils.generateRandomString(8);
+                    String datasetType = ctx.header("datasetType");
+                    String targetDataset = ctx.header("targetDataset");
 
-                        File metadataDirectory = new File("upload/" + uid + "/" + folderName);
-                        metadataDirectory.mkdirs();
+                    if (ctx.header("datasetType").equals("COCO")) {
+                        COCO uploader = new COCO();
+                        uploader.upload(folderName, ctx.uploadedFiles("files"), uid);
+                    } else if (ctx.header("datasetType").equals("ROBOFLOW")) {
+                        Roboflow uploader = new Roboflow();
+                        uploader.upload(folderName, ctx.header("roboflowUrl"), uid);
+                        uploadName = uploader.getProjectFromUrl(ctx.header("roboflowUrl"));
+                        datasetType = "COCO";
+                    }
 
-                        String metadataFilePath = metadataDirectory.getPath() + "/metadata.json";
+                    JSONObject metadata = new JSONObject();
+                    metadata.put("uploadTime", uploadTime);
+                    metadata.put("uploadName", uploadName);
+                    metadata.put("datasetType", datasetType);
+                    metadata.put("targetDataset", targetDataset);
 
-                        try (FileWriter file = new FileWriter(metadataFilePath)) {
-                            file.write(metadata.toJSONString());
-                            file.flush();
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                            ctx.status(500).result("Error: Failed to save metadata on the server.");
-                            return;
-                        }
+                    File metadataDirectory = new File("upload/" + uid + "/" + folderName);
+                    metadataDirectory.mkdirs();
 
-                        for (UploadedFile uploadedFile: ctx.uploadedFiles("files")) {
-                            String filePath = "upload/" + uid + "/" + folderName + "/" + uploadedFile.filename();
-                            System.out.println(filePath);
+                    String metadataFilePath = metadataDirectory.getPath() + "/metadata.json";
 
-                            File directory = new File(filePath).getParentFile();
-                            if (!directory.exists()) {
-                                directory.mkdirs();
-                            }
-
-                            try (
-                                InputStream fileContent = uploadedFile.content(); OutputStream output = new FileOutputStream(filePath)
-                            ) {
-                                byte[] buffer = new byte[8192];
-                                int bytesRead;
-                                while ((bytesRead = fileContent.read(buffer)) != -1) {
-                                    output.write(buffer, 0, bytesRead);
-                                }
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                                ctx.status(500).result("Error: Failed to save the file on the server.");
-                                return;
-                            }
-                        }
-                    } else {
-                        RoboflowDownloader downloader = new RoboflowDownloader();
-                        String folderName = downloader.downloadDataset(ctx.header("roboflowUrl"), uid);
-                    
-                        JSONObject metadata = new JSONObject();
-                        metadata.put("uploadTime", formattedDate);
-                        metadata.put("uploadName", downloader.getProjectFromUrl(ctx.header("roboflowUrl")));
-                        metadata.put("datasetType", "COCO");
-                        metadata.put("targetDataset", ctx.header("targetDataset"));
-
-                        File metadataDirectory = new File("upload/" + uid + "/" + folderName);
-                        metadataDirectory.mkdirs();
-
-                        String metadataFilePath = metadataDirectory.getPath() + "/metadata.json";
-
-                        try (FileWriter file = new FileWriter(metadataFilePath)) {
-                            file.write(metadata.toJSONString());
-                            file.flush();
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                            ctx.status(500).result("Error: Failed to save metadata on the server.");
-                            return;
-                        }
+                    try (FileWriter file = new FileWriter(metadataFilePath)) {
+                        file.write(metadata.toJSONString());
+                        file.flush();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        ctx.status(500).result("Error: Failed to save metadata on the server.");
+                        return;
                     }
                 } catch (FirebaseAuthException e) {
                     e.printStackTrace();
@@ -208,7 +174,7 @@ public class App {
                         apiJsonObject = new JSONObject();
                     }
 
-                    RandomString random = new RandomString();
+                    Utils random = new Utils();
                     String newApiKey = random.generateRandomString(24);
                     if (apiJsonObject.containsKey(uid)) {
                         apiJsonObject.put(uid, newApiKey);
