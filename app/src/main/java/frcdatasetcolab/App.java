@@ -1,5 +1,6 @@
 package frcdatasetcolab;
 import roboflow.RoboflowDownloader;
+import utils.RandomString;
 
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.firebase.FirebaseApp;
@@ -112,7 +113,8 @@ public class App {
                     String formattedDate = dateFormat.format(date);
 
                     if (ctx.header("roboflowUrl").equals("")) {
-                        String folderName = ctx.header("name").replace(" ", "_");
+                        RandomString random = new RandomString();
+                        String folderName = random.generateRandomString(8);
 
                         JSONObject metadata = new JSONObject();
                         metadata.put("uploadTime", formattedDate);
@@ -163,7 +165,7 @@ public class App {
                     
                         JSONObject metadata = new JSONObject();
                         metadata.put("uploadTime", formattedDate);
-                        metadata.put("uploadName", folderName);
+                        metadata.put("uploadName", downloader.getProjectFromUrl(ctx.header("roboflowUrl")));
                         metadata.put("datasetType", "COCO");
                         metadata.put("targetDataset", ctx.header("targetDataset"));
 
@@ -206,7 +208,8 @@ public class App {
                         apiJsonObject = new JSONObject();
                     }
 
-                    String newApiKey = generateRandomApiKey();
+                    RandomString random = new RandomString();
+                    String newApiKey = random.generateRandomString(24);
                     if (apiJsonObject.containsKey(uid)) {
                         apiJsonObject.put(uid, newApiKey);
                     } else {
@@ -266,15 +269,5 @@ public class App {
     	ctx -> ctx.status(200)
 );
 
-    }
-
-    public static String generateRandomApiKey() {
-        String characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-        StringBuilder apiKey = new StringBuilder();
-        Random random = new Random();
-        for (int i = 0; i < 24; i++) {
-            apiKey.append(characters.charAt(random.nextInt(characters.length())));
-        }
-        return apiKey.toString();
     }
 }

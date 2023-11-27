@@ -1,4 +1,5 @@
 package roboflow;
+import utils.RandomString;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -18,6 +19,8 @@ public class RoboflowDownloader {
 
         String workspace = getWorkspaceFromUrl(roboflowUrl);
         String project = getProjectFromUrl(roboflowUrl);
+        RandomString random = new RandomString();
+        String folderName = random.generateRandomString(8);
 
         String apiUrl = "https://api.roboflow.com/" + workspace;
         String apiKeyParam = "?api_key=" + apiKey;
@@ -27,17 +30,17 @@ public class RoboflowDownloader {
         String versionJson = executeCommand("curl https://api.roboflow.com/" + latestVersionId + "/coco?api_key=" + apiKey);
         String exportLink = parseExportLink(versionJson);
 
-        executeCommand("mkdir -p upload/" + uid + "/" + project);
-        executeCommand("wget --user-agent='Mozilla/5.0' --referer=" + roboflowUrl + " -O upload/" + uid + "/" + project + "/dataset.zip " + exportLink);
+        executeCommand("mkdir -p upload/" + uid + "/" + folderName);
+        executeCommand("wget --user-agent='Mozilla/5.0' --referer=" + roboflowUrl + " -O upload/" + uid + "/" + folderName + "/dataset.zip " + exportLink);
 
         if (getLastExitCode() == 0) {
-            executeCommand("unzip upload/" + uid + "/" + project + "/dataset.zip -d upload/" + uid + "/" + project);
-            executeCommand("rm upload/" + uid + "/" + project + "/dataset.zip");
+            executeCommand("unzip upload/" + uid + "/" + folderName + "/dataset.zip -d upload/" + uid + "/" + folderName);
+            executeCommand("rm upload/" + uid + "/" + folderName + "/dataset.zip");
         } else {
             System.err.println("Download failed. Skipping unzip.");
         }
 
-        return project;
+        return folderName;
     }
 
     private String readApiKeyFromFile(String filePath) {
@@ -118,12 +121,12 @@ private String executeCommand(String command) {
         return export.get("link").getAsString();
     }
 
-    private String getWorkspaceFromUrl(String roboflowUrl) {
+    public String getWorkspaceFromUrl(String roboflowUrl) {
         String[] parts = roboflowUrl.split("/");
         return parts[parts.length - 2];
     }
 
-    private String getProjectFromUrl(String roboflowUrl) {
+    public String getProjectFromUrl(String roboflowUrl) {
         String[] parts = roboflowUrl.split("/");
         return parts[parts.length - 1];
     }
