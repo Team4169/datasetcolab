@@ -4,6 +4,7 @@ import { useAuth } from "../contexts/AuthContext";
 import Form from 'react-bootstrap/Form';
 import Button from 'react-bootstrap/Button';
 import Alert from 'react-bootstrap/Alert';
+import axios from "axios";
 
 export default function Signup() {
   const emailRef = useRef();
@@ -26,7 +27,15 @@ export default function Signup() {
     try {
       setError("");
       setLoading(true);
-      await signup(emailRef.current.value, passwordRef.current.value);
+      const currentUser = (await signup(emailRef.current.value, passwordRef.current.value)).user;
+      console.log(currentUser);
+      const idToken = await currentUser.getIdToken();
+      let config = {
+        headers: {
+          idToken: idToken,
+        },
+      };
+      await axios.get("https://api.seanmabli.com:3433/newapikey", config);
       await sendEmailVerification_();
       navigate("/email-verification?to=" + destination);
     } catch {

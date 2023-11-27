@@ -117,14 +117,12 @@ export default function Settings() {
       setLoadingNewApiKey(true);
 
       const idToken = await currentUser.getIdToken();
-      console.log(idToken);
 
       let config = {
         headers: {
           idToken: idToken,
         },
       };
-      console.log(config);
 
       const response = await axios.get("https://api.seanmabli.com:3433/newapikey", config);
       setApiKey(response.data);

@@ -49,7 +49,7 @@ export default function Upload() {
 
     try {
       const idToken = await currentUser.getIdToken();
-      console.log(idToken);
+      
       let config = {
         headers: {
           idToken: idToken,

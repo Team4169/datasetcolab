@@ -50,7 +50,6 @@ export function AuthProvider({ children }) {
   }
 
   function deleteAccount() {
-    console.log("delete");
     return deleteUser(auth.currentUser);
   }
 

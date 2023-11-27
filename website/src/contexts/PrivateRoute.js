@@ -5,8 +5,6 @@ import { useAuth } from "./AuthContext";
 export default function PrivateRoute({ children, noAuth }) {
   const { currentUser } = useAuth();
 
-  console.log(currentUser);
-
   if (currentUser) {
     if (currentUser.emailVerified) {
       return children;
