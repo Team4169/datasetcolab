@@ -12,7 +12,7 @@ import org.json.simple.parser.ParseException;
 
 public class DatasetManagement {
 
-  private static void convertYOLOtoCOCO(String yoloPath, String cocoPath) {
+  public void convertYOLOtoCOCO(String yoloPath, String cocoPath) {
         try {
             JSONObject cocoDataset = new JSONObject();
             JSONArray images = new JSONArray();
@@ -62,7 +62,7 @@ public class DatasetManagement {
         }
     }
 
-       private static void convertCOCOtoYOLO(String cocoPath, String yoloPath) {
+       public void convertCOCOtoYOLO(String cocoPath, String yoloPath) {
         try {
             JSONObject cocoDataset = new JSONObject(new FileReader(cocoPath));
 

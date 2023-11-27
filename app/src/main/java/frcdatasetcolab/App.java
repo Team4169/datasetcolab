@@ -23,7 +23,6 @@ import java.nio.file.StandardOpenOption;
 public class App {
 
     public static void main(String[] args) {
-        // Initialize Firebase outside of the route handler
         try {
             FileInputStream serviceAccount = new FileInputStream(
                 "admin.json"
@@ -34,7 +33,7 @@ public class App {
             FirebaseApp.initializeApp(options);
         } catch (IOException e) {
             e.printStackTrace();
-            return; // Exit if there's an error with the service account file
+            return;
         }
 
         Javalin app = Javalin
@@ -64,20 +63,17 @@ public class App {
                         .verifyIdToken(ctx.header("idToken"));
                     String uid = decodedToken.getUid();
 
-                    String directoryPath = "upload/" + uid; // Assuming the directory structure starts from the user's unique ID
+                    String directoryPath = "upload/" + uid;
                     File directory = new File(directoryPath);
                     if (directory.exists() && directory.isDirectory()) {
                         String[] fileNames = directory.list();
                         if (fileNames != null) {
-                            // Create a JSON array to store file information
                             JSONArray filesArray = new JSONArray();
 
                             for (String fileName: fileNames) {
-                                // Check if metadata.json exists and add its contents to the JSON array
                                 String metadataFilePath = "upload/" + uid + "/" + fileName + "/metadata.json";
                                 File metadataFile = new File(metadataFilePath);
                                 if (metadataFile.exists() && metadataFile.isFile()) {
-                                    // Read the contents of metadata.json
                                     try (FileReader fileReader = new FileReader(metadataFile)) {
                                         JSONParser parser = new JSONParser();
                                         JSONObject metadata = (JSONObject) parser.parse(fileReader);
@@ -88,10 +84,10 @@ public class App {
 
                             ctx.json(filesArray);
                         } else {
-                            ctx.result("No metadata files found in the directory."); // If no metadata files are found
+                            ctx.result("No metadata files found in the directory.");
                         }
                     } else {
-                        ctx.result("Directory does not exist for the user."); // If the directory doesn't exist
+                        ctx.result("Directory does not exist for the user.");
                     }
                 } catch (FirebaseAuthException | ParseException e) {
                     e.printStackTrace();
@@ -105,8 +101,6 @@ public class App {
             "/upload",
             ctx -> {
                 try {
-                    // The Firebase initialization is done outside the route handler
-                
                     FirebaseToken decodedToken = FirebaseAuth
                         .getInstance()
                         .verifyIdToken(ctx.header("idToken"));
@@ -116,54 +110,53 @@ public class App {
                     SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd_HH:mm");
                     String formattedDate = dateFormat.format(date);
 
-                    String folderName = ctx.header("name").replace(" ", "_");
+                    if (roboflowUrl.equals("")) {
+                        String folderName = ctx.header("name").replace(" ", "_");
 
-                    // Create a JSON object to store metadata
-                    JSONObject metadata = new JSONObject();
-                    metadata.put("uploadTime", formattedDate);
-                    metadata.put("uploadName", ctx.header("name"));
-                    metadata.put("datasetType", ctx.header("datasetType"));
+                        JSONObject metadata = new JSONObject();
+                        metadata.put("uploadTime", formattedDate);
+                        metadata.put("uploadName", ctx.header("name"));
+                        metadata.put("datasetType", ctx.header("datasetType"));
 
-                    File metadataDirectory = new File("upload/" + uid + "/" + folderName);
-                    metadataDirectory.mkdirs();
+                        File metadataDirectory = new File("upload/" + uid + "/" + folderName);
+                        metadataDirectory.mkdirs();
 
-                    String metadataFilePath = metadataDirectory.getPath() + "/metadata.json";
+                        String metadataFilePath = metadataDirectory.getPath() + "/metadata.json";
 
-                    // Save the metadata to the JSON file
-                    try (FileWriter file = new FileWriter(metadataFilePath)) {
-                        file.write(metadata.toJSONString());
-                        file.flush();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                        // Sending an error response to the client
-                        ctx.status(500).result("Error: Failed to save metadata on the server.");
-                        return; // Exit the loop and return an error response
-                    }
-
-                    // Save each uploaded file with the folder name matching the upload name
-                    for (UploadedFile uploadedFile: ctx.uploadedFiles("files")) {
-                        String filePath = "upload/" + uid + "/" + folderName + "/" + uploadedFile.filename();
-                        System.out.println(filePath);
-
-                        File directory = new File(filePath).getParentFile();
-                        if (!directory.exists()) {
-                            directory.mkdirs(); // creates the directory including any necessary but nonexistent parent directories
-                        }
-
-                        try (
-                            InputStream fileContent = uploadedFile.content(); OutputStream output = new FileOutputStream(filePath)
-                        ) {
-                            byte[] buffer = new byte[8192];
-                            int bytesRead;
-                            while ((bytesRead = fileContent.read(buffer)) != -1) {
-                                output.write(buffer, 0, bytesRead);
-                            }
+                        try (FileWriter file = new FileWriter(metadataFilePath)) {
+                            file.write(metadata.toJSONString());
+                            file.flush();
                         } catch (IOException e) {
                             e.printStackTrace();
-                            // Sending an error response to the client
-                            ctx.status(500).result("Error: Failed to save the file on the server.");
-                            return; // Exit the loop and return an error response
+                            ctx.status(500).result("Error: Failed to save metadata on the server.");
+                            return;
                         }
+
+                        for (UploadedFile uploadedFile: ctx.uploadedFiles("files")) {
+                            String filePath = "upload/" + uid + "/" + folderName + "/" + uploadedFile.filename();
+                            System.out.println(filePath);
+
+                            File directory = new File(filePath).getParentFile();
+                            if (!directory.exists()) {
+                                directory.mkdirs();
+                            }
+
+                            try (
+                                InputStream fileContent = uploadedFile.content(); OutputStream output = new FileOutputStream(filePath)
+                            ) {
+                                byte[] buffer = new byte[8192];
+                                int bytesRead;
+                                while ((bytesRead = fileContent.read(buffer)) != -1) {
+                                    output.write(buffer, 0, bytesRead);
+                                }
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                                ctx.status(500).result("Error: Failed to save the file on the server.");
+                                return;
+                            }
+                        }
+                    } else {
+                        downloadDataset(roboflowUrl, uid);
                     }
                 } catch (FirebaseAuthException e) {
                     e.printStackTrace();

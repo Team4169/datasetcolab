@@ -9,14 +9,9 @@ import java.io.InputStreamReader;
 
 public class RoboflowDownloader {
 
-    public static void main(String[] args) {
-        String roboflowUrl = "https://universe.roboflow.com/gdit/aerial-airport";
+    public void downloadDataset(String roboflowUrl) {
         String apiKey = readApiKeyFromFile("roboflow.txt");
 
-        downloadDataset(roboflowUrl, apiKey);
-    }
-
-    public void downloadDataset(String roboflowUrl, String apiKey) {
         String workspace = getWorkspaceFromUrl(roboflowUrl);
         String project = getProjectFromUrl(roboflowUrl);
 
@@ -42,7 +37,7 @@ public class RoboflowDownloader {
         String exportLink = parseExportLink(versionJson);
 
         // Download dataset using wget and unzip
-        executeCommand("wget -O dataset.zip " + exportLink);
+        executeCommand("wget -O upload//dataset.zip " + exportLink);
         executeCommand("unzip dataset.zip");
     }
 
