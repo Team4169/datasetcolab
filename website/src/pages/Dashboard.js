@@ -122,33 +122,39 @@ export default function Dashboard() {
         ) : (
           <div>
             {folderMetadata.length > 0 ? (
-              folderMetadata.map((metadata, index) => {
-                const formattedUploadTime = formatUploadTime(metadata.uploadTime);
-                const formattedTargetDataset = formatTargetDataset(metadata.targetDataset);
-      
-                return (
-                  <div key={index}>
-                    <Card key={index} style={styles.datasetCard}>
-                      <Card.Body>
-                        <h3>{metadata.uploadName}</h3>
-                        <small><strong>Upload Time:</strong> {formattedUploadTime}</small>
-                        <br />
-                        <small><strong>Dataset Type:</strong> {metadata.datasetType}</small>
-                        <br />
-                        <small><strong>Target Dataset:</strong> {formattedTargetDataset}</small>
-                        <br />
-                        <Button
-                          variant="primary"
-                          className="position-absolute top-0 end-0 m-3"  // Added m-2 for margin
-                          onClick={() => redirectToView(metadata.folderName)}
-                        >
-                          View
-                        </Button>
-                      </Card.Body>
-                    </Card>
-                  </div>
-                );
-              })
+              folderMetadata
+                .sort((a, b) => {
+                  const nanosecondsA = new Date(a.uploadTime).getTime() * 1e6; // Convert to nanoseconds
+                  const nanosecondsB = new Date(b.uploadTime).getTime() * 1e6; // Convert to nanoseconds
+                  return nanosecondsB - nanosecondsA; // Sort in descending order
+                })
+                .map((metadata, index) => {
+                  const formattedUploadTime = formatUploadTime(metadata.uploadTime);
+                  const formattedTargetDataset = formatTargetDataset(metadata.targetDataset);
+
+                  return (
+                    <div key={index}>
+                      <Card key={index} style={styles.datasetCard}>
+                        <Card.Body>
+                          <h3>{metadata.uploadName}</h3>
+                          <small><strong>Upload Time:</strong> {formattedUploadTime}</small>
+                          <br />
+                          <small><strong>Dataset Type:</strong> {metadata.datasetType}</small>
+                          <br />
+                          <small><strong>Target Dataset:</strong> {formattedTargetDataset}</small>
+                          <br />
+                          <Button
+                            variant="primary"
+                            className="position-absolute top-0 end-0 m-3"
+                            onClick={() => redirectToView(metadata.folderName)}
+                          >
+                            View
+                          </Button>
+                        </Card.Body>
+                      </Card>
+                    </div>
+                  );
+                })
             ) : (
               <p>No uploads available.</p>
             )}

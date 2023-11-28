@@ -28,8 +28,11 @@ def combine_datasets(dataset1_path, dataset2_path, output_path):
     new_image_id_counter = 0
 
     for image_info in combined_images:
+        # Determine the source dataset for the image based on the file name
         old_image_path = os.path.join(dataset1_path, image_info['file_name'])
-        print(old_image_path)
+        if not os.path.exists(old_image_path):
+            old_image_path = os.path.join(dataset2_path, image_info['file_name'])
+
         new_image_name = generate_unique_name()
         new_image_path = os.path.join(new_image_dir, f'{new_image_name}.jpg')
 
@@ -55,38 +58,24 @@ def combine_datasets(dataset1_path, dataset2_path, output_path):
 
     # Calculate the offset to start new image IDs from 0
     offset_image_id = min(image_id_mapping.values())
-    annotation_ids = coco1.getAnnIds()
+    annotation_ids = coco1.getAnnIds() + coco2.getAnnIds()
     num_annotations = len(annotation_ids)
     
     annotationsCounter = 1
     # Update image and annotation file names in the combined COCO annotations
     for annotation in combined_annotations:
-        if annotationsCounter < num_annotations:
-            old_image_id = annotation['image_id']
-            new_image_id = image_id_mapping[old_image_id] - offset_image_id
+        old_image_id = annotation['image_id']
+        new_image_id = image_id_mapping[old_image_id] - offset_image_id
 
-            # Update image_id in the annotation
-            annotation['image_id'] = new_image_id
+        # Update image_id in the annotation
+        annotation['image_id'] = new_image_id
 
-            # Update annotation_id
-            annotation_id_mapping[annotation['id']] = new_annotation_id_counter
-            new_annotation_id_counter += 1
+        # Update annotation_id
+        annotation_id_mapping[annotation['id']] = new_annotation_id_counter
+        new_annotation_id_counter += 1
 
-            # Add new annotation information to the combined_coco object
-            combined_coco['annotations'].append(annotation)
-        else:
-            old_image_id = annotation['image_id']
-            new_image_id = image_id_mapping[old_image_id] # - offset_image_id
-
-            # Update image_id in the annotation
-            annotation['image_id'] = new_image_id
-
-            # Update annotation_id
-            annotation_id_mapping[annotation['id']] = new_annotation_id_counter
-            new_annotation_id_counter += 1
-
-            # Add new annotation information to the combined_coco object
-            combined_coco['annotations'].append(annotation)
+        # Add new annotation information to the combined_coco object
+        combined_coco['annotations'].append(annotation)
         
         annotationsCounter += 1
 
@@ -111,9 +100,7 @@ generate_unique_name.counter = 0
 # Example usage
 
 
-# dataset1_path = '/Users/arjungoray/Developer/test/dataset1/test'
-# dataset2_path = '/Users/arjungoray/Developer/test/dataset2/test'
-print(sys.argv)
+
 dataset1_path = "/home/team4169/frcdatasetcolab/app/upload/" + sys.argv[1]
 dataset2_path = "/home/team4169/frcdatasetcolab/app/upload/" + sys.argv[2]
 output_path = '/home/team4169/frcdatasetcolab/app/output'

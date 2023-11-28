@@ -63,8 +63,8 @@ export default function Upload() {
           targetDataset: targetDataset,
         },
       };
-
-      await axios.post(
+      
+      let metadata = await axios.get(
         "https://api.seanmabli.com:3433/upload",
         formData,
         config
@@ -72,6 +72,7 @@ export default function Upload() {
       setError("Files uploaded successfully");
       setUploadSuccess(true);
       navigate("/");
+      
     } catch (error) {
       // Handle errors
       setError("Error: " + error.message);

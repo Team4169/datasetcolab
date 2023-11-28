@@ -171,7 +171,43 @@ public class App {
             }
         );
 
-        app.post(
+	app.post("/delete/{folderName}", ctx -> {
+		try {
+			FirebaseToken decodedToken = FirebaseAuth
+				.getInstance()
+				.verifyIdToken(ctx.header("idToken"));
+			String uid = decodedToken.getUid();
+
+			String folderName = ctx.pathParam("folderName");
+
+			Utils utils = new Utils();
+			utils.executeCommand("rm -fr upload/" + uid + "/" + folderName);
+		} catch (FirebaseAuthException e) {
+			e.printStackTrace();
+			ctx.status(401).result("Error: Authentication failed.");
+		}	
+	}
+	);
+
+    app.post("/edit/{folderName}", ctx -> {
+		try {
+			FirebaseToken decodedToken = FirebaseAuth
+				.getInstance()
+				.verifyIdToken(ctx.header("idToken"));
+			String uid = decodedToken.getUid();
+
+			String folderName = ctx.pathParam("folderName");
+            JSONObject dataToAdd = new JSONObject(ctx.body());
+            addToMetadata(folderName, dataToAdd);
+			
+		} catch (FirebaseAuthException e) {
+			e.printStackTrace();
+			ctx.status(401).result("Error: Authentication failed.");
+		}	
+	}
+	);
+
+        app.get(
             "/upload",
             ctx -> {
                 try {
@@ -190,22 +226,22 @@ public class App {
                     String folderName = utils.generateRandomString(8);
                     String datasetType = ctx.header("datasetType");
                     String targetDataset = ctx.header("targetDataset");
+                    JSONArray parsedNamesUpload = new JSONArray();
 
                     JSONObject metadata = new JSONObject();
 
                     if (ctx.header("datasetType").equals("COCO")) {
                         COCO uploader = new COCO();
                         uploader.upload(folderName, ctx.uploadedFiles("files"), uid);
-                        /*
                         Set<String> parsedNames = uploader.parsedNames;
-                        JsonArray parsedNamesUpload = new JSONArray(parsedNames);
-                        metadata.put("parsedNames", parsedNamesUpload);
-                        */
+                        parsedNamesUpload.addAll(parsedNames);
                     } else if (ctx.header("datasetType").equals("ROBOFLOW")) {
                         Roboflow uploader = new Roboflow();
                         uploader.upload(folderName, ctx.header("roboflowUrl"), uid);
                         uploadName = uploader.getProjectFromUrl(ctx.header("roboflowUrl"));
                         datasetType = "COCO";
+                        Set<String> parsedNames = uploader.parsedNames;
+                        parsedNamesUpload.addAll(parsedNames);
                     }
 
                     metadata.put("uploadTime", uploadTime);
@@ -213,6 +249,7 @@ public class App {
                     metadata.put("datasetType", datasetType);
                     metadata.put("targetDataset", targetDataset);
                     metadata.put("folderName", folderName);
+                    metadata.put("parsedNames", parsedNamesUpload);
 
                     File metadataDirectory = new File("upload/" + uid + "/" + folderName);
                     metadataDirectory.mkdirs();
@@ -228,6 +265,7 @@ public class App {
                         return;
                     }
 
+                   
                     if (targetDataset.equals("FRC2023")) {
                         utils.executeCommand("python3 /home/team4169/frcdatasetcolab/app/combineDatasets.py FRC2023/" + "test " + uid + "/" + folderName + "/test");
                         utils.executeCommand("python3 /home/team4169/frcdatasetcolab/app/combineDatasets.py FRC2023/" + "train " + uid + "/" + folderName + "/train");
@@ -237,12 +275,51 @@ public class App {
                         utils.executeCommand("python3 /home/team4169/frcdatasetcolab/app/combineDatasets.py FRC2024/" + "train " + uid + "/" + folderName + "/train");
                         utils.executeCommand("python3 /home/team4169/frcdatasetcolab/app/combineDatasets.py FRC2024/" + "valid " + uid + "/" + folderName + "/valid");
                     }
+
+                    ctx.json(metadata);
+                   
                 } catch (FirebaseAuthException e) {
                     e.printStackTrace();
                     ctx.status(401).result("Error: Authentication failed.");
                 }
             }
         );
+app.get(
+    "/download/:targetDataset",
+    ctx -> {
+        try {
+            FirebaseToken decodedToken = FirebaseAuth
+                .getInstance()
+                .verifyIdToken(ctx.header("idToken"));
+            String uid = decodedToken.getUid();
+
+            String targetDataset = ctx.pathParam("targetDataset");
+            String folderPath = "upload/" + uid + "/";
+
+            if (targetDataset.equals("FRC2023") || targetDataset.equals("FRC2024")) {
+                String targetFolderPath = folderPath + targetDataset;
+                File targetFolder = new File(targetFolderPath);
+
+                if (targetFolder.exists() && targetFolder.isDirectory()) {
+                    String zipFileName = targetDataset + "_projects.zip";
+                    Utils utils = new Utils();
+                    utils.zipDirectory(targetFolderPath, zipFileName);
+
+                    ctx.result(zipFileName);
+                    ctx.contentType("application/zip");
+                    ctx.header("Content-Disposition", "attachment; filename=" + zipFileName);
+                } else {
+                    ctx.result("Error: Target dataset folder not found.");
+                }
+            } else {
+                ctx.result("Error: Invalid target dataset.");
+            }
+        } catch (FirebaseAuthException e) {
+            e.printStackTrace();
+            ctx.status(401).result("Error: Authentication failed.");
+        }
+    }
+);
 
         app.get(
             "/newapikey",
