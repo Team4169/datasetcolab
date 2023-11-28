@@ -53,8 +53,6 @@ const styles = {
   },
 };
 
-// ... (imports and styles remain unchanged)
-
 const View = () => {
     const { currentUser } = useAuth();
     const { folderName } = useParams();
@@ -103,6 +101,24 @@ const View = () => {
         setError('Error fetching project details.');
       } finally {
         setLoading(false);
+      }
+    };
+
+    const handleDeleteProject = async () => {
+      try {
+        const idToken = await currentUser.getIdToken();
+        const config = {
+          headers: {
+            idToken: idToken,
+          },
+        };
+
+        console.log(config);
+  
+        await axios.post(`https://api.seanmabli.com:3433/delete/${folderName}`, config);
+        navigate('/');
+      } catch (err) {
+        setError('Error deleting project.');
       }
     };
   
@@ -190,6 +206,9 @@ const View = () => {
               <strong>Target Dataset:</strong> {formatTargetDataset(projectDetails.targetDataset)}
             </small>
             <br />
+            <Button variant="danger" onClick={handleDeleteProject}>
+              Delete Project
+            </Button>
             <Button
               variant="primary"
               className="position-absolute top-0 end-0 m-1"
