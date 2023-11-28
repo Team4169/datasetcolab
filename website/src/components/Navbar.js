@@ -49,6 +49,7 @@ export default function NavbarComponent() {
           <Nav>
             <Nav.Link onClick={() => navigate("/upload")} style={{ cursor: "pointer" }}>Upload</Nav.Link>
             <Nav.Link onClick={() => navigate("/download")} style={{ cursor: "pointer" }}>Download Dataset</Nav.Link>
+            <Nav.Link onClick={() => navigate("/aboutus")} style={{ cursor: "pointer" }}>About Us</Nav.Link>
             <NavDropdown title="Account" id="basic-nav-dropdown">
               <NavDropdown.Item onClick={() => navigate("/settings")} style={{ cursor: "pointer" }}>Settings</NavDropdown.Item>
               <NavDropdown.Item onClick={handleLogout} style={{ cursor: "pointer" }}>Logout</NavDropdown.Item>
