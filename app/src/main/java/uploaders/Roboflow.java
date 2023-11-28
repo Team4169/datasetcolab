@@ -3,16 +3,33 @@ import utils.Utils;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import com.google.gson.JsonParser;;
+import com.google.auth.oauth2.GoogleCredentials;
+import com.google.firebase.FirebaseApp;
+import com.google.firebase.FirebaseOptions;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseAuthException;
+import com.google.firebase.auth.FirebaseToken;
+import io.javalin.Javalin;
+import io.javalin.community.ssl.SSLPlugin;
+import io.javalin.http.UploadedFile;
+import java.io.*;
+import java.util.*;
+import java.text.SimpleDateFormat;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
+import org.json.simple.JSONArray;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 public class Roboflow {
 
     private Utils utils = new Utils();
+    public Set<String> parsedNames = new HashSet<>();
 
     public void upload(String folderName, String roboflowUrl, String uid) {
         String apiKey = readApiKeyFromFile("roboflow.txt");
@@ -37,6 +54,8 @@ public class Roboflow {
         } else {
             System.err.println("Download failed. Skipping unzip.");
         }
+        
+        parseFiles("upload/" + uid + "/" + folderName);
     }
 
     private String readApiKeyFromFile(String filePath) {
@@ -70,4 +89,45 @@ public class Roboflow {
         String[] parts = roboflowUrl.split("/");
         return parts[parts.length - 1];
     }
+
+    private void parseFiles(String parentPath) {
+        File parentFolder = new File(parentPath);
+
+        if (parentFolder.exists() && parentFolder.isDirectory()) {
+            parseFilesRecursive(parentFolder);
+        } else {
+            System.out.println("Invalid parent path or not a directory.");
+        }
+    }
+
+    private void parseFilesRecursive(File folder) {
+        File[] files = folder.listFiles();
+
+        if (files != null) {
+            for (File file : files) {
+                if (file.isDirectory()) {
+                    parseFilesRecursive(file);
+                } else {
+                    if (file.getName().toLowerCase().endsWith(".coco.json")) {
+                        parseJsonFile(file);
+                    }
+                }
+            }
+        }
+    }
+
+    private void parseJsonFile(File jsonFile) {
+        try (FileReader reader = new FileReader(jsonFile)) {
+            JsonObject jsonObject = JsonParser.parseReader(reader).getAsJsonObject();
+            String categoryName = jsonObject.getAsJsonArray("categories").get(0).getAsJsonObject().get("name").getAsString();
+
+            if (!parsedNames.contains(categoryName)) {
+                parsedNames.add(categoryName);
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
 }
