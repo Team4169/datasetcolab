@@ -19,6 +19,7 @@ import DownloadDataset from "./pages/DownloadDataset";
 import DeleteAccount from "./pages/DeleteAccount";
 import Home from "./pages/Home";
 import View from "./pages/View";
+import AboutUs from "./pages/aboutUs";
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
@@ -54,12 +55,19 @@ root.render(
                   element={
                     <Docs />
                   }
-                />
+                />    
                 <Route
                   exact
                   path="/download"
                   element={
                     <DownloadDataset />
+                  }
+                />
+                <Route
+                  exact
+                  path="/aboutus"
+                  element={
+                    <AboutUs />
                   }
                 />
                 <Route
