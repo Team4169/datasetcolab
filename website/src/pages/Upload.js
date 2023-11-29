@@ -65,7 +65,7 @@ export default function Upload() {
       };
       
       let metadata = await axios.get(
-        "https://api.seanmabli.com:3433/upload",
+        "https://api.seanmabli.com/upload",
         formData,
         config
       );

@@ -81,7 +81,7 @@ export default function DownloadDataset() {
   const classes = ["Cone", "Cube", "Robot", "Other Robots"];
 
   const handleDownloadCurl = () =>
-    `curl -O https://api.seanmabli.com:3433/download`;
+    `curl -O https://api.seanmabli.com/download`;
 
   const handleDownloadMethodChange = (dataset, value) => {
     setDownloadMethod((prevMethods) => ({ ...prevMethods, [dataset]: value }));

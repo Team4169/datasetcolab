@@ -87,11 +87,11 @@ const View = () => {
         };
   
         // Fetch project details from /files/{folderName}
-        const filesResponse = await axios.get(`https://api.seanmabli.com:3433/files/${folderName}`, config);
+        const filesResponse = await axios.get(`https://api.seanmabli.com/files/${folderName}`, config);
         const filesData = filesResponse.data;
   
         // Fetch additional project details from /view/{folderName}
-        const viewResponse = await axios.get(`https://api.seanmabli.com:3433/view/${folderName}`, config);
+        const viewResponse = await axios.get(`https://api.seanmabli.com/view/${folderName}`, config);
         const viewData = viewResponse.data;
   
         // Set separate variables for project details and file tree
@@ -115,7 +115,7 @@ const View = () => {
 
         console.log(config);
   
-        await axios.post(`https://api.seanmabli.com:3433/delete/${folderName}`, config);
+        await axios.post(`https://api.seanmabli.com/delete/${folderName}`, config);
         navigate('/');
       } catch (err) {
         setError('Error deleting project.');

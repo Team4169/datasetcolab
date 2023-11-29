@@ -125,7 +125,7 @@ export default function Settings() {
         },
       };
 
-      const response = await axios.get("https://api.seanmabli.com:3433/getapikey", config);
+      const response = await axios.get("https://api.seanmabli.com/getapikey", config);
       setApiKey(response.data);
     } catch (err) {
       setError("Error fetching API key.");
@@ -144,7 +144,7 @@ export default function Settings() {
         },
       };
 
-      const response = await axios.get("https://api.seanmabli.com:3433/newapikey", config);
+      const response = await axios.get("https://api.seanmabli.com/newapikey", config);
       setApiKey(response.data);
       setShowCopyAlert(false);
     } catch (err) {
