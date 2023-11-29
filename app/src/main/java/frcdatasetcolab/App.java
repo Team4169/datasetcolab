@@ -25,25 +25,25 @@ import java.nio.file.StandardOpenOption;
 
 public class App {
 
-        public static void populateTree(String folderPath, JSONObject result) {
-            File folder = new File(folderPath);
-            if (folder.exists() && folder.isDirectory()) {
-                File[] files = folder.listFiles();
-                if (files != null) {
-                    for (File file : files) {
-                        if (file.isDirectory()) {
-                            JSONObject subFolder = new JSONObject();
-                            result.put(file.getName(), subFolder);
-                            populateTree(file.getPath(), subFolder);
-                        } else {
-                            result.put(file.getName(), "File");
-                        }
+    public static void populateTree(String folderPath, JSONObject result) {
+        File folder = new File(folderPath);
+        if (folder.exists() && folder.isDirectory()) {
+            File[] files = folder.listFiles();
+            if (files != null) {
+                for (File file: files) {
+                    if (file.isDirectory()) {
+                        JSONObject subFolder = new JSONObject();
+                        result.put(file.getName(), subFolder);
+                        populateTree(file.getPath(), subFolder);
+                    } else {
+                        result.put(file.getName(), "File");
                     }
                 }
-            } else {
-                result.put("error", "Invalid folder path or not a directory.");
             }
+        } else {
+            result.put("error", "Invalid folder path or not a directory.");
         }
+    }
 
     public static void main(String[] args) {
         try {
@@ -60,14 +60,14 @@ public class App {
         }
 
         Javalin app = Javalin
-            .create(config -> {
-                config.plugins.enableCors(cors -> {
-                    cors.add(corsConfig -> {
+            .create(config - > {
+                config.plugins.enableCors(cors - > {
+                    cors.add(corsConfig - > {
                         corsConfig.anyHost();
                     });
                 });
                 config.plugins.register(
-                    new SSLPlugin(ssl -> {
+                    new SSLPlugin(ssl - > {
                         ssl.host = "10.0.0.142";
                         ssl.insecurePort = 7070;
                         ssl.securePort = 3433;
@@ -79,7 +79,7 @@ public class App {
 
         app.get(
             "/view",
-            ctx -> {
+            ctx - > {
                 try {
                     FirebaseToken decodedToken = FirebaseAuth
                         .getInstance()
@@ -121,7 +121,7 @@ public class App {
 
         app.get(
             "/view/{folderName}",
-            ctx -> {
+            ctx - > {
                 try {
                     FirebaseToken decodedToken = FirebaseAuth
                         .getInstance()
@@ -150,7 +150,7 @@ public class App {
 
         app.get(
             "/files/{folderName}",
-            ctx -> {
+            ctx - > {
                 try {
                     FirebaseToken decodedToken = FirebaseAuth
                         .getInstance()
@@ -171,45 +171,44 @@ public class App {
             }
         );
 
-	app.post("/delete/{folderName}", ctx -> {
-		try {
-			FirebaseToken decodedToken = FirebaseAuth
-				.getInstance()
-				.verifyIdToken(ctx.header("idToken"));
-			String uid = decodedToken.getUid();
+        app.post("/delete/{folderName}", ctx - > {
+            try {
+                FirebaseToken decodedToken = FirebaseAuth
+                    .getInstance()
+                    .verifyIdToken(ctx.header("idToken"));
+                String uid = decodedToken.getUid();
 
-			String folderName = ctx.pathParam("folderName");
+                String folderName = ctx.pathParam("folderName");
 
-			Utils utils = new Utils();
-			utils.executeCommand("rm -fr upload/" + uid + "/" + folderName);
-		} catch (FirebaseAuthException e) {
-			e.printStackTrace();
-			ctx.status(401).result("Error: Authentication failed.");
-		}	
-	}
-	);
+                Utils utils = new Utils();
+                utils.executeCommand("rm -fr upload/" + uid + "/" + folderName);
+            } catch (FirebaseAuthException e) {
+                e.printStackTrace();
+                ctx.status(401).result("Error: Authentication failed.");
+            }
+        });
+        /*
+            app.post("/edit/{folderName}", ctx -> {
+        		try {
+        			FirebaseToken decodedToken = FirebaseAuth
+        				.getInstance()
+        				.verifyIdToken(ctx.header("idToken"));
+        			String uid = decodedToken.getUid();
 
-    app.post("/edit/{folderName}", ctx -> {
-		try {
-			FirebaseToken decodedToken = FirebaseAuth
-				.getInstance()
-				.verifyIdToken(ctx.header("idToken"));
-			String uid = decodedToken.getUid();
-
-			String folderName = ctx.pathParam("folderName");
-            JSONObject dataToAdd = new JSONObject(ctx.body());
-            addToMetadata(folderName, dataToAdd);
-			
-		} catch (FirebaseAuthException e) {
-			e.printStackTrace();
-			ctx.status(401).result("Error: Authentication failed.");
-		}	
-	}
-	);
-
+        			String folderName = ctx.pathParam("folderName");
+                    JSONObject dataToAdd = new JSONObject(ctx.body());
+                    addToMetadata(folderName, dataToAdd);
+        			
+        		} catch (FirebaseAuthException e) {
+        			e.printStackTrace();
+        			ctx.status(401).result("Error: Authentication failed.");
+        		}	
+        	}
+        	);
+        */
         app.get(
             "/upload",
-            ctx -> {
+            ctx - > {
                 try {
                     FirebaseToken decodedToken = FirebaseAuth
                         .getInstance()
@@ -233,14 +232,14 @@ public class App {
                     if (ctx.header("datasetType").equals("COCO")) {
                         COCO uploader = new COCO();
                         uploader.upload(folderName, ctx.uploadedFiles("files"), uid);
-                        Set<String> parsedNames = uploader.parsedNames;
+                        Set < String > parsedNames = uploader.parsedNames;
                         parsedNamesUpload.addAll(parsedNames);
                     } else if (ctx.header("datasetType").equals("ROBOFLOW")) {
                         Roboflow uploader = new Roboflow();
                         uploader.upload(folderName, ctx.header("roboflowUrl"), uid);
                         uploadName = uploader.getProjectFromUrl(ctx.header("roboflowUrl"));
                         datasetType = "COCO";
-                        Set<String> parsedNames = uploader.parsedNames;
+                        Set < String > parsedNames = uploader.parsedNames;
                         parsedNamesUpload.addAll(parsedNames);
                     }
 
@@ -265,7 +264,7 @@ public class App {
                         return;
                     }
 
-                   
+
                     if (targetDataset.equals("FRC2023")) {
                         utils.executeCommand("python3 /home/team4169/frcdatasetcolab/app/combineDatasets.py FRC2023/" + "test " + uid + "/" + folderName + "/test");
                         utils.executeCommand("python3 /home/team4169/frcdatasetcolab/app/combineDatasets.py FRC2023/" + "train " + uid + "/" + folderName + "/train");
@@ -277,14 +276,15 @@ public class App {
                     }
 
                     ctx.json(metadata);
-                   
+
                 } catch (FirebaseAuthException e) {
                     e.printStackTrace();
                     ctx.status(401).result("Error: Authentication failed.");
                 }
             }
         );
-app.get(
+        /*
+	app.get(
     "/download/:targetDataset",
     ctx -> {
         try {
@@ -320,10 +320,10 @@ app.get(
         }
     }
 );
-
+*/
         app.get(
             "/newapikey",
-            ctx -> {
+            ctx - > {
                 try {
                     FirebaseToken decodedToken = FirebaseAuth
                         .getInstance()
@@ -333,7 +333,7 @@ app.get(
                     JSONObject apiJsonObject;
                     try {
                         String content = Files.readString(Path.of("api.json"));
-                        apiJsonObject = new JSONObject((Map<?, ?>) new JSONParser().parse(content));
+                        apiJsonObject = new JSONObject((Map << ? , ? > ) new JSONParser().parse(content));
                     } catch (IOException | ParseException e) {
                         e.printStackTrace();
                         apiJsonObject = new JSONObject();
@@ -365,7 +365,7 @@ app.get(
 
         app.get(
             "/getapikey",
-            ctx -> {
+            ctx - > {
                 try {
                     FirebaseToken decodedToken = FirebaseAuth
                         .getInstance()
@@ -375,7 +375,7 @@ app.get(
                     JSONObject apiJsonObject;
                     try {
                         String content = Files.readString(Path.of("api.json"));
-                        apiJsonObject = new JSONObject((Map<?, ?>) new JSONParser().parse(content));
+                        apiJsonObject = new JSONObject((Map << ? , ? > ) new JSONParser().parse(content));
                     } catch (IOException | ParseException e) {
                         e.printStackTrace();
                         ctx.status(500).result("Error: Unable to read API keys.");
@@ -396,10 +396,10 @@ app.get(
             }
         );
 
-	app.get(
-	    "/test",
-    	ctx -> ctx.status(200)
-);
+        app.get(
+            "/test",
+            ctx - > ctx.status(200)
+        );
 
     }
 }
