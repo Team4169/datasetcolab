@@ -4,9 +4,6 @@ import { Container, Row, Col } from "react-bootstrap";
 const AboutUs = () => {
   return (
     <div style={{ padding: "20px" }}>
-      <Container>
-        <Row>
-          <Col>
             <h2>About Us</h2>
             <p>
               Dataset Colab presents a collaborative large-scale
@@ -24,11 +21,6 @@ const AboutUs = () => {
               Dataset Colab was developed in response to the poor preformance of
               our object detection models because of small datasets.
             </p>
-          </Col>
-        </Row>
-
-        <Row>
-          <Col>
             <h3>Contact Information</h3>
             <p>For any questions or inquiries, please contact:</p>
             <ul>
@@ -41,9 +33,6 @@ const AboutUs = () => {
                 <a href="mailto:mablis25@lsrhs.net">mablis25@lsrhs.net</a>
               </li>
             </ul>
-          </Col>
-        </Row>
-      </Container>
     </div>
   );
 };
