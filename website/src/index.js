@@ -1,6 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
 import { AuthProvider } from "./contexts/AuthContext";
 import PrivateRoute from "./contexts/PrivateRoute";
@@ -19,7 +19,7 @@ import DownloadDataset from "./pages/DownloadDataset";
 import DeleteAccount from "./pages/DeleteAccount";
 import Home from "./pages/Home";
 import View from "./pages/View";
-import AboutUs from "./pages/aboutUs";
+import AboutUs from "./pages/AboutUs";
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
@@ -35,7 +35,7 @@ root.render(
                   exact
                   path="/"
                   element={
-                    <PrivateRoute noAuth={<Home />}>
+                    <PrivateRoute noAuth={<Navigate to="/signup" />}>
                       <Dashboard />
                     </PrivateRoute>
                   }
@@ -65,7 +65,7 @@ root.render(
                 />
                 <Route
                   exact
-                  path="/aboutus"
+                  path="/about"
                   element={
                     <AboutUs />
                   }

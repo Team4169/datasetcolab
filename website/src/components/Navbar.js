@@ -24,13 +24,14 @@ export default function NavbarComponent() {
       <div style={{ backgroundColor: "inherit" }}>
         <Navbar bg="inherit" expand="lg">
           <Navbar.Brand onClick={() => navigate("/")} style={{ cursor: "pointer" }}>
-            FRC Dataset Colab
+            Dataset Colab
           </Navbar.Brand>
           <Navbar.Toggle aria-controls="basic-navbar-nav" />
           <Navbar.Collapse id="basic-navbar-nav" className="justify-content-end">
             <Nav>
               <Nav.Link onClick={() => navigate("/download")} style={{ cursor: "pointer" }}>Download Dataset</Nav.Link>
-              <Nav.Link onClick={() => navigate("/login")} style={{ cursor: "pointer" }}>Login</Nav.Link>
+            <Nav.Link onClick={() => navigate("/about")} style={{ cursor: "pointer" }}>About Us</Nav.Link>
+              <Nav.Link onClick={() => navigate("/signup")} style={{ cursor: "pointer" }}>Signup/Login</Nav.Link>
             </Nav>
           </Navbar.Collapse>
         </Navbar>
@@ -42,14 +43,13 @@ export default function NavbarComponent() {
     <div style={{ backgroundColor: "inherit" }}>
       <Navbar bg="inherit" expand="lg">
         <Navbar.Brand onClick={() => navigate("/")} style={{ cursor: "pointer" }}>
-          FRC Dataset Colab
+          Dataset Colab
         </Navbar.Brand>
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
         <Navbar.Collapse id="basic-navbar-nav" className="justify-content-end">
           <Nav>
             <Nav.Link onClick={() => navigate("/upload")} style={{ cursor: "pointer" }}>Upload</Nav.Link>
             <Nav.Link onClick={() => navigate("/download")} style={{ cursor: "pointer" }}>Download Dataset</Nav.Link>
-            <Nav.Link onClick={() => navigate("/aboutus")} style={{ cursor: "pointer" }}>About Us</Nav.Link>
             <NavDropdown title="Account" id="basic-nav-dropdown">
               <NavDropdown.Item onClick={() => navigate("/settings")} style={{ cursor: "pointer" }}>Settings</NavDropdown.Item>
               <NavDropdown.Item onClick={handleLogout} style={{ cursor: "pointer" }}>Logout</NavDropdown.Item>
