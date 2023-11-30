@@ -173,6 +173,7 @@ public class App {
 
 	app.post("/delete/{folderName}", ctx -> {
 		try {
+			System.out.println(ctx.header("idToken"));
 			FirebaseToken decodedToken = FirebaseAuth
 				.getInstance()
 				.verifyIdToken(ctx.header("idToken"));
@@ -207,7 +208,7 @@ public class App {
 	}
 	);
 */
-        app.get(
+        app.post(
             "/upload",
             ctx -> {
                 try {
