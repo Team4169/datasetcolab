@@ -64,8 +64,7 @@ export default function Upload() {
         },
       };
       
-      console.log(config);
-      let metadata = await axios.get(
+      let metadata = await axios.post(
         "https://api.datasetcolab.com/upload",
         formData,
         config
