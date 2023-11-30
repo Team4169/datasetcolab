@@ -81,7 +81,7 @@ export default function DownloadDataset() {
   const classes = ["Cone", "Cube", "Robot", "Other Robots"];
 
   const handleDownloadCurl = () =>
-    `curl -O https://api.seanmabli.com/download`;
+    `curl -O https://api.datasetcolab.com/download`;
 
   const handleDownloadMethodChange = (dataset, value) => {
     setDownloadMethod((prevMethods) => ({ ...prevMethods, [dataset]: value }));

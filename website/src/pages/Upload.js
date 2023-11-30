@@ -64,8 +64,9 @@ export default function Upload() {
         },
       };
       
+      console.log(config);
       let metadata = await axios.get(
-        "https://api.seanmabli.com/upload",
+        "https://api.datasetcolab.com/upload",
         formData,
         config
       );

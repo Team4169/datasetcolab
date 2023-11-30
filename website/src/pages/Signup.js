@@ -35,7 +35,7 @@ export default function Signup() {
           idToken: idToken,
         },
       };
-      await axios.get("https://api.seanmabli.com/newapikey", config);
+      await axios.get("https://api.datasetcolab.com/newapikey", config);
       await sendEmailVerification_();
       navigate("/email-verification?to=" + destination);
     } catch {

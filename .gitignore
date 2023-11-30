@@ -40,3 +40,5 @@ roboflow.txt
 
 # Ignore Gradle build output directory
 build
+
+app/run.sh
