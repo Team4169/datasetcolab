@@ -4,11 +4,107 @@ import shutil
 from pycocotools.coco import COCO
 import sys
 
-def combine_datasets(dataset1_path, dataset2_path, output_path):
-    # Load COCO annotations
-    coco1 = COCO(os.path.join(dataset1_path, 'combined_annotations.json'))
-    coco2 = COCO(os.path.join(dataset2_path, '_annotations.coco.json'))
+def find_json_files(directory_path):
+    json_files = [f for f in os.listdir(directory_path) if f.endswith('.json')]
+    return json_files
 
+def find_metadata_folders(directory_path, year):
+    matching_metadata_folders = []
+
+    for root, dirs, files in os.walk(directory_path):
+        if 'metadata.json' in files:
+            metadata_file_path = os.path.join(root, 'metadata.json')
+
+            with open(metadata_file_path, 'r') as f:
+                metadata = json.load(f)
+
+            # Assuming 'targetDataset' is a key in metadata.json
+            target_dataset_value = metadata.get('targetDataset')
+
+            if target_dataset_value == year:
+                matching_metadata_folders.append(root)
+    return matching_metadata_folders
+
+def combine_datasets_without_delete(dataset1_path, dataset2_path, output_path):
+    # Load COCO annotations
+    json_file1 = find_json_files(dataset1_path)[0]
+    json_file2 = find_json_files(dataset2_path)[0]
+    coco1 = COCO(json_file1)
+    coco2 = COCO(json_file2)
+    
+    # Combine image and annotation data
+    combined_images = coco1.loadImgs(coco1.getImgIds()) + coco2.loadImgs(coco2.getImgIds())
+    combined_annotations = coco1.loadAnns(coco1.getAnnIds()) + coco2.loadAnns(coco2.getAnnIds())
+
+    # Create a new COCO object for the combined dataset
+    combined_coco = {
+        'images': [],
+        'annotations': [],
+        'categories': coco1.loadCats(coco1.getCatIds())
+    }
+
+    # Create a new directory for the combined dataset
+    os.makedirs(output_path, exist_ok=True)
+
+    image_id_mapping = {}
+    new_image_id_counter = 0
+
+    for image_info in combined_images:
+        # Determine the source dataset for the image based on the file name
+        old_image_path = os.path.join(dataset1_path, image_info['file_name'])
+        if not os.path.exists(old_image_path):
+            old_image_path = os.path.join(dataset2_path, image_info['file_name'])
+
+        new_image_name = generate_unique_name()
+        new_image_path = os.path.join(output_path, f'{new_image_name}.jpg')
+
+        image_id_mapping[image_info['id']] = new_image_id_counter
+        new_image_id_counter += 1
+
+        shutil.copy(old_image_path, new_image_path)
+
+        # Add new image information to the combined_coco object
+        combined_coco['images'].append({
+            'id': image_id_mapping[image_info['id']],
+            'file_name': f'{new_image_name}.jpg',
+            'width': image_info['width'],
+            'height': image_info['height'],
+            'date_captured': image_info['date_captured'],
+            'license': image_info['license'],
+        })
+
+    annotation_id_mapping = {}
+    new_annotation_id_counter = 0
+
+    # Calculate the offset to start new image IDs from 0
+    offset_image_id = min(image_id_mapping.values())
+
+    # Update image and annotation file names in the combined COCO annotations
+    for annotation in combined_annotations:
+        old_image_id = annotation['image_id']
+        new_image_id = image_id_mapping[old_image_id] - offset_image_id
+
+        # Update image_id in the annotation
+        annotation['image_id'] = new_image_id
+
+        # Update annotation_id
+        annotation_id_mapping[annotation['id']] = new_annotation_id_counter
+        new_annotation_id_counter += 1
+
+        # Add new annotation information to the combined_coco object
+        combined_coco['annotations'].append(annotation)
+
+    # Save the updated annotations to the JSON file with new image names and annotation IDs
+    with open(os.path.join(output_path, 'combined_annotations.json'), 'w') as f:
+        json.dump(combined_coco, f)
+
+def combine_datasets_and_merge(dataset1_path, dataset2_path, output_path):
+    # Load COCO annotations
+    json_file1 = find_json_files(dataset1_path)[0]
+    json_file2 = find_json_files(dataset2_path)[0]
+    coco1 = COCO(json_file1)
+    coco2 = COCO(json_file2)
+    
     # Combine image and annotation data
     combined_images = coco1.loadImgs(coco1.getImgIds()) + coco2.loadImgs(coco2.getImgIds())
     combined_annotations = coco1.loadAnns(coco1.getAnnIds()) + coco2.loadAnns(coco2.getAnnIds())
@@ -99,9 +195,26 @@ generate_unique_name.counter = 0
 
 # Example usage
 
+year = sys.argv[1]
+
+directory_path = '/home/team4169/frcdatasetcolab/app/upload'
+metadata_folders = find_metadata_folder(directory_path, year)
 
 
-dataset1_path = "/home/team4169/frcdatasetcolab/app/upload/" + sys.argv[1]
-dataset2_path = "/home/team4169/frcdatasetcolab/app/upload/" + sys.argv[2]
+
+
+output_path_main = '/home/team4169/frcdatasetcolab/app/outputMain'
+combine_datasets_without_delete(metadata_folders[0] + "/test", metadata_folders[1] + "/test", output_path_main + "/test")
+combine_datasets_without_delete(metadata_folders[0] + "/train", metadata_folders[1] + "/train", output_path_main + "/train")
+combine_datasets_without_delete(metadata_folders[0] + "/valid", metadata_folders[1] + "/valid", output_path_main + "/valid")
 output_path = '/home/team4169/frcdatasetcolab/app/output'
-combine_datasets(dataset1_path, dataset2_path, output_path)
+for i in range(2, len(metadata_folders)):
+    combine_datasets_and_merge(output_path_main + "/test", metadata_folders[i] + "/test", output_path)
+    combine_datasets_and_merge(output_path_main + "/train", metadata_folders[i] + "/train", output_path)
+    combine_datasets_and_merge(output_path_main + "/valid", metadata_folders[i] + "/valid", output_path)
+
+
+
+#dataset1_path = "/home/team4169/frcdatasetcolab/app/upload/" + sys.argv[1]
+#dataset2_path = "/home/team4169/frcdatasetcolab/app/upload/" + sys.argv[2]
+#combine_datasets(dataset1_path, dataset2_path, output_path)

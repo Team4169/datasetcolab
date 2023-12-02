@@ -45,6 +45,8 @@ public class App {
             }
         }
 
+    private static Utils mainUtils = new Utils();
+
     public static void main(String[] args) {
         try {
             FileInputStream serviceAccount = new FileInputStream(
@@ -171,9 +173,8 @@ public class App {
             }
         );
 
-	app.post("/delete/{folderName}", ctx -> {
+	app.get("/delete/{folderName}", ctx -> {
 		try {
-			System.out.println(ctx.header("idToken"));
 			FirebaseToken decodedToken = FirebaseAuth
 				.getInstance()
 				.verifyIdToken(ctx.header("idToken"));
@@ -181,8 +182,7 @@ public class App {
 
 			String folderName = ctx.pathParam("folderName");
 
-			Utils utils = new Utils();
-			utils.executeCommand("rm -fr upload/" + uid + "/" + folderName);
+			mainUtils.executeCommand("rm -fr upload/" + uid + "/" + folderName);
 		} catch (FirebaseAuthException e) {
 			e.printStackTrace();
 			ctx.status(401).result("Error: Authentication failed.");
@@ -190,7 +190,7 @@ public class App {
 	}
 	);
 /*
-    app.post("/edit/{folderName}", ctx -> {
+    app.get("/edit/{folderName}", ctx -> {
 		try {
 			FirebaseToken decodedToken = FirebaseAuth
 				.getInstance()
@@ -199,7 +199,8 @@ public class App {
 
 			String folderName = ctx.pathParam("folderName");
             JSONObject dataToAdd = new JSONObject(ctx.body());
-            addToMetadata(folderName, dataToAdd);
+           // addToMetadata(folderName, dataToAdd);
+	   
 			
 		} catch (FirebaseAuthException e) {
 			e.printStackTrace();
@@ -220,11 +221,9 @@ public class App {
                     Date date = new Date();
                     SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd_HH:mm");
 
-                    Utils utils = new Utils();
-
                     String uploadTime = dateFormat.format(date);
                     String uploadName = ctx.header("uploadName");
-                    String folderName = utils.generateRandomString(8);
+                    String folderName = mainUtils.generateRandomString(8);
                     String datasetType = ctx.header("datasetType");
                     String targetDataset = ctx.header("targetDataset");
                     JSONArray parsedNamesUpload = new JSONArray();
@@ -268,13 +267,13 @@ public class App {
 
                    
                     if (targetDataset.equals("FRC2023")) {
-                        utils.executeCommand("python3 /home/team4169/frcdatasetcolab/app/combineDatasets.py FRC2023/" + "test " + uid + "/" + folderName + "/test");
-                        utils.executeCommand("python3 /home/team4169/frcdatasetcolab/app/combineDatasets.py FRC2023/" + "train " + uid + "/" + folderName + "/train");
-                        utils.executeCommand("python3 /home/team4169/frcdatasetcolab/app/combineDatasets.py FRC2023/" + "valid " + uid + "/" + folderName + "/valid");
+                        mainUtils.executeCommand("python3 /home/team4169/frcdatasetcolab/app/combineDatasets.py FRC2023/" + "test " + uid + "/" + folderName + "/test");
+                        mainUtils.executeCommand("python3 /home/team4169/frcdatasetcolab/app/combineDatasets.py FRC2023/" + "train " + uid + "/" + folderName + "/train");
+                        mainUtils.executeCommand("python3 /home/team4169/frcdatasetcolab/app/combineDatasets.py FRC2023/" + "valid " + uid + "/" + folderName + "/valid");
                     } else if (targetDataset.equals("FRC2024")) {
-                        utils.executeCommand("python3 /home/team4169/frcdatasetcolab/app/combineDatasets.py FRC2024/" + "test " + uid + "/" + folderName + "/test");
-                        utils.executeCommand("python3 /home/team4169/frcdatasetcolab/app/combineDatasets.py FRC2024/" + "train " + uid + "/" + folderName + "/train");
-                        utils.executeCommand("python3 /home/team4169/frcdatasetcolab/app/combineDatasets.py FRC2024/" + "valid " + uid + "/" + folderName + "/valid");
+                        mainUtils.executeCommand("python3 /home/team4169/frcdatasetcolab/app/combineDatasets.py FRC2024/" + "test " + uid + "/" + folderName + "/test");
+                        mainUtils.executeCommand("python3 /home/team4169/frcdatasetcolab/app/combineDatasets.py FRC2024/" + "train " + uid + "/" + folderName + "/train");
+                        mainUtils.executeCommand("python3 /home/team4169/frcdatasetcolab/app/combineDatasets.py FRC2024/" + "valid " + uid + "/" + folderName + "/valid");
                     }
 
                     ctx.json(metadata);
@@ -285,9 +284,9 @@ public class App {
                 }
             }
         );
-	/*
+
 	app.get(
-    "/download/:targetDataset",
+    "/download/{targetDataset}",
     ctx -> {
         try {
             FirebaseToken decodedToken = FirebaseAuth
@@ -306,7 +305,8 @@ public class App {
                     String zipFileName = targetDataset + "_projects.zip";
                     Utils utils = new Utils();
                     utils.zipDirectory(targetFolderPath, zipFileName);
-
+		    
+		    System.out.println(zipFileName);
                     ctx.result(zipFileName);
                     ctx.contentType("application/zip");
                     ctx.header("Content-Disposition", "attachment; filename=" + zipFileName);
@@ -322,9 +322,9 @@ public class App {
         }
     }
 );
-*/
+
         app.get(
-            "/newapikey",
+            "/api",
             ctx -> {
                 try {
                     FirebaseToken decodedToken = FirebaseAuth
@@ -332,64 +332,39 @@ public class App {
                         .verifyIdToken(ctx.header("idToken"));
                     String uid = decodedToken.getUid();
 
+		    String newKeyString = ctx.header("new");
+		    boolean newKey;
+		    if (newKeyString.equals("true")) {
+		    	newKey = true;
+		    } else {
+			newKey = false;
+		    }
+
                     JSONObject apiJsonObject;
                     try {
                         String content = Files.readString(Path.of("api.json"));
                         apiJsonObject = new JSONObject((Map<?, ?>) new JSONParser().parse(content));
                     } catch (IOException | ParseException e) {
                         e.printStackTrace();
-                        apiJsonObject = new JSONObject();
-                    }
+			apiJsonObject = new JSONObject();
+			newKey = true;
+		    }
 
-                    Utils utils = new Utils();
-
-                    String newApiKey = utils.generateRandomString(24);
-                    if (apiJsonObject.containsKey(uid)) {
-                        apiJsonObject.put(uid, newApiKey);
+		    String apiKey = mainUtils.generateRandomString(24);
+                    if (apiJsonObject.containsKey(uid) && !newKey) {
+                        apiKey = (String) apiJsonObject.get(uid);
                     } else {
-                        apiJsonObject.put(uid, newApiKey);
+			apiJsonObject.put(uid, apiKey);	
                     }
 
-                    try {
+		    try {
                         String jsonString = apiJsonObject.toJSONString();
                         Files.write(Path.of("api.json"), jsonString.getBytes(), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
 
-                    ctx.result(newApiKey);
-                } catch (FirebaseAuthException e) {
-                    e.printStackTrace();
-                    ctx.status(401).result("Error: Authentication failed.");
-                }
-            }
-        );
-
-        app.get(
-            "/getapikey",
-            ctx -> {
-                try {
-                    FirebaseToken decodedToken = FirebaseAuth
-                        .getInstance()
-                        .verifyIdToken(ctx.header("idToken"));
-                    String uid = decodedToken.getUid();
-
-                    JSONObject apiJsonObject;
-                    try {
-                        String content = Files.readString(Path.of("api.json"));
-                        apiJsonObject = new JSONObject((Map<?, ?>) new JSONParser().parse(content));
-                    } catch (IOException | ParseException e) {
-                        e.printStackTrace();
-                        ctx.status(500).result("Error: Unable to read API keys.");
-                        return;
-                    }
-
-                    if (apiJsonObject.containsKey(uid)) {
-                        String apiKey = (String) apiJsonObject.get(uid);
-                        ctx.result(apiKey);
-                    } else {
-                        ctx.status(404).result("Error: API key not found for the user.");
-                    }
+		    ctx.result(apiKey);
 
                 } catch (FirebaseAuthException e) {
                     e.printStackTrace();

@@ -2,6 +2,9 @@ package utils;
 
 import java.io.*;
 import java.util.*;
+import java.nio.file.*;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 public class Utils {
 
@@ -69,7 +72,31 @@ public class Utils {
     }
 
 
+public static void zipDirectory(String sourcePath, String zipFileName) throws IOException {
+        Path sourcePathObj = Paths.get(sourcePath);
+        try (ZipOutputStream zipOut = new ZipOutputStream(new FileOutputStream(zipFileName))) {
+            Files.walk(sourcePathObj)
+                .filter(path -> !Files.isDirectory(path))
+                .forEach(path -> {
+                    try {
+                        String relativePath = sourcePathObj.relativize(path).toString();
+                        zipOut.putNextEntry(new ZipEntry(relativePath));
+                        Files.copy(path, zipOut);
+                        zipOut.closeEntry();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                });
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw new IOException("Error zipping directory: " + e.getMessage());
+        }
+    }
+
+
     public int getLastExitCode() {
         return lastExitCode;
     }
+
+
 }
