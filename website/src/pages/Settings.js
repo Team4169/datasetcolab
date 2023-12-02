@@ -57,7 +57,7 @@ export default function Settings() {
   const emailConfirmRef = useRef();
   const passwordRef = useRef();
   const passwordConfirmRef = useRef();
-  const { currentUser, updateEmail_, updatePassword_, logout } = useAuth();
+  const { currentUser, updateEmail_, updatePassword_ } = useAuth();
   const [emailError, setEmailError] = useState(null);
   const [passwordError, setPasswordError] = useState(null);
   const [apiKeyError, setApiKeyError] = useState(null);
