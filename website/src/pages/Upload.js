@@ -2,21 +2,29 @@ import React, { useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import { Form, Button, ButtonGroup, ToggleButton, Alert, Pagination, Card } from "react-bootstrap";
+import {
+  Form,
+  Button,
+  ButtonGroup,
+  ToggleButton,
+  Alert,
+  Pagination,
+  Card,
+} from "react-bootstrap";
 
 const styles = {
   customFileUpload: {
-    display: 'inline-block',
-    padding: '0.375rem 0.75rem',
-    cursor: 'pointer',
-    color: '#fff',
-    backgroundColor: '#0d6efd',
-    border: '1px solid #0d6efd',
-    borderRadius: '0.375rem',
-    fontSize: '1rem',
+    display: "inline-block",
+    padding: "0.375rem 0.75rem",
+    cursor: "pointer",
+    color: "#fff",
+    backgroundColor: "#0d6efd",
+    border: "1px solid #0d6efd",
+    borderRadius: "0.375rem",
+    fontSize: "1rem",
   },
   customFileInput: {
-    display: 'none',
+    display: "none",
   },
   padding: "20px",
   downloadContainer: { maxWidth: "800px", margin: "0 auto" },
@@ -97,17 +105,17 @@ export default function Upload() {
 
     try {
       const idToken = await currentUser.getIdToken();
-      
+
       let config = {
         headers: {
           idToken: idToken,
           uploadName: uploadName,
-          datasetType: (roboflowUrl == "" ? datasetType : "ROBOFLOW"),
+          datasetType: roboflowUrl == "" ? datasetType : "ROBOFLOW",
           roboflowUrl: roboflowUrl,
           targetDataset: targetDataset,
         },
       };
-      
+
       let metadata = await axios.post(
         "https://api.datasetcolab.com/upload",
         formData,
@@ -116,7 +124,6 @@ export default function Upload() {
       setError("Files uploaded successfully");
       setUploadSuccess(true);
       navigate("/");
-      
     } catch (error) {
       // Handle errors
       setError("Error: " + error.message);
@@ -163,7 +170,7 @@ export default function Upload() {
   const alertVariant = uploadSuccess ? "success" : "danger";
 
   const getSelectedFileNames = () => {
-    return Array.from(selectedFiles).map(file => file.name);
+    return Array.from(selectedFiles).map((file) => file.name);
   };
 
   // Pagination state
@@ -174,13 +181,18 @@ export default function Upload() {
   const indexOfLastFile = currentPage * filesPerPage;
   const indexOfFirstFile = indexOfLastFile - filesPerPage;
   const selectedFileNames = getSelectedFileNames();
-  const currentFiles = selectedFileNames.slice(indexOfFirstFile, indexOfLastFile);
+  const currentFiles = selectedFileNames.slice(
+    indexOfFirstFile,
+    indexOfLastFile
+  );
 
   // Change page
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
   // Pagination display logic
-  const pageNumbers = Array.from({ length: Math.ceil(selectedFileNames.length / filesPerPage) });
+  const pageNumbers = Array.from({
+    length: Math.ceil(selectedFileNames.length / filesPerPage),
+  });
   const maxPageLinks = 5; // Maximum number of page links to display
 
   let paginationItems = [];
@@ -205,7 +217,9 @@ export default function Upload() {
           1
         </Pagination.Item>
       );
-      paginationItems.push(<Pagination.Ellipsis key="ellipsis-start" disabled />);
+      paginationItems.push(
+        <Pagination.Ellipsis key="ellipsis-start" disabled />
+      );
     }
 
     for (let i = startPage; i <= endPage; i++) {
@@ -223,10 +237,7 @@ export default function Upload() {
     if (endPage < pageNumbers.length) {
       paginationItems.push(<Pagination.Ellipsis key="ellipsis-end" disabled />);
       paginationItems.push(
-        <Pagination.Item
-          key="end"
-          onClick={() => paginate(pageNumbers.length)}
-        >
+        <Pagination.Item key="end" onClick={() => paginate(pageNumbers.length)}>
           {pageNumbers.length}
         </Pagination.Item>
       );
@@ -242,7 +253,6 @@ export default function Upload() {
   const handleDownloadCurl = () =>
     `curl -O https://api.datasetcolab.com/download`;
 
-
   return (
     <div style={{ padding: "20px" }}>
       <h2>Upload</h2>
@@ -251,36 +261,40 @@ export default function Upload() {
           {error}
         </Alert>
       )}
-        <label htmlFor="uploadName">Upload Method</label>
-        <Form.Group>
-          <ButtonGroup toggle>
-            <ToggleButton
-              type="radio"
-              variant="outline-primary"
-              checked={uploadMethod === "direct"}
-              onClick={() => setUploadMethod("direct")}
-            >
-              Upload Directly
-            </ToggleButton>
-            <ToggleButton
-              type="radio"
-              variant="outline-primary"
-              checked={uploadMethod === "roboflow"}
-              onClick={() => setUploadMethod("roboflow")}
-            >
-              Upload With Roboflow
-            </ToggleButton>
-            <ToggleButton
-              type="radio"
-              variant="outline-primary"
-              checked={uploadMethod === "curl"}
-              onClick={() => setUploadMethod("curl")}
-            >
-              Upload With Curl
-            </ToggleButton>
-          </ButtonGroup>
-        </Form.Group>
-        {(uploadMethod === "direct") && (<><label htmlFor="uploadName" style={{ marginTop: "10px" }}>Upload Name</label>
+      <label htmlFor="uploadName">Upload Method</label>
+      <Form.Group>
+        <ButtonGroup toggle>
+          <ToggleButton
+            type="radio"
+            variant="outline-primary"
+            checked={uploadMethod === "direct"}
+            onClick={() => setUploadMethod("direct")}
+          >
+            Upload Directly
+          </ToggleButton>
+          <ToggleButton
+            type="radio"
+            variant="outline-primary"
+            checked={uploadMethod === "roboflow"}
+            onClick={() => setUploadMethod("roboflow")}
+          >
+            Upload With Roboflow
+          </ToggleButton>
+          <ToggleButton
+            type="radio"
+            variant="outline-primary"
+            checked={uploadMethod === "curl"}
+            onClick={() => setUploadMethod("curl")}
+          >
+            Upload With Curl
+          </ToggleButton>
+        </ButtonGroup>
+      </Form.Group>
+      {uploadMethod === "direct" && (
+        <>
+          <label htmlFor="uploadName" style={{ marginTop: "10px" }}>
+            Upload Name
+          </label>
           <Form.Control
             type="text"
             value={uploadName}
@@ -329,73 +343,88 @@ export default function Upload() {
             Note: Folders should be uploaded as ZIP files.
           </p>
           <div>
-        {selectedFiles.length > 0 && (
-          <div>
-            <div className="card-columns">
-              {currentFiles.map((fileName, index) => (
-                <Card key={index} className="text-center" style={{ padding: "10px", marginTop: "10px"}}>
-                  <Card.Text style={{ fontSize: "14px", fontWeight: "normal" }}>
-                    {fileName}
-                  </Card.Text>
-                </Card>
-              ))}
-            </div>
-            {(selectedFiles.length > 10) ? (<Pagination className="justify-content-center" style={{ marginTop: "10px" }}>
-              {paginationItems}
-            </Pagination>) : (<div style={{marginBottom: "10px"}}/>)
-            
-            
-            }
+            {selectedFiles.length > 0 && (
+              <div>
+                <div className="card-columns">
+                  {currentFiles.map((fileName, index) => (
+                    <Card
+                      key={index}
+                      className="text-center"
+                      style={{ padding: "10px", marginTop: "10px" }}
+                    >
+                      <Card.Text
+                        style={{ fontSize: "14px", fontWeight: "normal" }}
+                      >
+                        {fileName}
+                      </Card.Text>
+                    </Card>
+                  ))}
+                </div>
+                {selectedFiles.length > 10 ? (
+                  <Pagination
+                    className="justify-content-center"
+                    style={{ marginTop: "10px" }}
+                  >
+                    {paginationItems}
+                  </Pagination>
+                ) : (
+                  <div style={{ marginBottom: "10px" }} />
+                )}
+              </div>
+            )}
           </div>
-        )}
-      </div></>)}
-      {uploadMethod === "roboflow" && (<>
-            <label htmlFor="roboflowUrl" style={{ marginTop: "10px" }}>Roboflow URL</label>
-            <Form.Control
-              type="text"
-              value={roboflowUrl}
-              onChange={(e) => setRoboflowUrl(e.target.value)}
-              style={{ marginBottom: "10px" }}
-            />
-            <label htmlFor="datasetType" style={{ marginTop: "10px" }}>
-              Target Dataset
-            </label>
-            <Form.Control
-              as="select"
-              value={targetDataset}
-              onChange={(e) => setTargetDataset(e.target.value)}
-              style={{ marginBottom: "10px" }}
-            >
-              <option value="FRC2023">FRC 2023</option>
-              <option value="FRC2024">FRC 2024</option>
-            </Form.Control></>
-        )}
-        {uploadMethod === "curl" && (
-          <div>
-                          <div style={styles.codeBlock}>
-                            <code>{handleDownloadCurl()}</code>
-                            <div
-                              style={styles.copyButton}
-                              onClick={handleCopyToClipboard}
-                            >
-                              <span role="img" aria-label="Copy">
-                                📋
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-          )}
+        </>
+      )}
+      {uploadMethod === "roboflow" && (
+        <>
+          <label htmlFor="roboflowUrl" style={{ marginTop: "10px" }}>
+            Roboflow URL
+          </label>
+          <Form.Control
+            type="text"
+            value={roboflowUrl}
+            onChange={(e) => setRoboflowUrl(e.target.value)}
+            style={{ marginBottom: "10px" }}
+          />
+          <label htmlFor="datasetType" style={{ marginTop: "10px" }}>
+            Target Dataset
+          </label>
+          <Form.Control
+            as="select"
+            value={targetDataset}
+            onChange={(e) => setTargetDataset(e.target.value)}
+            style={{ marginBottom: "10px" }}
+          >
+            <option value="FRC2023">FRC 2023</option>
+            <option value="FRC2024">FRC 2024</option>
+          </Form.Control>
+        </>
+      )}
+      {uploadMethod === "curl" && (
+        <div>
+          <div style={styles.codeBlock}>
+            <code>{handleDownloadCurl()}</code>
+            <div style={styles.copyButton} onClick={handleCopyToClipboard}>
+              <span role="img" aria-label="Copy">
+                📋
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
 
-{(uploadMethod === "direct" || uploadMethod === "roboflow") && <div className="input-group-append">
+      {(uploadMethod === "direct" || uploadMethod === "roboflow") && (
+        <div className="input-group-append">
           <Button variant="primary" onClick={onUpload} disabled={isLoading}>
             {isLoading ? "Uploading..." : "Upload"}
           </Button>
-        </div>}
+        </div>
+      )}
       {showCopyAlert && (
         <Alert variant="success" style={styles.alertContainer} dismissible>
           Curl command copied to clipboard
         </Alert>
       )}
-      </div>
+    </div>
   );
 }

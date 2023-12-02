@@ -2,8 +2,8 @@ import React, { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import axios from "axios";
 import Alert from "react-bootstrap/Alert";
-import { Card, Button, Form, FormControl } from "react-bootstrap";
-import { useParams, useNavigate } from "react-router-dom";
+import { Button, Form, FormControl } from "react-bootstrap";
+import { useParams, useNavigate, Link } from "react-router-dom";
 
 const styles = {
   padding: "20px",
@@ -42,9 +42,6 @@ const styles = {
   },
   closeButton: { cursor: "pointer" },
   checkboxGroup: { display: "flex", gap: "10px", flexWrap: "wrap" },
-  treeContainer: {
-    marginLeft: "20px",
-  },
 };
 
 export default function View() {
@@ -74,11 +71,7 @@ export default function View() {
       setLoading(true);
 
       const idToken = await currentUser.getIdToken();
-      const config = {
-        headers: {
-          idToken: idToken,
-        },
-      };
+      const config = { headers: { idToken: idToken } };
 
       const filesResponse = await axios.get(
         `https://api.datasetcolab.com/files/${folderName}`,
@@ -101,11 +94,7 @@ export default function View() {
   const handleDeleteProject = async () => {
     try {
       const idToken = await currentUser.getIdToken();
-      const config = {
-        headers: {
-          idToken: idToken,
-        },
-      };
+      const config = { headers: { idToken: idToken } };
 
       await axios.get(
         `https://api.datasetcolab.com/delete/${folderName}`,
@@ -166,60 +155,78 @@ export default function View() {
     fetchProjectDetails();
   }, [folderName]);
 
-  const renderTree = (treeData, parentName = "") => (
-    <ul
-      className="list-unstyled"
-      style={
-        parentName === ""
-          ? { ...styles.treeContainer, paddingLeft: 0 }
-          : styles.treeContainer
-      }
-    >
-      {Object.entries(treeData).map(([name, value], index) => (
-        <li key={name}>
-          <div
-            style={{
-              cursor: "pointer",
-              backgroundColor: "white",
-              padding: "5px",
-              marginBottom: "5px",
-            }}
-            onClick={() => handleToggleSection(parentName + name)}
-          >
-            {typeof value === "object" ? (
-              <>
-                <span>
-                  {isSectionOpen(parentName + name) ? "▼" : "►"}{" "}
-                  {name.length > 20 ? name.substring(0, 20) + "..." : name}
-                </span>
-                {isSectionOpen(parentName + name) &&
-                  renderTree(value, parentName + name)}
-              </>
-            ) : (
-              name
-            )}
-          </div>
-          {isSectionOpen(parentName + name) &&
-            index === 9 &&
-            Object.entries(treeData).length > 10 && (
-              <div
-                style={{
-                  cursor: "pointer",
-                  backgroundColor: "white",
-                  padding: "5px",
-                  marginBottom: "5px",
-                }}
-                onClick={() => handleToggleSection(parentName + "more")}
-              >
-                Show more
-              </div>
-            )}
-        </li>
-      ))}
-      {isSectionOpen(parentName + "more") &&
-        renderTree(Object.entries(treeData).slice(10), parentName + "more")}
-    </ul>
-  );
+  const renderTree = (treeData, parentName = "", first = false) => {
+    const treeStyle = {
+      cursor: "pointer",
+      backgroundColor: "white",
+      padding: "5px",
+      marginBottom: "5px",
+    };
+    treeStyle.marginLeft = first ? "" : "25px";
+    return (
+      <ul
+        className="list-unstyled"
+        style={parentName === "" ? { paddingLeft: 0 } : {}}
+      >
+        {Object.entries(treeData).map(([name, value], index) => (
+          <li key={name}>
+            <div
+              style={treeStyle}
+              onClick={() => handleToggleSection(parentName + name)}
+            >
+              {typeof value === "object" ? (
+                <>
+                  <span>
+                    {isSectionOpen(parentName + name) ? "▼" : "►"}{" "}
+                    {name.length < 63
+                      ? name
+                      : name.substring(0, 40) +
+                        "..." +
+                        name.substring(name.length - 20)}
+                  </span>
+                  {isSectionOpen(parentName + name) &&
+                    renderTree(value, parentName + name)}
+                </>
+              ) : (
+                <Link
+                  to={
+                    "/view/" +
+                    folderName +
+                    "/" +
+                    (parentName !== "" ? parentName + "/" : "") +
+                    name
+                  }
+                >
+                  {name.length < 63
+                    ? name
+                    : name.substring(0, 40) +
+                      "..." +
+                      name.substring(name.length - 20)}
+                </Link>
+              )}
+            </div>
+            {isSectionOpen(parentName + name) &&
+              index === 9 &&
+              Object.entries(treeData).length > 10 && (
+                <div
+                  style={{
+                    cursor: "pointer",
+                    backgroundColor: "white",
+                    padding: "5px",
+                    marginBottom: "5px",
+                  }}
+                  onClick={() => handleToggleSection(parentName + "more")}
+                >
+                  Show more
+                </div>
+              )}
+          </li>
+        ))}
+        {isSectionOpen(parentName + "more") &&
+          renderTree(Object.entries(treeData).slice(10), parentName + "more")}
+      </ul>
+    );
+  };
 
   return (
     <div style={{ padding: "20px" }}>
@@ -277,7 +284,9 @@ export default function View() {
                 onChange={handleSearch}
               />
             </Form>
-            <div style={styles.treeContainer}>{renderTree(fileTree)}</div>
+            <div style={styles.treeContainer}>
+              {renderTree(fileTree, "", true)}
+            </div>
             <div style={{ padding: "10px 0" }}>
               <Button variant="danger" onClick={handleDeleteProject}>
                 Delete Project

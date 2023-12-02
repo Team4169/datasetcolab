@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import axios from "axios";
-import Alert from 'react-bootstrap/Alert';
+import Alert from "react-bootstrap/Alert";
 
 export default function Docs() {
   const { currentUser } = useAuth();
@@ -9,7 +9,12 @@ export default function Docs() {
 
   return (
     <div style={{ padding: "20px" }}>
-      <Alert variant="danger" show={error} onClose={() => setError("")} dismissible>
+      <Alert
+        variant="danger"
+        show={error}
+        onClose={() => setError("")}
+        dismissible
+      >
         {error}
       </Alert>
       <div className="files-preview">

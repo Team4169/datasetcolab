@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import axios from "axios";
-import Alert from 'react-bootstrap/Alert';
-import { Card, Button } from 'react-bootstrap';
-import { useNavigate } from 'react-router-dom';
+import Alert from "react-bootstrap/Alert";
+import { Card, Button } from "react-bootstrap";
+import { useNavigate } from "react-router-dom";
 
 const styles = {
   padding: "20px",
@@ -50,7 +50,6 @@ const styles = {
   checkboxGroup: { display: "flex", gap: "10px", flexWrap: "wrap" },
 };
 
-
 export default function Dashboard() {
   const { currentUser } = useAuth();
 
@@ -70,7 +69,10 @@ export default function Dashboard() {
         },
       };
 
-      const response = await axios.get("https://api.datasetcolab.com/view", config);
+      const response = await axios.get(
+        "https://api.datasetcolab.com/view",
+        config
+      );
 
       if (Array.isArray(response.data)) {
         setFolderMetadata(response.data);
@@ -89,16 +91,25 @@ export default function Dashboard() {
   }, []);
 
   function formatUploadTime(uploadTime) {
-    const [datePart, timePart] = uploadTime.split('_');
-    const [year, month, day] = datePart.split('-');
-    const [hour, minute] = timePart.split(':');
-  
-    const formattedDate = new Date(year, month - 1, day, hour, minute).toLocaleString();
+    const [datePart, timePart] = uploadTime.split("_");
+    const [year, month, day] = datePart.split("-");
+    const [hour, minute] = timePart.split(":");
+
+    const formattedDate = new Date(
+      year,
+      month - 1,
+      day,
+      hour,
+      minute
+    ).toLocaleString();
     return formattedDate;
   }
 
   function formatTargetDataset(targetDataset) {
-    const formattedTargetDataset = targetDataset.replace(/FRC(\d{4})/, 'FRC $1');
+    const formattedTargetDataset = targetDataset.replace(
+      /FRC(\d{4})/,
+      "FRC $1"
+    );
     return formattedTargetDataset;
   }
 
@@ -112,11 +123,11 @@ export default function Dashboard() {
     <div style={{ padding: "20px" }}>
       <div className="files-preview">
         <h2>Dashboard</h2>
-      {error && (
-        <Alert variant="danger" onClose={() => setError(null)} dismissible>
-          {error}
-        </Alert>
-      )}
+        {error && (
+          <Alert variant="danger" onClose={() => setError(null)} dismissible>
+            {error}
+          </Alert>
+        )}
         {isLoading ? (
           <p>Loading folder metadata...</p>
         ) : (
@@ -129,19 +140,31 @@ export default function Dashboard() {
                   return nanosecondsB - nanosecondsA; // Sort in descending order
                 })
                 .map((metadata, index) => {
-                  const formattedUploadTime = formatUploadTime(metadata.uploadTime);
-                  const formattedTargetDataset = formatTargetDataset(metadata.targetDataset);
+                  const formattedUploadTime = formatUploadTime(
+                    metadata.uploadTime
+                  );
+                  const formattedTargetDataset = formatTargetDataset(
+                    metadata.targetDataset
+                  );
 
                   return (
                     <div key={index}>
                       <Card key={index} style={styles.datasetCard}>
                         <Card.Body>
                           <h3>{metadata.uploadName}</h3>
-                          <small><strong>Upload Time:</strong> {formattedUploadTime}</small>
+                          <small>
+                            <strong>Upload Time:</strong> {formattedUploadTime}
+                          </small>
                           <br />
-                          <small><strong>Dataset Type:</strong> {metadata.datasetType}</small>
+                          <small>
+                            <strong>Dataset Type:</strong>{" "}
+                            {metadata.datasetType}
+                          </small>
                           <br />
-                          <small><strong>Target Dataset:</strong> {formattedTargetDataset}</small>
+                          <small>
+                            <strong>Target Dataset:</strong>{" "}
+                            {formattedTargetDataset}
+                          </small>
                           <br />
                           <Button
                             variant="primary"

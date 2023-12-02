@@ -1,9 +1,9 @@
 import React, { useRef, useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
-import Form from 'react-bootstrap/Form';
-import Button from 'react-bootstrap/Button';
-import Alert from 'react-bootstrap/Alert';
+import Form from "react-bootstrap/Form";
+import Button from "react-bootstrap/Button";
+import Alert from "react-bootstrap/Alert";
 import axios from "axios";
 
 const styles = {
@@ -62,14 +62,21 @@ export default function Settings() {
   const [passwordError, setPasswordError] = useState(null);
   const [apiKeyError, setApiKeyError] = useState(null);
   const [loadingEmail, setLoadingEmail] = useState(false);
-  const [loadingPassword, setLoadingPassword] = useState(false)
+  const [loadingPassword, setLoadingPassword] = useState(false);
   const [loadingNewApiKey, setLoadingNewApiKey] = useState(false);
   const [apiKey, setApiKey] = useState("API_KEY");
   const [showCopyAlert, setShowCopyAlert] = useState(false);
 
   let navigate = useNavigate();
 
-  const handleUpdate = async (type, ref, confirmRef, updateFunction, setLoading, setError) => {
+  const handleUpdate = async (
+    type,
+    ref,
+    confirmRef,
+    updateFunction,
+    setLoading,
+    setError
+  ) => {
     setLoading(true);
     setError(null);
 
@@ -91,12 +98,26 @@ export default function Settings() {
 
   const handleEmail = (e) => {
     e.preventDefault();
-    handleUpdate("Email", emailRef, emailConfirmRef, updateEmail_, setLoadingEmail, setEmailError);
+    handleUpdate(
+      "Email",
+      emailRef,
+      emailConfirmRef,
+      updateEmail_,
+      setLoadingEmail,
+      setEmailError
+    );
   };
 
   const handlePassword = (e) => {
     e.preventDefault();
-    handleUpdate("Password", passwordRef, passwordConfirmRef, updatePassword_, setLoadingPassword, setPasswordError);
+    handleUpdate(
+      "Password",
+      passwordRef,
+      passwordConfirmRef,
+      updatePassword_,
+      setLoadingPassword,
+      setPasswordError
+    );
   };
 
   const fetchApiKey = async (isNew) => {
@@ -113,11 +134,16 @@ export default function Settings() {
         },
       };
 
-      const response = await axios.get("https://api.datasetcolab.com/api", config);
+      const response = await axios.get(
+        "https://api.datasetcolab.com/api",
+        config
+      );
       setApiKey(response.data);
       setShowCopyAlert(false);
     } catch (err) {
-      setApiKeyError(isNew ? "Error generating a new API key." : "Error fetching API key.");
+      setApiKeyError(
+        isNew ? "Error generating a new API key." : "Error fetching API key."
+      );
     } finally {
       setLoadingNewApiKey(false);
     }
@@ -153,12 +179,21 @@ export default function Settings() {
           <Form.Label>Email Confirmation:</Form.Label>
           <Form.Control type="email" ref={emailConfirmRef} required />
         </Form.Group>
-        <Button variant="primary" type="submit" disabled={loadingEmail} style={{ marginBottom: "20px" }}>
+        <Button
+          variant="primary"
+          type="submit"
+          disabled={loadingEmail}
+          style={{ marginBottom: "20px" }}
+        >
           Update
         </Button>
       </Form>
       {passwordError && (
-        <Alert variant="danger" onClose={() => setPasswordError(null)} dismissible>
+        <Alert
+          variant="danger"
+          onClose={() => setPasswordError(null)}
+          dismissible
+        >
           {passwordError}
         </Alert>
       )}
@@ -168,27 +203,38 @@ export default function Settings() {
           <Form.Label>Password:</Form.Label>
           <Form.Control type="password" ref={passwordRef} required />
         </Form.Group>
-        <Form.Group controlId="passwordConfirm" style={{ marginBottom: "20px" }}>
+        <Form.Group
+          controlId="passwordConfirm"
+          style={{ marginBottom: "20px" }}
+        >
           <Form.Label>Password Confirmation:</Form.Label>
           <Form.Control type="password" ref={passwordConfirmRef} required />
         </Form.Group>
-        <Button variant="primary" type="submit" disabled={loadingPassword} style={{ marginBottom: "20px" }}>
+        <Button
+          variant="primary"
+          type="submit"
+          disabled={loadingPassword}
+          style={{ marginBottom: "20px" }}
+        >
           Update
         </Button>
       </Form>
       {apiKeyError && (
-        <Alert variant="danger" onClose={() => setApiKeyError(null)} dismissible>
+        <Alert
+          variant="danger"
+          onClose={() => setApiKeyError(null)}
+          dismissible
+        >
           {apiKeyError}
         </Alert>
       )}
       <h4>API Key</h4>
-      <div style={{ display: "flex", alignItems: "center", marginBottom: "20px" }}>
+      <div
+        style={{ display: "flex", alignItems: "center", marginBottom: "20px" }}
+      >
         <div style={{ ...styles.codeBlock, width: "100%" }}>
           <code>{apiKey}</code>
-          <div
-            style={styles.copyButton}
-            onClick={handleCopyToClipboard}
-          >
+          <div style={styles.copyButton} onClick={handleCopyToClipboard}>
             <span role="img" aria-label="Copy">
               📋
             </span>
@@ -198,14 +244,19 @@ export default function Settings() {
           variant="primary"
           type="submit"
           onClick={() => fetchApiKey(true)}
-          style={{ marginLeft: "10px", minWidth: "120px"}}
+          style={{ marginLeft: "10px", minWidth: "120px" }}
           disabled={loadingNewApiKey}
         >
           {loadingNewApiKey ? "Loading..." : "New API Key"}
         </Button>
       </div>
       <h4>Delete Account</h4>
-      <Button variant="danger" type="submit" style={{ marginBottom: "20px" }} onClick={() => navigate("/delete")}>
+      <Button
+        variant="danger"
+        type="submit"
+        style={{ marginBottom: "20px" }}
+        onClick={() => navigate("/delete")}
+      >
         Delete Account
       </Button>
       {showCopyAlert && (
