@@ -10,6 +10,7 @@ import {
 } from "react-bootstrap";
 import { useAuth } from "../contexts/AuthContext";
 import { Link } from "react-router-dom";
+import axios from 'axios';
 
 const styles = {
   padding: "20px",
@@ -110,8 +111,33 @@ export default function DownloadDataset() {
     setShowCopyAlert(true);
   };
 
-  const handleDirectDownload = (dataset) =>
-    console.log(`Direct download logic for ${dataset} here`);
+  const handleDirectDownload = async (dataset) => {
+    try {
+        const idToken = await currentUser.getIdToken();
+
+        let config = {
+            headers: {
+                idToken: idToken,
+            },
+            responseType: 'blob', // Set responseType to 'blob' to handle binary data
+        };
+
+        const response = await axios.get(`https://api.datasetcolab.com/download/${dataset}`, config);
+
+        // Create a Blob from the binary data
+        const blob = new Blob([response.data]);
+
+        // Create a download link and trigger the download
+        const downloadLink = document.createElement('a');
+        downloadLink.href = window.URL.createObjectURL(blob);
+        downloadLink.download = `${dataset}.zip`; // You can customize the downloaded file name
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        document.body.removeChild(downloadLink);
+    } catch (err) {
+        setError("Error downloading dataset.");
+    }
+}
 
   useEffect(() => {
     const alertTimeout = setTimeout(() => setShowCopyAlert(false), 5000);

@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { Form, Button, ButtonGroup, ToggleButton, Alert, Pagination, Card } from "react-bootstrap";
 
-const fileUploadStyles = {
+const styles = {
   customFileUpload: {
     display: 'inline-block',
     padding: '0.375rem 0.75rem',
@@ -18,6 +18,49 @@ const fileUploadStyles = {
   customFileInput: {
     display: 'none',
   },
+  padding: "20px",
+  downloadContainer: { maxWidth: "800px", margin: "0 auto" },
+  datasetCard: { marginBottom: "20px", border: "1px solid #e9ecef" },
+  optionsContainer: {
+    padding: "10px",
+    borderRadius: "5px",
+    backgroundColor: "#f8f9fa",
+    position: "relative",
+  },
+  downloadMethodContainer: { display: "flex", gap: "10px" },
+  downloadButtonsContainer: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "10px",
+    marginTop: "10px",
+    border: "none",
+    padding: "0",
+  },
+  codeBlock: {
+    backgroundColor: "#e9ecef",
+    padding: "10px",
+    borderRadius: "5px",
+    overflow: "auto",
+    position: "relative",
+    marginTop: "20px",
+  },
+  copyButton: {
+    position: "absolute",
+    top: "5px",
+    right: "5px",
+    cursor: "pointer",
+  },
+  alertContainer: {
+    position: "fixed",
+    bottom: "10px",
+    left: "10px",
+    zIndex: 999,
+    display: "flex",
+    gap: "10px",
+    alignItems: "center",
+  },
+  closeButton: { cursor: "pointer" },
+  checkboxGroup: { display: "flex", gap: "10px", flexWrap: "wrap" },
 };
 
 export default function Upload() {
@@ -29,8 +72,9 @@ export default function Upload() {
   const [uploadName, setUploadName] = useState(generateRandomName());
   const [datasetType, setDatasetType] = useState("COCO");
   const [targetDataset, setTargetDataset] = useState("FRC2023");
-  const [uploadWithRoboflow, setUploadWithRoboflow] = useState(false);
+  const [uploadMethod, setUploadMethod] = useState("direct");
   const [roboflowUrl, setRoboflowUrl] = useState("");
+  const [showCopyAlert, setShowCopyAlert] = useState(false);
 
   let navigate = useNavigate();
 
@@ -189,6 +233,16 @@ export default function Upload() {
     }
   }
 
+  const handleCopyToClipboard = () => {
+    const curlCommand = handleDownloadCurl();
+    navigator.clipboard.writeText(curlCommand);
+    setShowCopyAlert(true);
+  };
+
+  const handleDownloadCurl = () =>
+    `curl -O https://api.datasetcolab.com/download`;
+
+
   return (
     <div style={{ padding: "20px" }}>
       <h2>Upload</h2>
@@ -203,22 +257,30 @@ export default function Upload() {
             <ToggleButton
               type="radio"
               variant="outline-primary"
-              checked={!uploadWithRoboflow}
-              onClick={() => setUploadWithRoboflow(false)}
+              checked={uploadMethod === "direct"}
+              onClick={() => setUploadMethod("direct")}
             >
               Upload Directly
             </ToggleButton>
             <ToggleButton
               type="radio"
               variant="outline-primary"
-              checked={uploadWithRoboflow}
-              onClick={() => setUploadWithRoboflow(true)}
+              checked={uploadMethod === "roboflow"}
+              onClick={() => setUploadMethod("roboflow")}
             >
               Upload With Roboflow
             </ToggleButton>
+            <ToggleButton
+              type="radio"
+              variant="outline-primary"
+              checked={uploadMethod === "curl"}
+              onClick={() => setUploadMethod("curl")}
+            >
+              Upload With Curl
+            </ToggleButton>
           </ButtonGroup>
         </Form.Group>
-        {(uploadWithRoboflow === false) ? (<><label htmlFor="uploadName" style={{ marginTop: "10px" }}>Upload Name</label>
+        {(uploadMethod === "direct") && (<><label htmlFor="uploadName" style={{ marginTop: "10px" }}>Upload Name</label>
           <Form.Control
             type="text"
             value={uploadName}
@@ -252,14 +314,14 @@ export default function Upload() {
             Dataset
           </label>
           <br />
-          <label htmlFor="fileInput" style={fileUploadStyles.customFileUpload}>
+          <label htmlFor="fileInput" style={styles.customFileUpload}>
             <input
               type="file"
               id="fileInput"
               className="custom-file-input"
               onChange={onFileChange}
               multiple
-              style={fileUploadStyles.customFileInput}
+              style={styles.customFileInput}
             />
             Choose File(s)
           </label>
@@ -286,7 +348,8 @@ export default function Upload() {
             }
           </div>
         )}
-      </div></>) : (<>
+      </div></>)}
+      {uploadMethod === "roboflow" && (<>
             <label htmlFor="roboflowUrl" style={{ marginTop: "10px" }}>Roboflow URL</label>
             <Form.Control
               type="text"
@@ -307,12 +370,32 @@ export default function Upload() {
               <option value="FRC2024">FRC 2024</option>
             </Form.Control></>
         )}
+        {uploadMethod === "curl" && (
+          <div>
+                          <div style={styles.codeBlock}>
+                            <code>{handleDownloadCurl()}</code>
+                            <div
+                              style={styles.copyButton}
+                              onClick={handleCopyToClipboard}
+                            >
+                              <span role="img" aria-label="Copy">
+                                📋
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+          )}
 
-        <div className="input-group-append">
+{(uploadMethod === "direct" || uploadMethod === "roboflow") && <div className="input-group-append">
           <Button variant="primary" onClick={onUpload} disabled={isLoading}>
             {isLoading ? "Uploading..." : "Upload"}
           </Button>
-        </div>
+        </div>}
+      {showCopyAlert && (
+        <Alert variant="success" style={styles.alertContainer} dismissible>
+          Curl command copied to clipboard
+        </Alert>
+      )}
       </div>
   );
 }

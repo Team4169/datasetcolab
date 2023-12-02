@@ -113,9 +113,7 @@ const View = () => {
           },
         };
 
-        console.log(config);
-  
-        await axios.post(`https://api.datasetcolab.com/delete/${folderName}`, config);
+        await axios.get(`https://api.datasetcolab.com/delete/${folderName}`, config);
         navigate('/');
       } catch (err) {
         setError('Error deleting project.');

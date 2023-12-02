@@ -1,6 +1,6 @@
 import React, { useRef, useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import Form from 'react-bootstrap/Form';
 import Button from 'react-bootstrap/Button';
 import Alert from 'react-bootstrap/Alert';
@@ -58,7 +58,9 @@ export default function Settings() {
   const passwordRef = useRef();
   const passwordConfirmRef = useRef();
   const { currentUser, updateEmail_, updatePassword_, logout } = useAuth();
-  const [error, setError] = useState(null);
+  const [emailError, setEmailError] = useState(null);
+  const [passwordError, setPasswordError] = useState(null);
+  const [apiKeyError, setApiKeyError] = useState(null);
   const [loadingEmail, setLoadingEmail] = useState(false);
   const [loadingPassword, setLoadingPassword] = useState(false)
   const [loadingNewApiKey, setLoadingNewApiKey] = useState(false);
@@ -67,113 +69,78 @@ export default function Settings() {
 
   let navigate = useNavigate();
 
-  function handleEmail(e) {
-    e.preventDefault();
-    if (emailRef.current.value !== emailConfirmRef.current.value) {
-      setError("Emails do not match");
+  const handleUpdate = async (type, ref, confirmRef, updateFunction, setLoading, setError) => {
+    setLoading(true);
+    setError(null);
+
+    if (ref.current.value !== confirmRef.current.value) {
+      setError(`${type}s do not match`);
+      setLoading(false);
       return;
     }
 
     const promises = [];
-    setLoadingEmail(true);
-    setError("");
-
-    if (emailRef.current.value !== currentUser.email && emailRef.current.value) {
-      promises.push(updateEmail_(emailRef.current.value));
+    if (ref.current.value && ref.current.value !== currentUser.email) {
+      promises.push(updateFunction(ref.current.value));
     }
 
     Promise.all(promises)
-      .catch(() => {
-        setError("Failed to update account");
-      })
-      .finally(() => {
-        setLoadingEmail(false);
-      });
-  }
-
-  function handlePassword(e) {
-    e.preventDefault();
-    if (passwordRef.current.value !== passwordConfirmRef.current.value) {
-      setError("Passwords do not match");
-      return;
-    }
-
-    const promises = [];
-    setLoadingPassword(true);
-    setError("");
-
-    if (passwordRef.current.value) {
-      promises.push(updatePassword_(passwordRef.current.value));
-    }
-
-    Promise.all(promises)
-      .catch(() => {
-        setError("Failed to update account");
-      })
-      .finally(() => {
-        setLoadingPassword(false);
-      });
-  }
-
-  const fetchApiKeyOnMount = async () => {
-    try {
-      const idToken = await currentUser.getIdToken();
-
-      let config = {
-        headers: {
-          idToken: idToken,
-        },
-      };
-
-      const response = await axios.get("https://api.datasetcolab.com/getapikey", config);
-      setApiKey(response.data);
-    } catch (err) {
-      setError("Error fetching API key.");
-    }
+      .catch(() => setError(`Failed to update ${type.toLowerCase()}`))
+      .finally(() => setLoading(false));
   };
 
-  const fetchNewApiKey = async () => {
+  const handleEmail = (e) => {
+    e.preventDefault();
+    handleUpdate("Email", emailRef, emailConfirmRef, updateEmail_, setLoadingEmail, setEmailError);
+  };
+
+  const handlePassword = (e) => {
+    e.preventDefault();
+    handleUpdate("Password", passwordRef, passwordConfirmRef, updatePassword_, setLoadingPassword, setPasswordError);
+  };
+
+  const fetchApiKey = async (isNew) => {
     try {
-      setLoadingNewApiKey(true);
+      const setLoading = isNew ? setLoadingNewApiKey : () => {};
+      setLoading(true);
 
       const idToken = await currentUser.getIdToken();
 
       let config = {
         headers: {
           idToken: idToken,
+          new: isNew ? "true" : "false",
         },
       };
 
-      const response = await axios.get("https://api.datasetcolab.com/newapikey", config);
+      const response = await axios.get("https://api.datasetcolab.com/api", config);
       setApiKey(response.data);
       setShowCopyAlert(false);
     } catch (err) {
-      setError("Error generating a new API key.");
+      setApiKeyError(isNew ? "Error generating a new API key." : "Error fetching API key.");
     } finally {
       setLoadingNewApiKey(false);
     }
   };
-
-  useEffect(() => {
-    // Call the function when the component mounts
-    fetchApiKeyOnMount();
-
-    const alertTimeout = setTimeout(() => setShowCopyAlert(false), 5000);
-    return () => clearTimeout(alertTimeout);
-  }, [currentUser]); // Include currentUser in the dependency array if it's used inside the effect
-
 
   const handleCopyToClipboard = () => {
     navigator.clipboard.writeText(apiKey);
     setShowCopyAlert(true);
   };
 
+  useEffect(() => {
+    fetchApiKey(false);
+
+    const alertTimeout = setTimeout(() => setShowCopyAlert(false), 5000);
+    return () => clearTimeout(alertTimeout);
+  }, [currentUser]);
+
   return (
     <div style={{ padding: "20px" }}>
       <h2>Settings</h2>
-      {error && (
-        <Alert variant="danger" onClose={() => setError(null)} dismissible>
-          {error}
+      {emailError && (
+        <Alert variant="danger" onClose={() => setEmailError(null)} dismissible>
+          {emailError}
         </Alert>
       )}
       <h4>Update Email</h4>
@@ -190,6 +157,11 @@ export default function Settings() {
           Update
         </Button>
       </Form>
+      {passwordError && (
+        <Alert variant="danger" onClose={() => setPasswordError(null)} dismissible>
+          {passwordError}
+        </Alert>
+      )}
       <h4>Update Password</h4>
       <Form onSubmit={handlePassword}>
         <Form.Group controlId="password" style={{ marginBottom: "20px" }}>
@@ -204,9 +176,14 @@ export default function Settings() {
           Update
         </Button>
       </Form>
+      {apiKeyError && (
+        <Alert variant="danger" onClose={() => setApiKeyError(null)} dismissible>
+          {apiKeyError}
+        </Alert>
+      )}
       <h4>API Key</h4>
       <div style={{ display: "flex", alignItems: "center", marginBottom: "20px" }}>
-        <div  style={{ ...styles.codeBlock, width: "100%" }}>
+        <div style={{ ...styles.codeBlock, width: "100%" }}>
           <code>{apiKey}</code>
           <div
             style={styles.copyButton}
@@ -220,7 +197,7 @@ export default function Settings() {
         <Button
           variant="primary"
           type="submit"
-          onClick={fetchNewApiKey}
+          onClick={() => fetchApiKey(true)}
           style={{ marginLeft: "10px", minWidth: "120px"}}
           disabled={loadingNewApiKey}
         >
