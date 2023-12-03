@@ -1,9 +1,9 @@
 import React, { useRef, useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
-import Form from 'react-bootstrap/Form';
-import Button from 'react-bootstrap/Button';
-import Alert from 'react-bootstrap/Alert';
+import Form from "react-bootstrap/Form";
+import Button from "react-bootstrap/Button";
+import Alert from "react-bootstrap/Alert";
 import axios from "axios";
 
 export default function Signup() {
@@ -27,7 +27,9 @@ export default function Signup() {
     try {
       setError("");
       setLoading(true);
-      const currentUser = (await signup(emailRef.current.value, passwordRef.current.value)).user;
+      const currentUser = (
+        await signup(emailRef.current.value, passwordRef.current.value)
+      ).user;
       console.log(currentUser);
       const idToken = await currentUser.getIdToken();
       let config = {
@@ -46,7 +48,7 @@ export default function Signup() {
   }
 
   const location = useLocation();
-  const [destination, setDestination] = useState("/"); 
+  const [destination, setDestination] = useState("/");
 
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
@@ -68,7 +70,10 @@ export default function Signup() {
           <Form.Label>Password:</Form.Label>
           <Form.Control type="password" ref={passwordRef} required />
         </Form.Group>
-        <Form.Group controlId="passwordConfirm" style={{ marginBottom: "20px" }}>
+        <Form.Group
+          controlId="passwordConfirm"
+          style={{ marginBottom: "20px" }}
+        >
           <Form.Label>Password Confirmation:</Form.Label>
           <Form.Control type="password" ref={passwordConfirmRef} required />
         </Form.Group>

@@ -1,9 +1,9 @@
 import React, { useRef, useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
-import Form from 'react-bootstrap/Form';
-import Button from 'react-bootstrap/Button';
-import Alert from 'react-bootstrap/Alert';
+import Form from "react-bootstrap/Form";
+import Button from "react-bootstrap/Button";
+import Alert from "react-bootstrap/Alert";
 
 export default function Login() {
   const emailRef = useRef();
@@ -26,13 +26,15 @@ export default function Login() {
       let errorMessage = "";
       switch (error.code) {
         case "auth/user-not-found":
-          errorMessage = "User not found. Please check your email and try again.";
+          errorMessage =
+            "User not found. Please check your email and try again.";
           break;
         case "auth/wrong-password":
           errorMessage = "Incorrect password. Please try again.";
           break;
         case "auth/invalid-email":
-          errorMessage = "Invalid email format. Please provide a valid email address.";
+          errorMessage =
+            "Invalid email format. Please provide a valid email address.";
           break;
         default:
           errorMessage = "Failed to log in. Please try again.";
@@ -50,7 +52,7 @@ export default function Login() {
   }
 
   const location = useLocation();
-  const [destination, setDestination] = useState("/"); 
+  const [destination, setDestination] = useState("/");
 
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
@@ -59,12 +61,16 @@ export default function Login() {
     }
   }, [location.search]);
 
-
   return (
     <div style={{ padding: "20px" }}>
       <h2 style={{ marginBottom: "20px" }}>Login</h2>
       {errors.map((error, index) => (
-        <Alert key={index} variant="danger" onClose={() => handleDismiss(index)} dismissible>
+        <Alert
+          key={index}
+          variant="danger"
+          onClose={() => handleDismiss(index)}
+          dismissible
+        >
           {error}
         </Alert>
       ))}

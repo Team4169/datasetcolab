@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { useNavigate, useLocation } from "react-router-dom";
-import Alert from 'react-bootstrap/Alert';
+import Alert from "react-bootstrap/Alert";
 
 export default function EmailVerification() {
   const { currentUser } = useAuth();
@@ -27,7 +27,7 @@ export default function EmailVerification() {
   }, [currentUser, navigate]);
 
   const location = useLocation();
-  const [destination, setDestination] = useState("/"); 
+  const [destination, setDestination] = useState("/");
 
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
@@ -41,7 +41,9 @@ export default function EmailVerification() {
       {error && <Alert variant="danger">{error}</Alert>}
       {currentUser && !currentUser.emailVerified && (
         <>
-          <Alert variant="info">Email verification link sent to {currentUser.email}</Alert>
+          <Alert variant="info">
+            Email verification link sent to {currentUser.email}
+          </Alert>
         </>
       )}
     </div>
