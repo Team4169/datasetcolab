@@ -133,76 +133,61 @@ public class App {
             }
         );
 
-    app.get(
-            "/view/<folderName>",
-            ctx -> {
-                try {
-                    FirebaseToken decodedToken = FirebaseAuth
-                        .getInstance()
-                        .verifyIdToken(ctx.header("idToken"));
-                    String uid = decodedToken.getUid();
+app.get("/view/<folderName>", ctx -> {
+    try {
+        FirebaseToken decodedToken = FirebaseAuth
+            .getInstance()
+            .verifyIdToken(ctx.header("idToken"));
+        String uid = decodedToken.getUid();
 
-                    String folderName = ctx.pathParam("folderName");
-		    System.out.println(folderName);
-                    String requestedFile = "upload/" + uid + "/" + folderName;
+        String folderName = ctx.pathParam("folderName");
+        String requestedFile = "upload/" + uid + "/" + folderName;
 
-                    // Check if the requested path ends with an image extension
-                    if (requestedFile.matches(".*\\.(jpg|jpeg|png|webp)$")) {
-			System.out.println(requestedFile);
-                        File imageFile = new File(requestedFile);
+        // Check if the requested path ends with an image extension
+        if (requestedFile.matches(".*\\.(jpg|jpeg|png|webp)$")) {
+            System.out.println(requestedFile);
+            File imageFile = new File(requestedFile);
 
-                        if (imageFile.exists() && imageFile.isFile()) {
-                            try (InputStream inputStream = new FileInputStream(imageFile)) {
-                                ctx.result(inputStream);
-                                ctx.contentType("image/*");
-                            }
-                        } else {
-                            ctx.result("Image file not found for the specified path.");
-                        }
-                    } else {
-                        String metadataFilePath = requestedFile + "/metadata.json";
-                        System.out.println(metadataFilePath);
-			File metadataFile = new File(metadataFilePath);
-
-                        if (metadataFile.exists() && metadataFile.isFile()) {
-                            try (FileReader fileReader = new FileReader(metadataFile)) {
-                                JSONParser parser = new JSONParser();
-                                JSONObject metadata = (JSONObject) parser.parse(fileReader);
-                                ctx.json(metadata);
-                            }
-                        } else {
-                            ctx.result("Metadata file not found for the specified project.");
-                        }
-                    }
-                } catch (FirebaseAuthException | ParseException e) {
-                    e.printStackTrace();
-                    ctx.status(401).result("Error: Authentication failed.");
+            if (imageFile.exists() && imageFile.isFile()) {
+		System.out.println("hi");
+                try (InputStream inputStream = new FileInputStream(imageFile)) {
+                    ctx.result(inputStream);
+                    ctx.contentType("image/*");
                 }
+            } else {
+                ctx.result("Image file not found for the specified path.");
             }
-        );
+        } else {
+            String metadataFilePath = requestedFile + "/metadata.json";
+            System.out.println(metadataFilePath);
+            File metadataFile = new File(metadataFilePath);
 
-	app.get(
-            "/files/{folderName}",
-            ctx -> {
-                try {
-                    FirebaseToken decodedToken = FirebaseAuth
-                        .getInstance()
-                        .verifyIdToken(ctx.header("idToken"));
-                    String uid = decodedToken.getUid();
+            // Always return populatedTree, even if metadata does not exist
+            String folderPath = "upload/" + uid + "/" + folderName;
 
-                    String folderName = ctx.pathParam("folderName");
-                    String folderPath = "upload/" + uid + "/" + folderName;
+            JSONObject treeObject = new JSONObject();
+            populateTree(folderPath, treeObject);
 
-                    JSONObject result = new JSONObject();
-                    populateTree(folderPath, result);
 
-                    ctx.json(result);
-                } catch (FirebaseAuthException e) {
-                    e.printStackTrace();
-                    ctx.status(401).result("Error: Authentication failed.");
+            if (metadataFile.exists() && metadataFile.isFile()) {
+                try (FileReader fileReader = new FileReader(metadataFile)) {
+                    JSONParser parser = new JSONParser();
+                    JSONObject metadata = (JSONObject) parser.parse(fileReader);
+                    metadata.put("tree", treeObject);
+                    ctx.json(metadata);
                 }
+            } else {
+                // If metadata does not exist, return tree as the main response
+                JSONObject result = new JSONObject();
+                result.put("tree", treeObject);
+                ctx.json(result);
             }
-        );
+        }
+    } catch (FirebaseAuthException | ParseException e) {
+        e.printStackTrace();
+        ctx.status(401).result("Error: Authentication failed.");
+    }
+});
 
 	app.get("/delete/{folderName}", ctx -> {
 		try {
