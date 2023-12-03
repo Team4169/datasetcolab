@@ -46,13 +46,14 @@ const styles = {
 
 export default function View() {
   const { currentUser } = useAuth();
-  const { '*': folderName } = useParams();
+  const { "*": folderName } = useParams();
   const navigate = useNavigate();
 
   const [projectDetails, setProjectDetails] = useState({});
   const [currentFileTree, setCurrentFileTree] = useState({});
   const [isLoading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [imageSrc, setImageSrc] = useState(null);
 
   const [openSections, setOpenSections] = useState([]);
 
@@ -77,11 +78,19 @@ export default function View() {
         `https://api.datasetcolab.com/view/${folderName}`,
         config
       );
+      console.log("Image data length:", response.data.length);
 
-      setProjectDetails(response.data);
-      setCurrentFileTree(response.data.tree);
-
+      if (response.headers["content-type"].startsWith("image")) {
+        const blob = new Blob([response.data], { type: response.headers["content-type"] });
+        console.log(blob.size)
+        const imageUrl = URL.createObjectURL(blob);
+        setImageSrc(imageUrl);
+      } else {
+        setProjectDetails(response.data);
+        setCurrentFileTree(response.data.tree);
+      }
     } catch (err) {
+      console.log(err)
       setError("Error fetching project details.");
     } finally {
       setLoading(false);
@@ -232,6 +241,12 @@ export default function View() {
   return (
     <div style={{ padding: "20px" }}>
       <div className="project-details">
+        {imageSrc && (<img
+  src={imageSrc}
+  alt="Image"
+  style={{ maxWidth: "100%" }}
+  onError={() => console.error("Error loading image")}
+/>  )}
         {isLoading ? (
           <>
             <h2>Loading project details...</h2>
