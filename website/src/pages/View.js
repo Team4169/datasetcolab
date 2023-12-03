@@ -51,6 +51,7 @@ export default function View() {
 
   const [projectDetails, setProjectDetails] = useState({});
   const [fileTree, setFileTree] = useState({});
+  const [currentFileTree, setCurrentFileTree] = useState({});
   const [isLoading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -84,6 +85,7 @@ export default function View() {
 
       setProjectDetails(viewResponse.data);
       setFileTree(filesResponse.data);
+      setCurrentFileTree(filesResponse.data);
     } catch (err) {
       setError("Error fetching project details.");
     } finally {
@@ -148,7 +150,11 @@ export default function View() {
   const handleSearch = (e) => {
     const searchTerm = e.target.value.toLowerCase();
     const searchedFileTree = searchFiles(fileTree, searchTerm);
-    setFileTree(searchedFileTree);
+    setCurrentFileTree(searchedFileTree);
+  };
+
+  const handleSubmit = (event) => {
+    event.preventDefault();
   };
 
   useEffect(() => {
@@ -277,15 +283,16 @@ export default function View() {
             >
               Back to Dashboard
             </Button>
-            <Form style={{ margin: "20px 0px" }}>
-              <FormControl
+            <Form onSubmit={handleSubmit}>
+              <Form.Control
                 type="text"
                 placeholder="Search files"
                 onChange={handleSearch}
+                style={{ margin: "20px 0px" }}
               />
             </Form>
             <div style={styles.treeContainer}>
-              {renderTree(fileTree, "", true)}
+              {renderTree(currentFileTree, "", true)}
             </div>
             <div style={{ padding: "10px 0" }}>
               <Button variant="danger" onClick={handleDeleteProject}>
