@@ -25,25 +25,37 @@ import java.nio.file.StandardOpenOption;
 
 public class App {
 
-        public static void populateTree(String folderPath, JSONObject result) {
-            File folder = new File(folderPath);
-            if (folder.exists() && folder.isDirectory()) {
-                File[] files = folder.listFiles();
-                if (files != null) {
-                    for (File file : files) {
-                        if (file.isDirectory()) {
-                            JSONObject subFolder = new JSONObject();
-                            result.put(file.getName(), subFolder);
-                            populateTree(file.getPath(), subFolder);
-                        } else {
-                            result.put(file.getName(), "File");
+    public static void populateTree(String folderPath, JSONObject result) {
+        File folder = new File(folderPath);
+        if (folder.exists() && folder.isDirectory()) {
+            File[] files = folder.listFiles();
+            if (files != null) {
+                for (File file : files) {
+                    if (file.isDirectory()) {
+                        // Recursive call for subfolders
+                        JSONObject subFolder = new JSONObject();
+                        result.put(file.getName(), subFolder);
+                        populateTree(file.getPath(), subFolder);
+                    } else {
+                        // Check if the file is an image
+                        if (isImageFile(file)) {
+                            result.put(file.getName(), "Image");
                         }
                     }
                 }
-            } else {
-                result.put("error", "Invalid folder path or not a directory.");
             }
+        } else {
+            result.put("error", "Invalid folder path or not a directory.");
         }
+    }
+
+    private static boolean isImageFile(File file) {
+        String fileName = file.getName().toLowerCase();
+        return fileName.endsWith(".jpg") || fileName.endsWith(".jpeg") || fileName.endsWith(".png")
+                || fileName.endsWith(".gif") || fileName.endsWith(".bmp") || fileName.endsWith(".webp");
+        // Add more image file extensions if needed
+    }
+
 
     private static Utils mainUtils = new Utils();
 
@@ -121,8 +133,8 @@ public class App {
             }
         );
 
-        app.get(
-            "/view/{folderName}",
+    app.get(
+            "/view/<folderName>",
             ctx -> {
                 try {
                     FirebaseToken decodedToken = FirebaseAuth
@@ -131,17 +143,36 @@ public class App {
                     String uid = decodedToken.getUid();
 
                     String folderName = ctx.pathParam("folderName");
-                    String metadataFilePath = "upload/" + uid + "/" + folderName + "/metadata.json";
-                    File metadataFile = new File(metadataFilePath);
+		    System.out.println(folderName);
+                    String requestedFile = "upload/" + uid + "/" + folderName;
 
-                    if (metadataFile.exists() && metadataFile.isFile()) {
-                        try (FileReader fileReader = new FileReader(metadataFile)) {
-                            JSONParser parser = new JSONParser();
-                            JSONObject metadata = (JSONObject) parser.parse(fileReader);
-                            ctx.json(metadata);
+                    // Check if the requested path ends with an image extension
+                    if (requestedFile.matches(".*\\.(jpg|jpeg|png|webp)$")) {
+			System.out.println(requestedFile);
+                        File imageFile = new File(requestedFile);
+
+                        if (imageFile.exists() && imageFile.isFile()) {
+                            try (InputStream inputStream = new FileInputStream(imageFile)) {
+                                ctx.result(inputStream);
+                                ctx.contentType("image/*");
+                            }
+                        } else {
+                            ctx.result("Image file not found for the specified path.");
                         }
                     } else {
-                        ctx.result("Metadata file not found for the specified project.");
+                        String metadataFilePath = requestedFile + "/metadata.json";
+                        System.out.println(metadataFilePath);
+			File metadataFile = new File(metadataFilePath);
+
+                        if (metadataFile.exists() && metadataFile.isFile()) {
+                            try (FileReader fileReader = new FileReader(metadataFile)) {
+                                JSONParser parser = new JSONParser();
+                                JSONObject metadata = (JSONObject) parser.parse(fileReader);
+                                ctx.json(metadata);
+                            }
+                        } else {
+                            ctx.result("Metadata file not found for the specified project.");
+                        }
                     }
                 } catch (FirebaseAuthException | ParseException e) {
                     e.printStackTrace();
@@ -150,7 +181,7 @@ public class App {
             }
         );
 
-        app.get(
+	app.get(
             "/files/{folderName}",
             ctx -> {
                 try {
@@ -303,8 +334,7 @@ public class App {
 
                 if (targetFolder.exists() && targetFolder.isDirectory()) {
                     String zipFileName = targetDataset + "_projects.zip";
-                    Utils utils = new Utils();
-                    utils.zipDirectory(targetFolderPath, zipFileName);
+                    mainUtils.zipDirectory(targetFolderPath, zipFileName);
 		    
 		    System.out.println(zipFileName);
                     ctx.result(zipFileName);
