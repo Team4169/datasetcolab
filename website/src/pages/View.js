@@ -46,11 +46,10 @@ const styles = {
 
 export default function View() {
   const { currentUser } = useAuth();
-  const { folderName } = useParams();
+  const { '*': folderName } = useParams();
   const navigate = useNavigate();
 
   const [projectDetails, setProjectDetails] = useState({});
-  const [fileTree, setFileTree] = useState({});
   const [currentFileTree, setCurrentFileTree] = useState({});
   const [isLoading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -74,18 +73,14 @@ export default function View() {
       const idToken = await currentUser.getIdToken();
       const config = { headers: { idToken: idToken } };
 
-      const filesResponse = await axios.get(
-        `https://api.datasetcolab.com/files/${folderName}`,
-        config
-      );
-      const viewResponse = await axios.get(
+      const response = await axios.get(
         `https://api.datasetcolab.com/view/${folderName}`,
         config
       );
 
-      setProjectDetails(viewResponse.data);
-      setFileTree(filesResponse.data);
-      setCurrentFileTree(filesResponse.data);
+      setProjectDetails(response.data);
+      setCurrentFileTree(response.data.tree);
+
     } catch (err) {
       setError("Error fetching project details.");
     } finally {
@@ -149,7 +144,7 @@ export default function View() {
 
   const handleSearch = (e) => {
     const searchTerm = e.target.value.toLowerCase();
-    const searchedFileTree = searchFiles(fileTree, searchTerm);
+    const searchedFileTree = searchFiles(projectDetails.tree, searchTerm);
     setCurrentFileTree(searchedFileTree);
   };
 
@@ -252,6 +247,13 @@ export default function View() {
           </>
         ) : (
           <div style={{ position: "relative" }}>
+            {projectDetails.imageURL && (
+              <img
+                src={projectDetails.imageURL}
+                alt="Project Image"
+                style={{ maxWidth: "100%" }}
+              />
+            )}
             <h2>{projectDetails.uploadName}</h2>
             {error && (
               <Alert

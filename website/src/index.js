@@ -93,7 +93,7 @@ root.render(
                   element={<EmailVerification />}
                 />
                 
-                <Route path="/view/:folderName" element={<View />} />
+                <Route path="/view/*" element={<View />} />
               </Routes>
             </div>
           </div>
