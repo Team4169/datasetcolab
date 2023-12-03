@@ -148,15 +148,29 @@ app.get("/view/<folderName>", ctx -> {
             System.out.println(requestedFile);
             File imageFile = new File(requestedFile);
 
+
             if (imageFile.exists() && imageFile.isFile()) {
-		System.out.println("hi");
-                try (InputStream inputStream = new FileInputStream(imageFile)) {
-                    ctx.result(inputStream);
-                    ctx.contentType("image/*");
-                }
+                byte[] imageBytes = Files.readAllBytes(imageFile.toPath());
+		System.out.println(imageBytes.length);
+		ByteArrayInputStream result = new ByteArrayInputStream(imageBytes);
+                ctx.result(result);
+           String contentType;
+if (requestedFile.matches(".*\\.jpg$")) {
+    contentType = "image/jpeg";
+} else if (requestedFile.matches(".*\\.png$")) {
+    contentType = "image/png";
+} else if (requestedFile.matches(".*\\.webp$")) {
+    contentType = "image/webp";
+} else {
+    // Handle unsupported image formats or set a default content type
+    contentType = "image/jpeg"; // Change this as needed
+}
+
+ctx.contentType(contentType);
             } else {
                 ctx.result("Image file not found for the specified path.");
             }
+
         } else {
             String metadataFilePath = requestedFile + "/metadata.json";
             System.out.println(metadataFilePath);
