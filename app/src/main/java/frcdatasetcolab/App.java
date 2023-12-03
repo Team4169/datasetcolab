@@ -22,6 +22,7 @@ import org.json.simple.JSONArray;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.util.concurrent.CompletableFuture;
 
 public class App {
 
@@ -153,7 +154,7 @@ app.get("/view/<folderName>", ctx -> {
                 byte[] imageBytes = Files.readAllBytes(imageFile.toPath());
 		System.out.println(imageBytes.length);
 		ByteArrayInputStream result = new ByteArrayInputStream(imageBytes);
-                ctx.result(result);
+                ctx.result(imageBytes);
            String contentType;
 if (requestedFile.matches(".*\\.jpg$")) {
     contentType = "image/jpeg";
@@ -256,22 +257,18 @@ ctx.contentType(contentType);
                     String folderName = mainUtils.generateRandomString(8);
                     String datasetType = ctx.header("datasetType");
                     String targetDataset = ctx.header("targetDataset");
-                    JSONArray parsedNamesUpload = new JSONArray();
+                    String exportLink = "";
+		    JSONArray parsedNamesUpload = new JSONArray();
 
                     JSONObject metadata = new JSONObject();
 
                     if (ctx.header("datasetType").equals("COCO")) {
                         COCO uploader = new COCO();
                         uploader.upload(folderName, ctx.uploadedFiles("files"), uid);
-                        Set<String> parsedNames = uploader.parsedNames;
-                        parsedNamesUpload.addAll(parsedNames);
                     } else if (ctx.header("datasetType").equals("ROBOFLOW")) {
                         Roboflow uploader = new Roboflow();
-                        uploader.upload(folderName, ctx.header("roboflowUrl"), uid);
+                        exportLink = uploader.upload(folderName, ctx.header("roboflowUrl"), uid);
                         uploadName = uploader.getProjectFromUrl(ctx.header("roboflowUrl"));
-                        datasetType = "COCO";
-                        Set<String> parsedNames = uploader.parsedNames;
-                        parsedNamesUpload.addAll(parsedNames);
                     }
 
                     metadata.put("uploadTime", uploadTime);
@@ -279,7 +276,6 @@ ctx.contentType(contentType);
                     metadata.put("datasetType", datasetType);
                     metadata.put("targetDataset", targetDataset);
                     metadata.put("folderName", folderName);
-                    metadata.put("parsedNames", parsedNamesUpload);
 
                     File metadataDirectory = new File("upload/" + uid + "/" + folderName);
                     metadataDirectory.mkdirs();
@@ -295,18 +291,36 @@ ctx.contentType(contentType);
                         return;
                     }
 
-                   
-                    if (targetDataset.equals("FRC2023")) {
-                        mainUtils.executeCommand("python3 /home/team4169/frcdatasetcolab/app/combineDatasets.py FRC2023/" + "test " + uid + "/" + folderName + "/test");
-                        mainUtils.executeCommand("python3 /home/team4169/frcdatasetcolab/app/combineDatasets.py FRC2023/" + "train " + uid + "/" + folderName + "/train");
-                        mainUtils.executeCommand("python3 /home/team4169/frcdatasetcolab/app/combineDatasets.py FRC2023/" + "valid " + uid + "/" + folderName + "/valid");
-                    } else if (targetDataset.equals("FRC2024")) {
-                        mainUtils.executeCommand("python3 /home/team4169/frcdatasetcolab/app/combineDatasets.py FRC2024/" + "test " + uid + "/" + folderName + "/test");
-                        mainUtils.executeCommand("python3 /home/team4169/frcdatasetcolab/app/combineDatasets.py FRC2024/" + "train " + uid + "/" + folderName + "/train");
-                        mainUtils.executeCommand("python3 /home/team4169/frcdatasetcolab/app/combineDatasets.py FRC2024/" + "valid " + uid + "/" + folderName + "/valid");
-                    }
+		    ctx.json(metadata);
 
-                    ctx.json(metadata);
+            final String finalExportLink = exportLink;
+
+            CompletableFuture.runAsync(() -> {
+		
+            if ("COCO".equals(ctx.header("datasetType"))) {
+                COCO uploader = new COCO();
+                uploader.postUpload(uid, folderName);
+                Set<String> parsedNames = uploader.parsedNames;
+                parsedNamesUpload.addAll(parsedNames);
+            } else if ("ROBOFLOW".equals(ctx.header("datasetType"))) {
+                Roboflow uploader = new Roboflow();
+                uploader.postUpload(uid, folderName, finalExportLink);
+                Set<String> parsedNames = uploader.parsedNames;
+                parsedNamesUpload.addAll(parsedNames);
+            }
+
+            metadata.put("parsedNames", parsedNamesUpload);
+
+            try (FileWriter file = new FileWriter(metadataFilePath)) {
+                file.write(metadata.toJSONString());
+                file.flush();
+            } catch (IOException e) {
+                e.printStackTrace();
+                ctx.status(500).result("Error: Failed to save metadata on the server.");
+                return;
+            }
+
+	    });
                    
                 } catch (FirebaseAuthException e) {
                     e.printStackTrace();
@@ -314,8 +328,8 @@ ctx.contentType(contentType);
                 }
             }
         );
-
-	app.get(
+	
+app.get(
     "/download/{targetDataset}",
     ctx -> {
         try {

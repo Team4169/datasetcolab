@@ -31,7 +31,7 @@ public class Roboflow {
     private Utils utils = new Utils();
     public Set<String> parsedNames = new HashSet<>();
 
-    public void upload(String folderName, String roboflowUrl, String uid) {
+    public String upload(String folderName, String roboflowUrl, String uid) {
         String apiKey = readApiKeyFromFile("roboflow.txt");
 
         String workspace = getWorkspaceFromUrl(roboflowUrl);
@@ -45,8 +45,12 @@ public class Roboflow {
         String versionJson = utils.executeCommand("curl https://api.roboflow.com/" + latestVersionId + "/coco?api_key=" + apiKey);
         String exportLink = parseExportLink(versionJson);
 
-        utils.executeCommand("mkdir -p upload/" + uid + "/" + folderName);
-        utils.executeCommand("wget --user-agent='Mozilla/5.0' --referer=" + roboflowUrl + " -O upload/" + uid + "/" + folderName + "/dataset.zip " + exportLink);
+	return(exportLink);
+    }
+
+    public void postUpload(String uid, String folderName, String exportLink) {
+ 	utils.executeCommand("mkdir -p upload/" + uid + "/" + folderName);
+        utils.executeCommand("wget --user-agent='Mozilla/5.0' -O upload/" + uid + "/" + folderName + "/dataset.zip " + exportLink);
 
         if (utils.getLastExitCode() == 0) {
             utils.executeCommand("unzip upload/" + uid + "/" + folderName + "/dataset.zip -d upload/" + uid + "/" + folderName);

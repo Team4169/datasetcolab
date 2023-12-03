@@ -32,7 +32,7 @@ public class COCO {
     public Set<String> parsedNames = new HashSet<>();
 
     public void upload(String folderName, List<UploadedFile> files, String uid) {
-        for (UploadedFile uploadedFile : files) {
+	    for (UploadedFile uploadedFile : files) {
             String filePath = "upload/" + uid + "/" + folderName + "/" + uploadedFile.filename();
 
             File directory = new File(filePath).getParentFile();
@@ -57,8 +57,10 @@ public class COCO {
             }
 
         }
+    }
 
-        parseFiles("upload/" + uid + "/" + folderName);
+    public void postUpload(String uid, String folderName) {
+	    parseFiles("upload/" + uid + "/" + folderName);
     }
 
     private void unzip(String zipFilePath, String destDirectory) {
