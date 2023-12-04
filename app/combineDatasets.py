@@ -20,9 +20,12 @@ def find_metadata_folders(directory_path, year):
 
             # Assuming 'targetDataset' is a key in metadata.json
             target_dataset_value = metadata.get('targetDataset')
+            status = metadata.get('status')
 
             if target_dataset_value == year:
-                matching_metadata_folders.append(root)
+                if status == 'merged':
+                    matching_metadata_folders.append(root)
+            
     return matching_metadata_folders
 
 def combine_datasets_without_delete(dataset1_path, dataset2_path, output_path):

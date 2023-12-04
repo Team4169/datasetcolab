@@ -239,47 +239,77 @@ public class App {
         	}
         	);
         */
-        app.post(
-            "/upload",
-            ctx -> {
+
+app.post(
+    "/upload",
+    ctx -> {
+        try {
+            FirebaseToken decodedToken = FirebaseAuth.getInstance().verifyIdToken(ctx.header("idToken"));
+            String uid = decodedToken.getUid();
+
+            Date date = new Date();
+            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd_HH:mm");
+
+            String uploadTime = dateFormat.format(date);
+            String uploadName = ctx.header("uploadName");
+            String folderName = mainUtils.generateRandomString(8);
+            String datasetType = ctx.header("datasetType");
+            String targetDataset = ctx.header("targetDataset");
+            String exportLink = "";
+            JSONArray parsedNamesUpload = new JSONArray();
+
+            JSONObject metadata = new JSONObject();
+
+            if ("COCO".equals(datasetType)) {
+                COCO uploader = new COCO();
+                uploader.upload(folderName, ctx.uploadedFiles("files"), uid);
+            } else if ("ROBOFLOW".equals(datasetType)) {
+                Roboflow uploader = new Roboflow();
+                exportLink = uploader.upload(folderName, ctx.header("roboflowUrl"), uid);
+                uploadName = uploader.getProjectFromUrl(ctx.header("roboflowUrl"));
+            }
+
+            metadata.put("uploadTime", uploadTime);
+            metadata.put("uploadName", uploadName);
+            metadata.put("datasetType", datasetType);
+            metadata.put("targetDataset", targetDataset);
+            metadata.put("folderName", folderName);
+            metadata.put("status", "postprocessing");
+
+            File metadataDirectory = new File("upload/" + uid + "/" + folderName);
+            metadataDirectory.mkdirs();
+
+            String metadataFilePath = metadataDirectory.getPath() + "/metadata.json";
+
+            try (FileWriter file = new FileWriter(metadataFilePath)) {
+                file.write(metadata.toJSONString());
+                file.flush();
+            } catch (IOException e) {
+                e.printStackTrace();
+                ctx.status(500).result("Error: Failed to save metadata on the server.");
+                return;
+            }
+
+            ctx.json(metadata);
+
+            final String finalExportLink = exportLink;
+
+            CompletableFuture.runAsync(() -> {
                 try {
-                    FirebaseToken decodedToken = FirebaseAuth
-                        .getInstance()
-                        .verifyIdToken(ctx.header("idToken"));
-                    String uid = decodedToken.getUid();
-
-                    Date date = new Date();
-                    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd_HH:mm");
-
-                    String uploadTime = dateFormat.format(date);
-                    String uploadName = ctx.header("uploadName");
-                    String folderName = mainUtils.generateRandomString(8);
-                    String datasetType = ctx.header("datasetType");
-                    String targetDataset = ctx.header("targetDataset");
-                    String exportLink = "";
-                    JSONArray parsedNamesUpload = new JSONArray();
-
-                    JSONObject metadata = new JSONObject();
-
-                    if (ctx.header("datasetType").equals("COCO")) {
+                    if ("COCO".equals(datasetType)) {
                         COCO uploader = new COCO();
-                        uploader.upload(folderName, ctx.uploadedFiles("files"), uid);
-                    } else if (ctx.header("datasetType").equals("ROBOFLOW")) {
+                        uploader.postUpload(uid, folderName);
+                        Set<String> parsedNames = uploader.parsedNames;
+                        parsedNamesUpload.addAll(parsedNames);
+                    } else if ("ROBOFLOW".equals(datasetType)) {
                         Roboflow uploader = new Roboflow();
-                        exportLink = uploader.upload(folderName, ctx.header("roboflowUrl"), uid);
-                        uploadName = uploader.getProjectFromUrl(ctx.header("roboflowUrl"));
+                        uploader.postUpload(uid, folderName, finalExportLink);
+                        Set<String> parsedNames = uploader.parsedNames;
+                        parsedNamesUpload.addAll(parsedNames);
                     }
 
-                    metadata.put("uploadTime", uploadTime);
-                    metadata.put("uploadName", uploadName);
-                    metadata.put("datasetType", datasetType);
-                    metadata.put("targetDataset", targetDataset);
-                    metadata.put("folderName", folderName);
-
-                    File metadataDirectory = new File("upload/" + uid + "/" + folderName);
-                    metadataDirectory.mkdirs();
-
-                    String metadataFilePath = metadataDirectory.getPath() + "/metadata.json";
+                    metadata.put("parsedNames", parsedNamesUpload);
+                    metadata.put("status", "merged");
 
                     try (FileWriter file = new FileWriter(metadataFilePath)) {
                         file.write(metadata.toJSONString());
@@ -290,43 +320,45 @@ public class App {
                         return;
                     }
 
-                    ctx.json(metadata);
+                    File datasetFile = new File("currentDataset.json");
+                    try (FileReader fileReader = new FileReader(datasetFile)) {
+                        JSONParser parser = new JSONParser();
+                        JSONObject currentDataset = (JSONObject) parser.parse(fileReader);
+                        String oldTempName = (String) currentDataset.get(targetDataset);
+                        String tempName = mainUtils.generateRandomString(4);
+                        mainUtils.executeCommand("python3 combineDatasets.py " + targetDataset + " " + tempName);
+                        mainUtils.zipDirectory(tempName + "Main", tempName + "Main" + ".zip");
 
-                    final String finalExportLink = exportLink;
+                        currentDataset.put(targetDataset, tempName + "Main.zip");
 
-                    CompletableFuture.runAsync(() -> {
-
-                        if ("COCO".equals(ctx.header("datasetType"))) {
-                            COCO uploader = new COCO();
-                            uploader.postUpload(uid, folderName);
-                            Set < String > parsedNames = uploader.parsedNames;
-                            parsedNamesUpload.addAll(parsedNames);
-                        } else if ("ROBOFLOW".equals(ctx.header("datasetType"))) {
-                            Roboflow uploader = new Roboflow();
-                            uploader.postUpload(uid, folderName, finalExportLink);
-                            Set < String > parsedNames = uploader.parsedNames;
-                            parsedNamesUpload.addAll(parsedNames);
-                        }
-
-                        metadata.put("parsedNames", parsedNamesUpload);
-
-                        try (FileWriter file = new FileWriter(metadataFilePath)) {
-                            file.write(metadata.toJSONString());
+                        try (FileWriter file = new FileWriter("currentDataset.json")) {
+                            file.write(currentDataset.toJSONString());
                             file.flush();
                         } catch (IOException e) {
                             e.printStackTrace();
                             ctx.status(500).result("Error: Failed to save metadata on the server.");
-                            return;
                         }
 
-                    });
-
-                } catch (FirebaseAuthException e) {
+                        mainUtils.executeCommand("rm -fr " + oldTempName + "Main" + ".zip");
+                        mainUtils.executeCommand("rm -fr " + tempName + "Main");
+                    } catch (IOException | ParseException e) {
+                        e.printStackTrace();
+                        ctx.status(500).result("Error: Failed to read dataset file.");
+                    }
+                } catch (Exception e) {
                     e.printStackTrace();
-                    ctx.status(401).result("Error: Authentication failed.");
+                    ctx.status(500).result("Error: Failed to process dataset.");
                 }
-            }
-        );
+            });
+
+        } catch (FirebaseAuthException e) {
+            e.printStackTrace();
+            ctx.status(401).result("Error: Authentication failed.");
+        }
+    }
+);
+
+
 
         app.get(
             "/download/{targetDataset}",
@@ -340,27 +372,21 @@ public class App {
                     */
 
                     String targetDataset = ctx.pathParam("targetDataset");
-                    System.out.println(targetDataset);
                     if (targetDataset.equals("FRC2023") || targetDataset.equals("FRC2024")) {
-                        String tempName = mainUtils.generateRandomString(4);
-                        mainUtils.executeCommand("python3 combineDatasets.py " + targetDataset + " " + tempName);
-                        mainUtils.zipDirectory(tempName + "Main", tempName + "Main" + ".zip");
+                        
+                    	File datasetFile = new File("currentDataset.json");
+                    	try (FileReader fileReader = new FileReader(datasetFile)) {
+                        	JSONParser parser = new JSONParser();
+                        	JSONObject currentDataset = (JSONObject) parser.parse(fileReader);
+                        	String tempName = (String) currentDataset.get(targetDataset);
 
-                        System.out.println(tempName + "Main" + ".zip");
-                        File zipFile = new File(tempName + "Main" + ".zip");
+                        	File zipFile = new File(tempName);
+				byte[] zipBytes = Files.readAllBytes(zipFile.toPath());
 
-                        // Read the file content into a byte array
-                        byte[] zipBytes = Files.readAllBytes(zipFile.toPath());
-
-                        ctx.result(zipBytes)
-                            .contentType("application/zip")
-                            .header("Content-Disposition", "attachment; filename=" + tempName + "Main" + ".zip");
-
-                        CompletableFuture.runAsync(() -> {
-                            mainUtils.executeCommand("rm -fr " + tempName + "Main" + ".zip");
-                            mainUtils.executeCommand("rm -fr " + tempName);
-                            mainUtils.executeCommand("rm -fr " + tempName + "Main");
-                        });
+                        	ctx.result(zipBytes)
+                            		.contentType("application/zip")
+                            		.header("Content-Disposition", "attachment; filename=" + tempName + "Main" + ".zip");
+			}
                     } else {
                         ctx.result("Error: Invalid target dataset.");
                     }
