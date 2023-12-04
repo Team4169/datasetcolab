@@ -252,7 +252,7 @@ export default function DownloadDataset() {
                         <div style={{ width: "100%" }}>
                           <Button
                             variant="primary"
-                            onClick={() => handleDirectDownload(dataset.name)}
+                            onClick={() => handleDirectDownload(dataset.name.replace(" ", ""))}
                             style={{ width: "100%" }}
                           >
                             Download Directly

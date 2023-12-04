@@ -31,7 +31,7 @@ public class App {
         if (folder.exists() && folder.isDirectory()) {
             File[] files = folder.listFiles();
             if (files != null) {
-                for (File file : files) {
+                for (File file: files) {
                     if (file.isDirectory()) {
                         // Recursive call for subfolders
                         JSONObject subFolder = new JSONObject();
@@ -52,8 +52,8 @@ public class App {
 
     private static boolean isImageFile(File file) {
         String fileName = file.getName().toLowerCase();
-        return fileName.endsWith(".jpg") || fileName.endsWith(".jpeg") || fileName.endsWith(".png")
-                || fileName.endsWith(".gif") || fileName.endsWith(".bmp") || fileName.endsWith(".webp");
+        return fileName.endsWith(".jpg") || fileName.endsWith(".jpeg") || fileName.endsWith(".png") ||
+            fileName.endsWith(".gif") || fileName.endsWith(".bmp") || fileName.endsWith(".webp");
         // Add more image file extensions if needed
     }
 
@@ -134,112 +134,111 @@ public class App {
             }
         );
 
-app.get("/view/<folderName>", ctx -> {
-    try {
-        FirebaseToken decodedToken = FirebaseAuth
-            .getInstance()
-            .verifyIdToken(ctx.header("idToken"));
-        String uid = decodedToken.getUid();
+        app.get("/view/<folderName>", ctx -> {
+            try {
+                FirebaseToken decodedToken = FirebaseAuth
+                    .getInstance()
+                    .verifyIdToken(ctx.header("idToken"));
+                String uid = decodedToken.getUid();
 
-        String folderName = ctx.pathParam("folderName");
-        String requestedFile = "upload/" + uid + "/" + folderName;
+                String folderName = ctx.pathParam("folderName");
+                String requestedFile = "upload/" + uid + "/" + folderName;
 
-        // Check if the requested path ends with an image extension
-        if (requestedFile.matches(".*\\.(jpg|jpeg|png|webp)$")) {
-            System.out.println(requestedFile);
-            File imageFile = new File(requestedFile);
-
-
-            if (imageFile.exists() && imageFile.isFile()) {
-                byte[] imageBytes = Files.readAllBytes(imageFile.toPath());
-		System.out.println(imageBytes.length);
-		ByteArrayInputStream result = new ByteArrayInputStream(imageBytes);
-                ctx.result(imageBytes);
-           String contentType;
-if (requestedFile.matches(".*\\.jpg$")) {
-    contentType = "image/jpeg";
-} else if (requestedFile.matches(".*\\.png$")) {
-    contentType = "image/png";
-} else if (requestedFile.matches(".*\\.webp$")) {
-    contentType = "image/webp";
-} else {
-    // Handle unsupported image formats or set a default content type
-    contentType = "image/jpeg"; // Change this as needed
-}
-
-ctx.contentType(contentType);
-            } else {
-                ctx.result("Image file not found for the specified path.");
-            }
-
-        } else {
-            String metadataFilePath = requestedFile + "/metadata.json";
-            System.out.println(metadataFilePath);
-            File metadataFile = new File(metadataFilePath);
-
-            // Always return populatedTree, even if metadata does not exist
-            String folderPath = "upload/" + uid + "/" + folderName;
-
-            JSONObject treeObject = new JSONObject();
-            populateTree(folderPath, treeObject);
+                // Check if the requested path ends with an image extension
+                if (requestedFile.matches(".*\\.(jpg|jpeg|png|webp)$")) {
+                    System.out.println(requestedFile);
+                    File imageFile = new File(requestedFile);
 
 
-            if (metadataFile.exists() && metadataFile.isFile()) {
-                try (FileReader fileReader = new FileReader(metadataFile)) {
-                    JSONParser parser = new JSONParser();
-                    JSONObject metadata = (JSONObject) parser.parse(fileReader);
-                    metadata.put("tree", treeObject);
-                    ctx.json(metadata);
+                    if (imageFile.exists() && imageFile.isFile()) {
+                        byte[] imageBytes = Files.readAllBytes(imageFile.toPath());
+                        System.out.println(imageBytes.length);
+                        ByteArrayInputStream result = new ByteArrayInputStream(imageBytes);
+                        ctx.result(imageBytes);
+                        String contentType;
+                        if (requestedFile.matches(".*\\.jpg$")) {
+                            contentType = "image/jpeg";
+                        } else if (requestedFile.matches(".*\\.png$")) {
+                            contentType = "image/png";
+                        } else if (requestedFile.matches(".*\\.webp$")) {
+                            contentType = "image/webp";
+                        } else {
+                            // Handle unsupported image formats or set a default content type
+                            contentType = "image/jpeg"; // Change this as needed
+                        }
+
+                        ctx.contentType(contentType);
+                    } else {
+                        ctx.result("Image file not found for the specified path.");
+                    }
+
+                } else {
+                    String metadataFilePath = requestedFile + "/metadata.json";
+                    System.out.println(metadataFilePath);
+                    File metadataFile = new File(metadataFilePath);
+
+                    // Always return populatedTree, even if metadata does not exist
+                    String folderPath = "upload/" + uid + "/" + folderName;
+
+                    JSONObject treeObject = new JSONObject();
+                    populateTree(folderPath, treeObject);
+
+
+                    if (metadataFile.exists() && metadataFile.isFile()) {
+                        try (FileReader fileReader = new FileReader(metadataFile)) {
+                            JSONParser parser = new JSONParser();
+                            JSONObject metadata = (JSONObject) parser.parse(fileReader);
+                            metadata.put("tree", treeObject);
+                            ctx.json(metadata);
+                        }
+                    } else {
+                        // If metadata does not exist, return tree as the main response
+                        JSONObject result = new JSONObject();
+                        result.put("tree", treeObject);
+                        ctx.json(result);
+                    }
                 }
-            } else {
-                // If metadata does not exist, return tree as the main response
-                JSONObject result = new JSONObject();
-                result.put("tree", treeObject);
-                ctx.json(result);
+            } catch (FirebaseAuthException | ParseException e) {
+                e.printStackTrace();
+                ctx.status(401).result("Error: Authentication failed.");
             }
-        }
-    } catch (FirebaseAuthException | ParseException e) {
-        e.printStackTrace();
-        ctx.status(401).result("Error: Authentication failed.");
-    }
-});
+        });
 
-	app.get("/delete/{folderName}", ctx -> {
-		try {
-			FirebaseToken decodedToken = FirebaseAuth
-				.getInstance()
-				.verifyIdToken(ctx.header("idToken"));
-			String uid = decodedToken.getUid();
+        app.get("/delete/{folderName}", ctx -> {
+            try {
+                FirebaseToken decodedToken = FirebaseAuth
+                    .getInstance()
+                    .verifyIdToken(ctx.header("idToken"));
+                String uid = decodedToken.getUid();
 
-			String folderName = ctx.pathParam("folderName");
+                String folderName = ctx.pathParam("folderName");
 
-			mainUtils.executeCommand("rm -fr upload/" + uid + "/" + folderName);
-		} catch (FirebaseAuthException e) {
-			e.printStackTrace();
-			ctx.status(401).result("Error: Authentication failed.");
-		}	
-	}
-	);
-/*
-    app.get("/edit/{folderName}", ctx -> {
-		try {
-			FirebaseToken decodedToken = FirebaseAuth
-				.getInstance()
-				.verifyIdToken(ctx.header("idToken"));
-			String uid = decodedToken.getUid();
+                mainUtils.executeCommand("rm -fr upload/" + uid + "/" + folderName);
+            } catch (FirebaseAuthException e) {
+                e.printStackTrace();
+                ctx.status(401).result("Error: Authentication failed.");
+            }
+        });
+        /*
+            app.get("/edit/{folderName}", ctx -> {
+        		try {
+        			FirebaseToken decodedToken = FirebaseAuth
+        				.getInstance()
+        				.verifyIdToken(ctx.header("idToken"));
+        			String uid = decodedToken.getUid();
 
-			String folderName = ctx.pathParam("folderName");
-            JSONObject dataToAdd = new JSONObject(ctx.body());
-           // addToMetadata(folderName, dataToAdd);
-	   
-			
-		} catch (FirebaseAuthException e) {
-			e.printStackTrace();
-			ctx.status(401).result("Error: Authentication failed.");
-		}	
-	}
-	);
-*/
+        			String folderName = ctx.pathParam("folderName");
+                    JSONObject dataToAdd = new JSONObject(ctx.body());
+                   // addToMetadata(folderName, dataToAdd);
+        	   
+        			
+        		} catch (FirebaseAuthException e) {
+        			e.printStackTrace();
+        			ctx.status(401).result("Error: Authentication failed.");
+        		}	
+        	}
+        	);
+        */
         app.post(
             "/upload",
             ctx -> {
@@ -258,7 +257,7 @@ ctx.contentType(contentType);
                     String datasetType = ctx.header("datasetType");
                     String targetDataset = ctx.header("targetDataset");
                     String exportLink = "";
-		    JSONArray parsedNamesUpload = new JSONArray();
+                    JSONArray parsedNamesUpload = new JSONArray();
 
                     JSONObject metadata = new JSONObject();
 
@@ -291,80 +290,88 @@ ctx.contentType(contentType);
                         return;
                     }
 
-		    ctx.json(metadata);
+                    ctx.json(metadata);
 
-            final String finalExportLink = exportLink;
+                    final String finalExportLink = exportLink;
 
-            CompletableFuture.runAsync(() -> {
-		
-            if ("COCO".equals(ctx.header("datasetType"))) {
-                COCO uploader = new COCO();
-                uploader.postUpload(uid, folderName);
-                Set<String> parsedNames = uploader.parsedNames;
-                parsedNamesUpload.addAll(parsedNames);
-            } else if ("ROBOFLOW".equals(ctx.header("datasetType"))) {
-                Roboflow uploader = new Roboflow();
-                uploader.postUpload(uid, folderName, finalExportLink);
-                Set<String> parsedNames = uploader.parsedNames;
-                parsedNamesUpload.addAll(parsedNames);
-            }
+                    CompletableFuture.runAsync(() -> {
 
-            metadata.put("parsedNames", parsedNamesUpload);
+                        if ("COCO".equals(ctx.header("datasetType"))) {
+                            COCO uploader = new COCO();
+                            uploader.postUpload(uid, folderName);
+                            Set < String > parsedNames = uploader.parsedNames;
+                            parsedNamesUpload.addAll(parsedNames);
+                        } else if ("ROBOFLOW".equals(ctx.header("datasetType"))) {
+                            Roboflow uploader = new Roboflow();
+                            uploader.postUpload(uid, folderName, finalExportLink);
+                            Set < String > parsedNames = uploader.parsedNames;
+                            parsedNamesUpload.addAll(parsedNames);
+                        }
 
-            try (FileWriter file = new FileWriter(metadataFilePath)) {
-                file.write(metadata.toJSONString());
-                file.flush();
-            } catch (IOException e) {
-                e.printStackTrace();
-                ctx.status(500).result("Error: Failed to save metadata on the server.");
-                return;
-            }
+                        metadata.put("parsedNames", parsedNamesUpload);
 
-	    });
-                   
+                        try (FileWriter file = new FileWriter(metadataFilePath)) {
+                            file.write(metadata.toJSONString());
+                            file.flush();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                            ctx.status(500).result("Error: Failed to save metadata on the server.");
+                            return;
+                        }
+
+                    });
+
                 } catch (FirebaseAuthException e) {
                     e.printStackTrace();
                     ctx.status(401).result("Error: Authentication failed.");
                 }
             }
         );
-	
-app.get(
-    "/download/{targetDataset}",
-    ctx -> {
-        try {
-            FirebaseToken decodedToken = FirebaseAuth
-                .getInstance()
-                .verifyIdToken(ctx.header("idToken"));
-            String uid = decodedToken.getUid();
 
-            String targetDataset = ctx.pathParam("targetDataset");
-            String folderPath = "upload/" + uid + "/";
+        app.get(
+            "/download/{targetDataset}",
+            ctx -> {
+                /*
+                try {
+                    FirebaseToken decodedToken = FirebaseAuth
+                        .getInstance()
+                        .verifyIdToken(ctx.header("idToken"));
+                    String uid = decodedToken.getUid();
+                    */
 
-            if (targetDataset.equals("FRC2023") || targetDataset.equals("FRC2024")) {
-                String targetFolderPath = folderPath + targetDataset;
-                File targetFolder = new File(targetFolderPath);
+                    String targetDataset = ctx.pathParam("targetDataset");
+                    System.out.println(targetDataset);
+                    if (targetDataset.equals("FRC2023") || targetDataset.equals("FRC2024")) {
+                        String tempName = mainUtils.generateRandomString(4);
+                        mainUtils.executeCommand("python3 combineDatasets.py " + targetDataset + " " + tempName);
+                        mainUtils.zipDirectory(tempName + "Main", tempName + "Main" + ".zip");
 
-                if (targetFolder.exists() && targetFolder.isDirectory()) {
-                    String zipFileName = targetDataset + "_projects.zip";
-                    mainUtils.zipDirectory(targetFolderPath, zipFileName);
-		    
-		    System.out.println(zipFileName);
-                    ctx.result(zipFileName);
-                    ctx.contentType("application/zip");
-                    ctx.header("Content-Disposition", "attachment; filename=" + zipFileName);
-                } else {
-                    ctx.result("Error: Target dataset folder not found.");
+                        System.out.println(tempName + "Main" + ".zip");
+                        File zipFile = new File(tempName + "Main" + ".zip");
+
+                        // Read the file content into a byte array
+                        byte[] zipBytes = Files.readAllBytes(zipFile.toPath());
+
+                        ctx.result(zipBytes)
+                            .contentType("application/zip")
+                            .header("Content-Disposition", "attachment; filename=" + tempName + "Main" + ".zip");
+
+                        CompletableFuture.runAsync(() -> {
+                            mainUtils.executeCommand("rm -fr " + tempName + "Main" + ".zip");
+                            mainUtils.executeCommand("rm -fr " + tempName);
+                            mainUtils.executeCommand("rm -fr " + tempName + "Main");
+                        });
+                    } else {
+                        ctx.result("Error: Invalid target dataset.");
+                    }
+                /*
+                } catch (FirebaseAuthException e) {
+                    e.printStackTrace();
+                    ctx.status(401).result("Error: Authentication failed.");
                 }
-            } else {
-                ctx.result("Error: Invalid target dataset.");
+                */
             }
-        } catch (FirebaseAuthException e) {
-            e.printStackTrace();
-            ctx.status(401).result("Error: Authentication failed.");
-        }
-    }
-);
+        );
 
         app.get(
             "/api",
@@ -375,13 +382,13 @@ app.get(
                         .verifyIdToken(ctx.header("idToken"));
                     String uid = decodedToken.getUid();
 
-		    String newKeyString = ctx.header("new");
-		    boolean newKey;
-		    if (newKeyString.equals("true")) {
-		    	newKey = true;
-		    } else {
-			newKey = false;
-		    }
+                    String newKeyString = ctx.header("new");
+                    boolean newKey;
+                    if (newKeyString.equals("true")) {
+                        newKey = true;
+                    } else {
+                        newKey = false;
+                    }
 
                     JSONObject apiJsonObject;
                     try {
@@ -389,25 +396,25 @@ app.get(
                         apiJsonObject = new JSONObject((Map<?, ?>) new JSONParser().parse(content));
                     } catch (IOException | ParseException e) {
                         e.printStackTrace();
-			apiJsonObject = new JSONObject();
-			newKey = true;
-		    }
+                        apiJsonObject = new JSONObject();
+                        newKey = true;
+                    }
 
-		    String apiKey = mainUtils.generateRandomString(24);
+                    String apiKey = mainUtils.generateRandomString(24);
                     if (apiJsonObject.containsKey(uid) && !newKey) {
                         apiKey = (String) apiJsonObject.get(uid);
                     } else {
-			apiJsonObject.put(uid, apiKey);	
+                        apiJsonObject.put(uid, apiKey);
                     }
 
-		    try {
+                    try {
                         String jsonString = apiJsonObject.toJSONString();
                         Files.write(Path.of("api.json"), jsonString.getBytes(), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
 
-		    ctx.result(apiKey);
+                    ctx.result(apiKey);
 
                 } catch (FirebaseAuthException e) {
                     e.printStackTrace();
@@ -416,10 +423,10 @@ app.get(
             }
         );
 
-	app.get(
-	    "/test",
-    	ctx -> ctx.status(200)
-);
+        app.get(
+            "/test",
+            ctx -> ctx.status(200)
+        );
 
     }
 }

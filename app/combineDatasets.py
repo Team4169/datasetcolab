@@ -27,10 +27,11 @@ def find_metadata_folders(directory_path, year):
 
 def combine_datasets_without_delete(dataset1_path, dataset2_path, output_path):
     # Load COCO annotations
+    print(dataset1_path)
     json_file1 = find_json_files(dataset1_path)[0]
     json_file2 = find_json_files(dataset2_path)[0]
-    coco1 = COCO(json_file1)
-    coco2 = COCO(json_file2)
+    coco1 = COCO(dataset1_path + "/" + json_file1)
+    coco2 = COCO(dataset2_path + "/" + json_file2)
     
     # Combine image and annotation data
     combined_images = coco1.loadImgs(coco1.getImgIds()) + coco2.loadImgs(coco2.getImgIds())
@@ -102,8 +103,8 @@ def combine_datasets_and_merge(dataset1_path, dataset2_path, output_path):
     # Load COCO annotations
     json_file1 = find_json_files(dataset1_path)[0]
     json_file2 = find_json_files(dataset2_path)[0]
-    coco1 = COCO(json_file1)
-    coco2 = COCO(json_file2)
+    coco1 = COCO(dataset1_path + "/" + json_file1)
+    coco2 = COCO(dataset2_path + "/" + json_file2)
     
     # Combine image and annotation data
     combined_images = coco1.loadImgs(coco1.getImgIds()) + coco2.loadImgs(coco2.getImgIds())
@@ -193,28 +194,18 @@ def generate_unique_name():
 # Initialize the counter
 generate_unique_name.counter = 0
 
-# Example usage
-
 year = sys.argv[1]
+tempname = sys.argv[2]
 
 directory_path = '/home/team4169/frcdatasetcolab/app/upload'
-metadata_folders = find_metadata_folder(directory_path, year)
+metadata_folders = find_metadata_folders(directory_path, year)
 
-
-
-
-output_path_main = '/home/team4169/frcdatasetcolab/app/outputMain'
+output_path_main = '/home/team4169/frcdatasetcolab/app/' + tempname + "Main"
 combine_datasets_without_delete(metadata_folders[0] + "/test", metadata_folders[1] + "/test", output_path_main + "/test")
 combine_datasets_without_delete(metadata_folders[0] + "/train", metadata_folders[1] + "/train", output_path_main + "/train")
 combine_datasets_without_delete(metadata_folders[0] + "/valid", metadata_folders[1] + "/valid", output_path_main + "/valid")
-output_path = '/home/team4169/frcdatasetcolab/app/output'
+output_path = '/home/team4169/frcdatasetcolab/app/' + tempname
 for i in range(2, len(metadata_folders)):
     combine_datasets_and_merge(output_path_main + "/test", metadata_folders[i] + "/test", output_path)
     combine_datasets_and_merge(output_path_main + "/train", metadata_folders[i] + "/train", output_path)
     combine_datasets_and_merge(output_path_main + "/valid", metadata_folders[i] + "/valid", output_path)
-
-
-
-#dataset1_path = "/home/team4169/frcdatasetcolab/app/upload/" + sys.argv[1]
-#dataset2_path = "/home/team4169/frcdatasetcolab/app/upload/" + sys.argv[2]
-#combine_datasets(dataset1_path, dataset2_path, output_path)
