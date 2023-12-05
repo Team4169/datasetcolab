@@ -80,7 +80,7 @@ export default function Upload() {
   const [uploadName, setUploadName] = useState(generateRandomName());
   const [datasetType, setDatasetType] = useState("COCO");
   const [targetDataset, setTargetDataset] = useState("FRC2023");
-  const [uploadMethod, setUploadMethod] = useState("direct");
+  const [uploadMethod, setUploadMethod] = useState("roboflow");
   const [roboflowUrl, setRoboflowUrl] = useState("");
   const [showCopyAlert, setShowCopyAlert] = useState(false);
 
@@ -267,14 +267,6 @@ export default function Upload() {
           <ToggleButton
             type="radio"
             variant="outline-primary"
-            checked={uploadMethod === "direct"}
-            onClick={() => setUploadMethod("direct")}
-          >
-            Upload Directly
-          </ToggleButton>
-          <ToggleButton
-            type="radio"
-            variant="outline-primary"
             checked={uploadMethod === "roboflow"}
             onClick={() => setUploadMethod("roboflow")}
           >
@@ -283,10 +275,10 @@ export default function Upload() {
           <ToggleButton
             type="radio"
             variant="outline-primary"
-            checked={uploadMethod === "curl"}
-            onClick={() => setUploadMethod("curl")}
+            checked={uploadMethod === "direct"}
+            onClick={() => setUploadMethod("direct")}
           >
-            Upload With Curl
+            Upload Directly
           </ToggleButton>
         </ButtonGroup>
       </Form.Group>
@@ -400,19 +392,6 @@ export default function Upload() {
           </Form.Control>
         </>
       )}
-      {uploadMethod === "curl" && (
-        <div>
-          <div style={styles.codeBlock}>
-            <code>{handleDownloadCurl()}</code>
-            <div style={styles.copyButton} onClick={handleCopyToClipboard}>
-              <span role="img" aria-label="Copy">
-                📋
-              </span>
-            </div>
-          </div>
-        </div>
-      )}
-
       {(uploadMethod === "direct" || uploadMethod === "roboflow") && (
         <div className="input-group-append">
           <Button variant="primary" onClick={onUpload} disabled={isLoading}>

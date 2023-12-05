@@ -62,8 +62,8 @@ export default function DownloadDataset() {
 
   const [error, setError] = useState("");
   const [selectedOptions, setSelectedOptions] = useState({
-    "FRC 2023": ["Cone", "Cube", "Robot", "Other Robots"],
-    "FRC 2024": ["Cone", "Cube", "Robot", "Other Robots"],
+    "FRC 2023": ["Cone", "Cube", "Robot", "Robot Bumper"],
+    "FRC 2024": ["Cone", "Cube", "Robot", "Robot Bumper"],
   });
   const [selectedDatasetType, setSelectedDatasetType] = useState({
     ["FRC 2023"]: "COCO",
@@ -76,13 +76,19 @@ export default function DownloadDataset() {
   const [showCopyAlert, setShowCopyAlert] = useState(false);
 
   const datasets = [
-    { name: "FRC 2024", images: 1200, annotations: 600, size: "1.8GB" },
     { name: "FRC 2023", images: 1000, annotations: 500, size: "1.5GB" },
   ];
-  const classes = ["Cone", "Cube", "Robot", "Other Robots"];
+  const classes = ["Cone", "Cube", "Robot", "Robot Bumper"];
 
-  const handleDownloadCurl = () =>
-    `curl -O https://api.datasetcolab.com/download`;
+  const [loading, setLoading] = useState(false);
+
+  const [apiKey, setApiKey] = useState("API_KEY");
+
+  const handleDownloadCurl = (dataset) =>
+    `curl -o ${dataset.replace(
+      /\s/g,
+      ""
+    )}.zip https://api.datasetcolab.com/download/${dataset.replace(/\s/g, "")}?api="${apiKey}"`;
 
   const handleDownloadMethodChange = (dataset, value) => {
     setDownloadMethod((prevMethods) => ({ ...prevMethods, [dataset]: value }));
@@ -113,13 +119,15 @@ export default function DownloadDataset() {
 
   const handleDirectDownload = async (dataset) => {
     try {
+      setLoading(true);
+
       const idToken = await currentUser.getIdToken();
 
       let config = {
         headers: {
           idToken: idToken,
         },
-        responseType: "blob", // Set responseType to 'blob' to handle binary data
+        responseType: "arraybuffer", // Use 'arraybuffer' to get the response as a byte array
       };
 
       const response = await axios.get(
@@ -127,8 +135,11 @@ export default function DownloadDataset() {
         config
       );
 
-      // Create a Blob from the binary data
-      const blob = new Blob([response.data]);
+      // Get the response as a byte array
+      const byteArray = new Uint8Array(response.data);
+
+      // Create a Blob from the byte array
+      const blob = new Blob([byteArray]);
 
       // Create a download link and trigger the download
       const downloadLink = document.createElement("a");
@@ -139,10 +150,34 @@ export default function DownloadDataset() {
       document.body.removeChild(downloadLink);
     } catch (err) {
       setError("Error downloading dataset.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+
+  const fetchApiKey = async () => {
+    try {
+      const idToken = await currentUser.getIdToken();
+
+      let config = {
+        headers: {
+          idToken: idToken,
+        },
+      };
+
+      const response = await axios.get(
+        "https://api.datasetcolab.com/api",
+        config
+      );
+      setApiKey(response.data);
+    } catch (err) {
+      setError("Error fetching API key.");
     }
   };
 
   useEffect(() => {
+    fetchApiKey();
     const alertTimeout = setTimeout(() => setShowCopyAlert(false), 5000);
     return () => clearTimeout(alertTimeout);
   }, [showCopyAlert]);
@@ -237,7 +272,7 @@ export default function DownloadDataset() {
                       {downloadMethod[dataset.name] === "curl" ? (
                         <div>
                           <div style={styles.codeBlock}>
-                            <code>{handleDownloadCurl()}</code>
+                            <code>{handleDownloadCurl(dataset.name)}</code>
                             <div
                               style={styles.copyButton}
                               onClick={handleCopyToClipboard}
@@ -252,10 +287,11 @@ export default function DownloadDataset() {
                         <div style={{ width: "100%" }}>
                           <Button
                             variant="primary"
-                            onClick={() => handleDirectDownload(dataset.name.replace(" ", ""))}
+                            onClick={() => handleDirectDownload(dataset.name)}
                             style={{ width: "100%" }}
+                            disabled={loading}
                           >
-                            Download Directly
+                            {loading ? "Downloading..." : "Download Directly"}
                           </Button>
                         </div>
                       )}
