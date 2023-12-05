@@ -119,6 +119,27 @@ export default function DownloadDataset() {
 
   const handleDirectDownload = async (dataset) => {
     try {
+      const targetDataset = 'FRC2023'; // replace with your actual dataset
+      const idToken = 'yourAuthToken'; // replace with your actual authentication token
+
+      const response = await fetch(`https://api.datasetcolab.com/download/${dataset}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          idToken: idToken, // add authentication token header
+        },
+      });
+
+      if (response.ok) {
+        const result = await response.blob();
+        setData(result);
+      } else {
+        console.error('Error:', response.status, response.statusText);
+      }
+    } catch (error) {
+      console.error('Error:', error);
+    }
+    try {
       setLoading(true);
 
       const idToken = await currentUser.getIdToken();
