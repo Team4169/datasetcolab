@@ -81,8 +81,8 @@ export default function DownloadDataset() {
   const classes = ["Cone", "Cube", "Robot", "Robot Bumper"];
 
   const [loading, setLoading] = useState(false);
-
   const [apiKey, setApiKey] = useState("API_KEY");
+  const [data, setData] = useState(null);
 
   const handleDownloadCurl = (dataset) =>
     `curl -o ${dataset.replace(
@@ -119,56 +119,30 @@ export default function DownloadDataset() {
 
   const handleDirectDownload = async (dataset) => {
     try {
-      const targetDataset = 'FRC2023'; // replace with your actual dataset
-      const idToken = 'yourAuthToken'; // replace with your actual authentication token
+      setLoading(true);
+
+      const idToken = await currentUser.getIdToken();
 
       const response = await fetch(`https://api.datasetcolab.com/download/${dataset}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          idToken: idToken, // add authentication token header
+          idToken: idToken,
         },
       });
 
       if (response.ok) {
         const result = await response.blob();
         setData(result);
+
+        // Trigger the download programmatically
+        const downloadLink = document.createElement('a');
+        downloadLink.href = URL.createObjectURL(result);
+        downloadLink.download = `${dataset}.zip`; // replace with a meaningful name
+        downloadLink.click();
       } else {
         console.error('Error:', response.status, response.statusText);
       }
-    } catch (error) {
-      console.error('Error:', error);
-    }
-    try {
-      setLoading(true);
-
-      const idToken = await currentUser.getIdToken();
-
-      let config = {
-        headers: {
-          idToken: idToken,
-        },
-        responseType: "arraybuffer", // Use 'arraybuffer' to get the response as a byte array
-      };
-
-      const response = await axios.get(
-        `https://api.datasetcolab.com/download/${dataset}`,
-        config
-      );
-
-      // Get the response as a byte array
-      const byteArray = new Uint8Array(response.data);
-
-      // Create a Blob from the byte array
-      const blob = new Blob([byteArray]);
-
-      // Create a download link and trigger the download
-      const downloadLink = document.createElement("a");
-      downloadLink.href = window.URL.createObjectURL(blob);
-      downloadLink.download = `${dataset}.zip`; // You can customize the downloaded file name
-      document.body.appendChild(downloadLink);
-      downloadLink.click();
-      document.body.removeChild(downloadLink);
     } catch (err) {
       setError("Error downloading dataset.");
     } finally {
