@@ -363,7 +363,12 @@ app.post(
 
                         mainUtils.executeCommand("rm  " + oldTempName);
                         mainUtils.executeCommand("rm -fr " + tempName + "Main");
+<<<<<<< HEAD
                         
+=======
+
+                        ctx.json(metadata);
+>>>>>>> d485f1e79022281c9d0351fcb9047717bc0e4e50
                     } catch (IOException | ParseException e) {
                         e.printStackTrace();
                         ctx.status(500).result("Error: Failed to read dataset file.");

@@ -83,8 +83,16 @@ export default function Upload() {
   const [uploadMethod, setUploadMethod] = useState("roboflow");
   const [roboflowUrl, setRoboflowUrl] = useState("");
   const [showCopyAlert, setShowCopyAlert] = useState(false);
+  const [parsedNames, setParsedNames] = useState([]);
+
 
   let navigate = useNavigate();
+
+  const handleDropdownChange = (className, selectedValue) => {
+    // Handle the dropdown change (e.g., store the selected value in state)
+    console.log(`Class: ${className}, Selected Value: ${selectedValue}`);
+    // You can add further logic based on your requirements
+  };
 
   const onFileChange = (event) => {
     setSelectedFiles(event.target.files);
@@ -404,17 +412,35 @@ export default function Upload() {
         </>
       )}
       {(uploadMethod === "direct" || uploadMethod === "roboflow") && (
-        <div className="input-group-append">
-          <Button variant="primary" onClick={onUpload} disabled={isLoading}>
-            {isLoading ? "Uploading..." : "Upload"}
-          </Button>
-        </div>
-      )}
-      {showCopyAlert && (
-        <Alert variant="success" style={styles.alertContainer} dismissible>
-          Curl command copied to clipboard
-        </Alert>
-      )}
+      <div className="input-group-append">
+        <Button variant="primary" onClick={onUpload} disabled={isLoading}>
+          {isLoading ? "Uploading..." : "Upload"}
+        </Button>
+        {parsedNames.length > 0 && (
+          <div style={{ marginTop: "10px" }}>
+            <strong>Parsed Names:</strong>
+            {parsedNames.map((className, index) => (
+              <div key={index} style={{ marginTop: "5px" }}>
+                <span>{className}: </span>
+                <Form.Control
+                  as="select"
+                  style={{ marginLeft: "5px" }}
+                  onChange={(e) => handleDropdownChange(className, e.target.value)}
+                >
+                  <option value="FRC2023">FRC 2023</option>
+                  <option value="FRC2024">FRC 2024</option>
+                </Form.Control>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    )}
+    {showCopyAlert && (
+      <Alert variant="success" style={styles.alertContainer} dismissible>
+        Curl command copied to clipboard
+      </Alert>
+    )}
     </div>
   );
 }
