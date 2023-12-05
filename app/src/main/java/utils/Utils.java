@@ -68,6 +68,10 @@ public class Utils {
             System.err.println(e);
         }
 
+        /*
+        System.out.println(output);
+        System.out.println(errorOutput);
+        */
         return output.toString();
     }
 

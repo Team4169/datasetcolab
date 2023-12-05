@@ -57,6 +57,26 @@ public class App {
         // Add more image file extensions if needed
     }
 
+private static String validAPI(String api) {
+    JSONObject apiJsonObject;
+    try {
+        String content = Files.readString(Path.of("api.json"));
+        apiJsonObject = new JSONObject((Map<?, ?>) new JSONParser().parse(content));
+
+        for (Object entryObj : apiJsonObject.entrySet()) {
+            Map.Entry<?, ?> entry = (Map.Entry<?, ?>) entryObj;
+            if (entry.getValue().equals(api)) {
+                return entry.getKey().toString();
+            }
+        }
+
+    } catch (IOException | ParseException e) {
+        e.printStackTrace();
+    }
+
+    return null;
+}
+
 
     private static Utils mainUtils = new Utils();
 
@@ -321,14 +341,15 @@ app.post(
                         return;
                     }
 
+                    String tempName = mainUtils.generateRandomString(4);
+                    mainUtils.executeCommand("python3 combineDatasets.py " + targetDataset + " " + tempName);
+                    mainUtils.zipDirectory(tempName + "Main", tempName + "Main" + ".zip");
+
                     File datasetFile = new File("currentDataset.json");
                     try (FileReader fileReader = new FileReader(datasetFile)) {
                         JSONParser parser = new JSONParser();
                         JSONObject currentDataset = (JSONObject) parser.parse(fileReader);
                         String oldTempName = (String) currentDataset.get(targetDataset);
-                        String tempName = mainUtils.generateRandomString(4);
-                        mainUtils.executeCommand("python3 combineDatasets.py " + targetDataset + " " + tempName);
-                        mainUtils.zipDirectory(tempName + "Main", tempName + "Main" + ".zip");
 
                         currentDataset.put(targetDataset, tempName + "Main.zip");
 
@@ -340,8 +361,9 @@ app.post(
                             ctx.status(500).result("Error: Failed to save metadata on the server.");
                         }
 
-                        mainUtils.executeCommand("rm -fr " + oldTempName + "Main" + ".zip");
+                        mainUtils.executeCommand("rm  " + oldTempName);
                         mainUtils.executeCommand("rm -fr " + tempName + "Main");
+                        
                     } catch (IOException | ParseException e) {
                         e.printStackTrace();
                         ctx.status(500).result("Error: Failed to read dataset file.");
@@ -361,44 +383,49 @@ app.post(
 
 
 
-        app.get(
-            "/download/{targetDataset}",
-            ctx -> {
-                /*
-                try {
-                    FirebaseToken decodedToken = FirebaseAuth
+    app.get(
+    "/download/{targetDataset}",
+    ctx -> {
+        try {
+            String uid;
+            if (ctx.header("idToken") != null) {
+                FirebaseToken decodedToken = FirebaseAuth
                         .getInstance()
                         .verifyIdToken(ctx.header("idToken"));
-                    String uid = decodedToken.getUid();
-                    */
-
-                    String targetDataset = ctx.pathParam("targetDataset");
-                    if (targetDataset.equals("FRC2023") || targetDataset.equals("FRC2024")) {
-                        
-                    	File datasetFile = new File("currentDataset.json");
-                    	try (FileReader fileReader = new FileReader(datasetFile)) {
-                        	JSONParser parser = new JSONParser();
-                        	JSONObject currentDataset = (JSONObject) parser.parse(fileReader);
-                        	String tempName = (String) currentDataset.get(targetDataset);
-
-                        	File zipFile = new File(tempName);
-				byte[] zipBytes = Files.readAllBytes(zipFile.toPath());
-
-                        	ctx.result(zipBytes)
-                            		.contentType("application/zip")
-                            		.header("Content-Disposition", "attachment; filename=" + tempName + "Main" + ".zip");
-			}
-                    } else {
-                        ctx.result("Error: Invalid target dataset.");
-                    }
-                /*
-                } catch (FirebaseAuthException e) {
-                    e.printStackTrace();
-                    ctx.status(401).result("Error: Authentication failed.");
-                }
-                */
+                uid = decodedToken.getUid();
+            } else if (ctx.header("api") != null) {
+                String api = ctx.header("api");
+                uid = validAPI(api);
             }
-        );
+
+            String targetDataset = ctx.pathParam("targetDataset");
+            if (targetDataset.equals("FRC2023") || targetDataset.equals("FRC2024")) {
+
+                File datasetFile = new File("currentDataset.json");
+                try (FileReader fileReader = new FileReader(datasetFile)) {
+                    JSONParser parser = new JSONParser();
+                    JSONObject currentDataset = (JSONObject) parser.parse(fileReader);
+                    String tempName = (String) currentDataset.get(targetDataset);
+
+                    File zipFile = new File(tempName);
+                    byte[] zipBytes = Files.readAllBytes(zipFile.toPath());
+
+                    ctx.result(zipBytes)
+                            .contentType("application/zip")
+                            .header("Content-Disposition", "attachment; filename=" + tempName + "Main" + ".zip");
+                }
+            } else {
+                ctx.result("Error: Invalid target dataset.");
+            }
+
+        } catch (FirebaseAuthException e) {
+            e.printStackTrace();
+            ctx.status(401).result("Error: Authentication failed.");
+        }
+
+    }
+);
+
 
         app.get(
             "/api",
@@ -408,14 +435,16 @@ app.post(
                         .getInstance()
                         .verifyIdToken(ctx.header("idToken"));
                     String uid = decodedToken.getUid();
-
-                    String newKeyString = ctx.header("new");
-                    boolean newKey;
-                    if (newKeyString.equals("true")) {
-                        newKey = true;
-                    } else {
-                        newKey = false;
-                    }
+		
+		    boolean newKey = false;
+		    String newKeyString = ctx.header("new");
+try {
+    if (newKeyString != null && newKeyString.equals("true")) {
+        newKey = true;
+    }
+} catch (Exception e) {
+    e.printStackTrace();
+}
 
                     JSONObject apiJsonObject;
                     try {

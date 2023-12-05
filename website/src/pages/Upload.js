@@ -116,14 +116,25 @@ export default function Upload() {
         },
       };
 
-      let metadata = await axios.post(
+      let response = await axios.post(
         "https://api.datasetcolab.com/upload",
         formData,
         config
       );
+      alert(response.data);
+
       setError("Files uploaded successfully");
       setUploadSuccess(true);
       navigate("/");
+
+      if (response.data.classes && response.data.classes.length > 0) {
+        console.log(`Parsed Names: ${response.data.classes.join(", ")}`);
+        alert(`Parsed Names: ${response.data.classes.join(", ")}`);
+      } else {
+        console.log("No classes found");
+        alert("No classes found");
+      }
+
     } catch (error) {
       // Handle errors
       setError("Error: " + error.message);
