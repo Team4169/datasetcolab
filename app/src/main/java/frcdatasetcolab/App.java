@@ -267,6 +267,8 @@ app.post(
                 Roboflow uploader = new Roboflow();
                 exportLink = uploader.upload(folderName, ctx.header("roboflowUrl"), uid);
                 uploadName = uploader.getProjectFromUrl(ctx.header("roboflowUrl"));
+		Set<String> parsedNames = uploader.classes;
+                parsedNamesUpload.addAll(parsedNames);
             }
 
             metadata.put("uploadTime", uploadTime);
@@ -274,6 +276,7 @@ app.post(
             metadata.put("datasetType", datasetType);
             metadata.put("targetDataset", targetDataset);
             metadata.put("folderName", folderName);
+	    metadata.put("classes", parsedNamesUpload);
             metadata.put("status", "postprocessing");
 
             File metadataDirectory = new File("upload/" + uid + "/" + folderName);
@@ -301,15 +304,13 @@ app.post(
                         uploader.postUpload(uid, folderName);
                         Set<String> parsedNames = uploader.parsedNames;
                         parsedNamesUpload.addAll(parsedNames);
+                    	metadata.put("classes", parsedNamesUpload);
                     } else if ("ROBOFLOW".equals(datasetType)) {
                         Roboflow uploader = new Roboflow();
                         uploader.postUpload(uid, folderName, finalExportLink);
-                        Set<String> parsedNames = uploader.parsedNames;
-                        parsedNamesUpload.addAll(parsedNames);
                     }
 
-                    metadata.put("parsedNames", parsedNamesUpload);
-                    metadata.put("status", "merged");
+		    metadata.put("status", "merged");
 
                     try (FileWriter file = new FileWriter(metadataFilePath)) {
                         file.write(metadata.toJSONString());
