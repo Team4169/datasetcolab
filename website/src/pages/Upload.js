@@ -75,35 +75,29 @@ export default function Upload() {
   const [error, setError] = useState("");
   const { currentUser } = useAuth();
   const [selectedFiles, setSelectedFiles] = useState([]);
-  const [isLoading, setLoading] = useState(false);
-  const [uploadSuccess, setUploadSuccess] = useState(false);
+  const [uploadLoading, setUploadLoading] = useState(false);
+  const [classesLoading, setClassesLoading] = useState(false);
   const [uploadName, setUploadName] = useState(generateRandomName());
   const [datasetType, setDatasetType] = useState("COCO");
   const [targetDataset, setTargetDataset] = useState("FRC2023");
   const [uploadMethod, setUploadMethod] = useState("roboflow");
   const [roboflowUrl, setRoboflowUrl] = useState("");
-  const [showCopyAlert, setShowCopyAlert] = useState(false);
-  const [parsedNames, setParsedNames] = useState([]);
-
+  const [metadata, setMetadata] = useState({});
+  const [mapClasses, setMapClasses] = useState([]);
+  const [showClassMatch, setShowClassMatch] = useState(false);
 
   let navigate = useNavigate();
-
-  const handleDropdownChange = (className, selectedValue) => {
-    // Handle the dropdown change (e.g., store the selected value in state)
-    console.log(`Class: ${className}, Selected Value: ${selectedValue}`);
-    // You can add further logic based on your requirements
-  };
 
   const onFileChange = (event) => {
     setSelectedFiles(event.target.files);
   };
 
   const onUpload = async () => {
-    if (isLoading) {
+    if (uploadLoading) {
       return;
     }
 
-    setLoading(true);
+    setUploadLoading(true);
 
     const formData = new FormData();
 
@@ -118,7 +112,7 @@ export default function Upload() {
         headers: {
           idToken: idToken,
           uploadName: uploadName,
-          datasetType: roboflowUrl == "" ? datasetType : "ROBOFLOW",
+          datasetType: roboflowUrl === "" ? datasetType : "ROBOFLOW",
           roboflowUrl: roboflowUrl,
           targetDataset: targetDataset,
         },
@@ -129,28 +123,43 @@ export default function Upload() {
         formData,
         config
       );
-      alert(response.data);
 
-      setError("Files uploaded successfully");
-      setUploadSuccess(true);
-      navigate("/");
-
-      if (response.data.classes && response.data.classes.length > 0) {
-        console.log(`Parsed Names: ${response.data.classes.join(", ")}`);
-        alert(`Parsed Names: ${response.data.classes.join(", ")}`);
-      } else {
-        console.log("No classes found");
-        alert("No classes found");
-      }
-
+      setMetadata(response.data);
+      setMapClasses(Array(response.data.classes.length).fill("cone"));
+      setShowClassMatch(true);
     } catch (error) {
-      // Handle errors
       setError("Error: " + error.message);
-      setUploadSuccess(false);
-    } finally {
-      setLoading(false);
     }
   };
+
+  const onMapClasses = async () => {
+    if (classesLoading) {
+      return;
+    }
+
+    setClassesLoading(true);
+
+    try {
+      const idToken = await currentUser.getIdToken();
+
+      let config = {
+        headers: {
+          idToken: idToken,
+          classes: metadata.classes,
+          mapClasses: mapClasses,
+        },
+      };
+
+      await axios.get(
+        "https://api.datasetcolab.com/classes",
+        config
+      );
+
+      navigate("/");
+    } catch (error) {
+      setError("Error: " + error.message);
+    }
+  }
 
   function generateRandomName() {
     const adjectives = [
@@ -186,17 +195,13 @@ export default function Upload() {
     return `${randomAdjective}-${randomNoun}`;
   }
 
-  const alertVariant = uploadSuccess ? "success" : "danger";
-
   const getSelectedFileNames = () => {
     return Array.from(selectedFiles).map((file) => file.name);
   };
 
-  // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [filesPerPage] = useState(10);
 
-  // Get current files for pagination
   const indexOfLastFile = currentPage * filesPerPage;
   const indexOfFirstFile = indexOfLastFile - filesPerPage;
   const selectedFileNames = getSelectedFileNames();
@@ -205,14 +210,12 @@ export default function Upload() {
     indexOfLastFile
   );
 
-  // Change page
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
-  // Pagination display logic
   const pageNumbers = Array.from({
     length: Math.ceil(selectedFileNames.length / filesPerPage),
   });
-  const maxPageLinks = 5; // Maximum number of page links to display
+  const maxPageLinks = 5;
 
   let paginationItems = [];
 
@@ -263,24 +266,15 @@ export default function Upload() {
     }
   }
 
-  const handleCopyToClipboard = () => {
-    const curlCommand = handleDownloadCurl();
-    navigator.clipboard.writeText(curlCommand);
-    setShowCopyAlert(true);
-  };
-
-  const handleDownloadCurl = () =>
-    `curl -O https://api.datasetcolab.com/download`;
-
   return (
     <div style={{ padding: "20px" }}>
       <h2>Upload</h2>
       {error && (
-        <Alert variant={alertVariant} onClose={() => setError("")} dismissible>
+        <Alert variant="danger" onClose={() => setError("")} dismissible>
           {error}
         </Alert>
       )}
-      <label htmlFor="uploadName">Upload Method</label>
+      <h5 htmlFor="uploadName">Upload Method</h5>
       <Form.Group>
         <ButtonGroup toggle>
           <ToggleButton
@@ -303,18 +297,18 @@ export default function Upload() {
       </Form.Group>
       {uploadMethod === "direct" && (
         <>
-          <label htmlFor="uploadName" style={{ marginTop: "10px" }}>
+          <h5 htmlFor="uploadName" style={{ marginTop: "10px" }}>
             Upload Name
-          </label>
+          </h5>
           <Form.Control
             type="text"
             value={uploadName}
             onChange={(e) => setUploadName(e.target.value)}
             style={{ marginBottom: "10px" }}
           />
-          <label htmlFor="datasetType" style={{ marginTop: "10px" }}>
+          <h5 htmlFor="datasetType" style={{ marginTop: "10px" }}>
             Dataset Type
-          </label>
+          </h5>
           <Form.Control
             as="select"
             value={datasetType}
@@ -323,9 +317,9 @@ export default function Upload() {
           >
             <option value="COCO">COCO</option>
           </Form.Control>
-          <label htmlFor="datasetType" style={{ marginTop: "10px" }}>
+          <h5 htmlFor="datasetType" style={{ marginTop: "10px" }}>
             Target Dataset
-          </label>
+          </h5>
           <Form.Control
             as="select"
             value={targetDataset}
@@ -335,11 +329,10 @@ export default function Upload() {
             <option value="FRC2023">FRC 2023</option>
             <option value="FRC2024">FRC 2024</option>
           </Form.Control>
-          <label htmlFor="dataset" style={{ marginTop: "10px" }}>
+          <h5 htmlFor="dataset" style={{ marginTop: "10px" }}>
             Dataset
-          </label>
-          <br />
-          <label htmlFor="fileInput" style={styles.customFileUpload}>
+          </h5>
+          <h5 htmlFor="fileInput" style={styles.customFileUpload}>
             <input
               type="file"
               id="fileInput"
@@ -349,7 +342,7 @@ export default function Upload() {
               style={styles.customFileInput}
             />
             Choose File(s)
-          </label>
+          </h5>
           <p style={{ marginTop: "10px", color: "gray", fontSize: 10 }}>
             Note: Folders should be uploaded as ZIP files.
           </p>
@@ -388,18 +381,18 @@ export default function Upload() {
       )}
       {uploadMethod === "roboflow" && (
         <>
-          <label htmlFor="roboflowUrl" style={{ marginTop: "10px" }}>
+          <h5 htmlFor="roboflowUrl" style={{ marginTop: "10px" }}>
             Roboflow URL
-          </label>
+          </h5>
           <Form.Control
             type="text"
             value={roboflowUrl}
             onChange={(e) => setRoboflowUrl(e.target.value)}
             style={{ marginBottom: "10px" }}
           />
-          <label htmlFor="datasetType" style={{ marginTop: "10px" }}>
+          <h5 htmlFor="datasetType" style={{ marginTop: "10px" }}>
             Target Dataset
-          </label>
+          </h5>
           <Form.Control
             as="select"
             value={targetDataset}
@@ -412,35 +405,38 @@ export default function Upload() {
         </>
       )}
       {(uploadMethod === "direct" || uploadMethod === "roboflow") && (
-      <div className="input-group-append">
-        <Button variant="primary" onClick={onUpload} disabled={isLoading}>
-          {isLoading ? "Uploading..." : "Upload"}
-        </Button>
-        {parsedNames.length > 0 && (
-          <div style={{ marginTop: "10px" }}>
-            <strong>Parsed Names:</strong>
-            {parsedNames.map((className, index) => (
-              <div key={index} style={{ marginTop: "5px" }}>
-                <span>{className}: </span>
-                <Form.Control
-                  as="select"
-                  style={{ marginLeft: "5px" }}
-                  onChange={(e) => handleDropdownChange(className, e.target.value)}
-                >
-                  <option value="FRC2023">FRC 2023</option>
-                  <option value="FRC2024">FRC 2024</option>
-                </Form.Control>
-              </div>
-            ))}
+        <div className="input-group-append">
+          <Button variant="primary" onClick={onUpload} disabled={uploadLoading}>
+            {uploadLoading ? "Uploading..." : "Upload"}
+          </Button>
+        </div>
+      )}
+      {(showClassMatch === true) && (
+        <div style={{ marginTop: "10px" }}>
+          <h5>Map Classes</h5>
+          {metadata.classes.map((className, index) => (
+            <div key={index} style={{ marginTop: "5px" }}>
+              <span>{className}: </span>
+              <Form.Control
+                as="select"
+                style={{ marginLeft: "5px" }}
+                onChange={(e) =>
+                  setMapClasses(e.target.value)
+                }
+              >
+                <option value="cone">cone</option>
+                <option value="cube">cube</option>
+                <option value="robot">robot</option>
+              </Form.Control>
+            </div>
+          ))}
+          <div className="input-group-append" style={{ marginTop: "10px" }}>
+            <Button variant="primary" onClick={onMapClasses} disabled={classesLoading}>
+              {classesLoading ? "Mapping Classes..." : "Map Classes"}
+            </Button>
           </div>
-        )}
-      </div>
-    )}
-    {showCopyAlert && (
-      <Alert variant="success" style={styles.alertContainer} dismissible>
-        Curl command copied to clipboard
-      </Alert>
-    )}
+        </div>
+      )}
     </div>
   );
 }

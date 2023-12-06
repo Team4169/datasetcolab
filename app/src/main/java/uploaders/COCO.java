@@ -60,7 +60,7 @@ public class COCO {
     }
 
     public void postUpload(String uid, String folderName) {
-	    parseFiles("upload/" + uid + "/" + folderName);
+	    utils.parseFiles("upload/" + uid + "/" + folderName);
     }
 
     private void unzip(String zipFilePath, String destDirectory) {
@@ -95,45 +95,4 @@ public class COCO {
             e.printStackTrace();
         }
     }
-
-    private void parseFiles(String parentPath) {
-        File parentFolder = new File(parentPath);
-
-        if (parentFolder.exists() && parentFolder.isDirectory()) {
-            parseFilesRecursive(parentFolder);
-        } else {
-            System.out.println("Invalid parent path or not a directory.");
-        }
-    }
-
-    private void parseFilesRecursive(File folder) {
-        File[] files = folder.listFiles();
-
-        if (files != null) {
-            for (File file : files) {
-                if (file.isDirectory()) {
-                    parseFilesRecursive(file);
-                } else {
-                    if (file.getName().toLowerCase().endsWith(".coco.json")) {
-                        parseJsonFile(file);
-                    }
-                }
-            }
-        }
-    }
-
-    private void parseJsonFile(File jsonFile) {
-        try (FileReader reader = new FileReader(jsonFile)) {
-            JsonObject jsonObject = JsonParser.parseReader(reader).getAsJsonObject();
-            String categoryName = jsonObject.getAsJsonArray("categories").get(0).getAsJsonObject().get("name").getAsString();
-
-            if (!parsedNames.contains(categoryName)) {
-                parsedNames.add(categoryName);
-            }
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
 }

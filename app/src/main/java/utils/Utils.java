@@ -3,8 +3,28 @@ package utils;
 import java.io.*;
 import java.util.*;
 import java.nio.file.*;
-import java.util.zip.ZipEntry;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.google.auth.oauth2.GoogleCredentials;
+import com.google.firebase.FirebaseApp;
+import com.google.firebase.FirebaseOptions;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseAuthException;
+import com.google.firebase.auth.FirebaseToken;
+import io.javalin.Javalin;
+import io.javalin.community.ssl.SSLPlugin;
+import io.javalin.http.UploadedFile;
+import java.text.SimpleDateFormat;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
+import org.json.simple.JSONArray;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.zip.ZipOutputStream;
+import java.util.zip.ZipEntry;
 
 public class Utils {
 
@@ -75,8 +95,7 @@ public class Utils {
         return output.toString();
     }
 
-
-public static void zipDirectory(String sourcePath, String zipFileName) throws IOException {
+    public static void zipDirectory(String sourcePath, String zipFileName) throws IOException {
         Path sourcePathObj = Paths.get(sourcePath);
         try (ZipOutputStream zipOut = new ZipOutputStream(new FileOutputStream(zipFileName))) {
             Files.walk(sourcePathObj)
@@ -97,10 +116,52 @@ public static void zipDirectory(String sourcePath, String zipFileName) throws IO
         }
     }
 
-
     public int getLastExitCode() {
         return lastExitCode;
     }
 
+    public HashSet<String> parseFiles(String parentPath) {
+        HashSet<String> parsedNames = new HashSet<>();
+        File parentFolder = new File(parentPath);
 
+        if (parentFolder.exists() && parentFolder.isDirectory()) {
+            parseFilesRecursive(parentFolder, parsedNames);
+        } else {
+            System.out.println("Invalid parent path or not a directory.");
+        }
+
+        return parsedNames;
+    }
+
+    private void parseFilesRecursive(File folder, HashSet<String> parsedNames) {
+        File[] files = folder.listFiles();
+
+        if (files != null) {
+            for (File file : files) {
+                if (file.isDirectory()) {
+                    parseFilesRecursive(file, parsedNames);
+                } else {
+                    if (file.getName().toLowerCase().endsWith(".json")) {
+                        parseJsonFile(file, parsedNames);
+                    }
+                }
+            }
+        }
+    }
+
+    private void parseJsonFile(File jsonFile, HashSet<String> parsedNames) {
+        try (FileReader reader = new FileReader(jsonFile)) {
+            JsonObject jsonObject = JsonParser.parseReader(reader).getAsJsonObject();
+            JsonArray categories = jsonObject.getAsJsonArray("categories");
+
+            if (categories != null && categories.size() > 0) {
+                JsonObject firstCategory = categories.get(0).getAsJsonObject();
+                String categoryName = firstCategory.get("name").getAsString();
+                parsedNames.add(categoryName);
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 }
