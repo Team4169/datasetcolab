@@ -123,26 +123,19 @@ export default function DownloadDataset() {
 
       const idToken = await currentUser.getIdToken();
 
-      const response = await fetch(`https://api.datasetcolab.com/download/${dataset}`, {
-        method: 'GET',
+      let config = {
         headers: {
-          'Content-Type': 'application/json',
           idToken: idToken,
+          targetDataset: dataset,
         },
-      });
+      };
 
-      if (response.ok) {
-        const result = await response.blob();
-        setData(result);
+      const response = await axios.get(
+        "https://api.datasetcolab.com/download",
+        config
+      );
 
-        // Trigger the download programmatically
-        const downloadLink = document.createElement('a');
-        downloadLink.href = URL.createObjectURL(result);
-        downloadLink.download = `${dataset}.zip`; // replace with a meaningful name
-        downloadLink.click();
-      } else {
-        console.error('Error:', response.status, response.statusText);
-      }
+      window.location.href = 'https://api.datasetcolab.com/download/' + response.data;
     } catch (err) {
       setError("Error downloading dataset.");
     } finally {
@@ -282,7 +275,7 @@ export default function DownloadDataset() {
                         <div style={{ width: "100%" }}>
                           <Button
                             variant="primary"
-                            onClick={() => handleDirectDownload(dataset.name)}
+                            onClick={() => handleDirectDownload(dataset.name.replace(" ", ""))}
                             style={{ width: "100%" }}
                             disabled={loading}
                           >

@@ -24,6 +24,10 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.concurrent.CompletableFuture;
 
+import io.javalin.Javalin;
+import java.io.File;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 public class App {
 
     public static void populateTree(String folderPath, JSONObject result) {
@@ -72,6 +76,11 @@ public class App {
         }
 
         return null;
+    }
+
+    private static String generateTemporaryLink(String filename) {
+        Path basePath = Paths.get("https://api.datasetcolab.com");
+        return basePath.resolve("/download/" + filename).toString();
     }
 
 
@@ -380,7 +389,7 @@ public class App {
         );
 
         app.get(
-            "/download/{targetDataset}",
+            "/download",
             ctx -> {
                 try {
                     String uid = "";
@@ -394,7 +403,7 @@ public class App {
                         uid = validAPI(api);
                     }
 
-                    String targetDataset = ctx.pathParam("targetDataset");
+                    String targetDataset = ctx.header("targetDataset");
                     if (targetDataset.equals("FRC2023") || targetDataset.equals("FRC2024")) {
 
                         File datasetFile = new File("currentDataset.json");
@@ -403,12 +412,7 @@ public class App {
                             JSONObject currentDataset = (JSONObject) parser.parse(fileReader);
                             String tempName = (String) currentDataset.get(targetDataset);
 
-                            File zipFile = new File(tempName);
-                            byte[] zipBytes = Files.readAllBytes(zipFile.toPath());
-
-                            ctx.result(zipBytes)
-                                .contentType("application/zip")
-                                .header("Content-Disposition", "attachment; filename=" + tempName + "Main" + ".zip");
+                            ctx.result(tempName);
                         }
                     } else {
                         ctx.result("Error: Invalid target dataset.");
@@ -422,6 +426,12 @@ public class App {
             }
         );
 
+        app.get("/download/<filePath>", ctx -> {
+            File file = new File(ctx.pathParam("filePath"));
+
+            ctx.result(Files.readAllBytes(file.toPath()))
+                    .header("Content-Disposition", "attachment; filename=" + file.getName());
+        });
 
         app.get(
             "/api",

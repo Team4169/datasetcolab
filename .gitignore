@@ -33,10 +33,9 @@ replay_pid*
 
 # Ignore Gradle project-specific cache directory
 .gradle
-app/admin.json
-app/api.json
 app/upload
 roboflow.txt
+app/*.json
 
 # Ignore Gradle build output directory
 build
