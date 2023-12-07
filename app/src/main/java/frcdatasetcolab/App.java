@@ -427,10 +427,43 @@ public class App {
         );
 
         app.get("/download/<filePath>", ctx -> {
-            File file = new File(ctx.pathParam("filePath"));
+            String filePath = ctx.pathParam("filePath");
+            if (filePath.equals("FRC2023") || filePath.equals("FRC2024")) {
+                try {
+                    String uid = "";
+                    if (ctx.header("idToken") != null) {
+                        FirebaseToken decodedToken = FirebaseAuth
+                            .getInstance()
+                            .verifyIdToken(ctx.header("idToken"));
+                        uid = decodedToken.getUid();
+                    } else if (ctx.header("api") != null) {
+                        String api = ctx.header("api");
+                        uid = validAPI(api);
+                    }
+                    
+                    File datasetFile = new File("currentDataset.json");
+                    try (FileReader fileReader = new FileReader(datasetFile)) {
+                        JSONParser parser = new JSONParser();
+                        JSONObject currentDataset = (JSONObject) parser.parse(fileReader);
+                        String tempName = (String) currentDataset.get(filePath);
 
-            ctx.result(Files.readAllBytes(file.toPath()))
-                    .header("Content-Disposition", "attachment; filename=" + file.getName());
+                        File zipFile = new File(tempName);
+                        byte[] zipBytes = Files.readAllBytes(zipFile.toPath());
+
+                        ctx.result(zipBytes)
+                            .contentType("application/zip")
+                            .header("Content-Disposition", "attachment; filename=" + tempName);
+                    }
+                } catch (FirebaseAuthException e) {
+                    e.printStackTrace();
+                    ctx.status(401).result("Error: Authentication failed.");
+                }
+            } else {
+                File file = new File(filePath);
+
+                ctx.result(Files.readAllBytes(file.toPath()))
+                    .header("Content-Disposition", "attachment; filename=FRC2023.zip");
+            }
         });
 
         app.get(

@@ -84,11 +84,15 @@ export default function DownloadDataset() {
   const [apiKey, setApiKey] = useState("API_KEY");
   const [data, setData] = useState(null);
 
-  const handleDownloadCurl = (dataset) =>
-    `curl -o ${dataset.replace(
-      /\s/g,
-      ""
-    )}.zip https://api.datasetcolab.com/download/${dataset.replace(/\s/g, "")}?api="${apiKey}"`;
+  const handleDownloadCurl = (dataset) => {
+    console.log(dataset.name);
+    const name = dataset.name.replace(" ", "");
+    console.log(name);
+
+    return (
+      `curl -o ${name}.zip https://api.datasetcolab.com/download/${name}?api="${apiKey}"`
+    );
+  }
 
   const handleDownloadMethodChange = (dataset, value) => {
     setDownloadMethod((prevMethods) => ({ ...prevMethods, [dataset]: value }));
@@ -112,7 +116,7 @@ export default function DownloadDataset() {
   };
 
   const handleCopyToClipboard = () => {
-    const curlCommand = handleDownloadCurl();
+    const curlCommand = handleDownloadCurl(datasets[0]);
     navigator.clipboard.writeText(curlCommand);
     setShowCopyAlert(true);
   };
@@ -260,7 +264,7 @@ export default function DownloadDataset() {
                       {downloadMethod[dataset.name] === "curl" ? (
                         <div>
                           <div style={styles.codeBlock}>
-                            <code>{handleDownloadCurl(dataset.name)}</code>
+                            <code>{handleDownloadCurl(dataset)}</code>
                             <div
                               style={styles.copyButton}
                               onClick={handleCopyToClipboard}
