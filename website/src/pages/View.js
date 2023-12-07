@@ -68,29 +68,34 @@ export default function View() {
   const isSectionOpen = (sectionName) => openSections.includes(sectionName);
 
   const fetchProjectDetails = async () => {
+    const imageFileTypes = [".jpg", ".png", ".webp"];
+    const isImageFile = imageFileTypes.some((fileType) =>
+      folderName.endsWith(fileType)
+    );
+
     try {
       setLoading(true);
 
       const idToken = await currentUser.getIdToken();
-      const config = { headers: { idToken: idToken } };
 
-      const response = await axios.get(
-        `https://api.datasetcolab.com/view/${folderName}`,
-        config
-      );
-      console.log("Image data length:", response.data.length);
-
-      if (response.headers["content-type"].startsWith("image")) {
-        const blob = new Blob([response.data], { type: response.headers["content-type"] });
-        console.log(blob.size)
-        const imageUrl = URL.createObjectURL(blob);
-        setImageSrc(imageUrl);
+      if (isImageFile) {
+        setImageSrc(
+          `https://api.datasetcolab.com/view/${folderName}?idToken=${idToken}`
+        );
       } else {
+        const config = { headers: { idToken: idToken } };
+
+        const response = await axios.get(
+          `https://api.datasetcolab.com/view/${folderName}`,
+          config
+        );
+
         setProjectDetails(response.data);
         setCurrentFileTree(response.data.tree);
+        setImageSrc(null);
       }
     } catch (err) {
-      console.log(err)
+      console.log(err);
       setError("Error fetching project details.");
     } finally {
       setLoading(false);
@@ -182,11 +187,10 @@ export default function View() {
           <li key={name}>
             <div
               style={treeStyle}
-              onClick={() => handleToggleSection(parentName + name)}
             >
               {typeof value === "object" ? (
                 <>
-                  <span>
+                  <span onClick={() => handleToggleSection(parentName + name)}>
                     {isSectionOpen(parentName + name) ? "▼" : "►"}{" "}
                     {name.length < 63
                       ? name
@@ -206,6 +210,9 @@ export default function View() {
                     (parentName !== "" ? parentName + "/" : "") +
                     name
                   }
+                  onClick={(e) => {
+                    e.stopPropagation(); // Prevent closing the folder when clicking on the link
+                  }}
                 >
                   {name.length < 63
                     ? name
@@ -240,85 +247,89 @@ export default function View() {
 
   return (
     <div style={{ padding: "20px" }}>
-      <div className="project-details">
-        {imageSrc && (<img
-  src={imageSrc}
-  alt="Image"
-  style={{ maxWidth: "100%" }}
-  onError={() => console.error("Error loading image")}
-/>  )}
-        {isLoading ? (
-          <>
-            <h2>Loading project details...</h2>
-            {error && (
-              <Alert
-                variant="danger"
-                onClose={() => setError(null)}
-                dismissible
+      {imageSrc && (
+        <img
+          src={imageSrc}
+          alt="Image"
+          style={{ maxWidth: "100%" }}
+          onError={() => console.error("Error loading image")}
+        />
+      )}
+      {!imageSrc && (
+        <div className="project-details">
+          {isLoading ? (
+            <>
+              <h2>Loading project details...</h2>
+              {error && (
+                <Alert
+                  variant="danger"
+                  onClose={() => setError(null)}
+                  dismissible
+                >
+                  {error}
+                </Alert>
+              )}
+            </>
+          ) : (
+            <div style={{ position: "relative" }}>
+              {projectDetails.imageURL && (
+                <img
+                  src={projectDetails.imageURL}
+                  alt="Project Image"
+                  style={{ maxWidth: "100%" }}
+                />
+              )}
+              <h2>{projectDetails.uploadName}</h2>
+              {error && (
+                <Alert
+                  variant="danger"
+                  onClose={() => setError(null)}
+                  dismissible
+                >
+                  {error}
+                </Alert>
+              )}
+              <small>
+                <strong>Upload Time:</strong>{" "}
+                {formatUploadTime(projectDetails.uploadTime)}
+              </small>
+              <br />
+              <small>
+                <strong>Dataset Type:</strong> {projectDetails.datasetType}
+              </small>
+              <br />
+              <small>
+                <strong>Target Dataset:</strong>{" "}
+                {formatTargetDataset(projectDetails.targetDataset)}
+              </small>
+              <br />
+              <Button
+                variant="primary"
+                className="position-absolute top-0 end-0"
+                onClick={() => navigate("/")}
               >
-                {error}
-              </Alert>
-            )}
-          </>
-        ) : (
-          <div style={{ position: "relative" }}>
-            {projectDetails.imageURL && (
-              <img
-                src={projectDetails.imageURL}
-                alt="Project Image"
-                style={{ maxWidth: "100%" }}
-              />
-            )}
-            <h2>{projectDetails.uploadName}</h2>
-            {error && (
-              <Alert
-                variant="danger"
-                onClose={() => setError(null)}
-                dismissible
-              >
-                {error}
-              </Alert>
-            )}
-            <small>
-              <strong>Upload Time:</strong>{" "}
-              {formatUploadTime(projectDetails.uploadTime)}
-            </small>
-            <br />
-            <small>
-              <strong>Dataset Type:</strong> {projectDetails.datasetType}
-            </small>
-            <br />
-            <small>
-              <strong>Target Dataset:</strong>{" "}
-              {formatTargetDataset(projectDetails.targetDataset)}
-            </small>
-            <br />
-            <Button
-              variant="primary"
-              className="position-absolute top-0 end-0"
-              onClick={() => navigate("/")}
-            >
-              Back to Dashboard
-            </Button>
-            <Form onSubmit={handleSubmit}>
-              <Form.Control
-                type="text"
-                placeholder="Search files"
-                onChange={handleSearch}
-                style={{ margin: "20px 0px" }}
-              />
-            </Form>
-            <div style={styles.treeContainer}>
-              {renderTree(currentFileTree, "", true)}
-            </div>
-            <div style={{ padding: "10px 0" }}>
-              <Button variant="danger" onClick={handleDeleteProject}>
-                Delete Project
+                Back to Dashboard
               </Button>
+              <Form onSubmit={handleSubmit}>
+                <Form.Control
+                  type="text"
+                  placeholder="Search files"
+                  onChange={handleSearch}
+                  style={{ margin: "20px 0px" }}
+                />
+              </Form>
+              <div style={styles.treeContainer}>
+                {renderTree(currentFileTree, "", true)}
+              </div>
+              <div style={{ padding: "10px 0" }}>
+                <Button variant="danger" onClick={handleDeleteProject}>
+                  Delete Project
+                </Button>
+              </div>
             </div>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

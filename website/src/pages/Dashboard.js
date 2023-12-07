@@ -52,6 +52,7 @@ const styles = {
 
 export default function Dashboard() {
   const { currentUser } = useAuth();
+  const navigate = useNavigate();
 
   const [folderMetadata, setFolderMetadata] = useState([]);
   const [isLoading, setLoading] = useState(false);
@@ -113,8 +114,6 @@ export default function Dashboard() {
     return formattedTargetDataset;
   }
 
-  const navigate = useNavigate();
-
   const redirectToView = (folderName) => {
     navigate(`/view/${folderName}`);
   };
@@ -122,7 +121,7 @@ export default function Dashboard() {
   return (
     <div style={{ padding: "20px" }}>
       <div className="files-preview">
-        <h2>Dashboard</h2>
+        <h2>Projects</h2>
         {error && (
           <Alert variant="danger" onClose={() => setError(null)} dismissible>
             {error}
@@ -133,13 +132,24 @@ export default function Dashboard() {
         ) : (
           <div>
             {folderMetadata.length > 0 ? (
-              folderMetadata
-                .sort((a, b) => {
-                  const nanosecondsA = new Date(a.uploadTime).getTime() * 1e6; // Convert to nanoseconds
-                  const nanosecondsB = new Date(b.uploadTime).getTime() * 1e6; // Convert to nanoseconds
-                  return nanosecondsB - nanosecondsA; // Sort in descending order
-                })
-                .map((metadata, index) => {
+              folderMetadata.sort((a, b) => {
+                const [datePartA, timePartA] = a.uploadTime.split("_");
+                const [yearA, monthA, dayA, hourA, minuteA] = [
+                  ...datePartA.split("-"),
+                  ...timePartA.split(":")
+                ];
+
+                const [datePartB, timePartB] = b.uploadTime.split("_");
+                const [yearB, monthB, dayB, hourB, minuteB] = [
+                  ...datePartB.split("-"),
+                  ...timePartB.split(":")
+                ];
+
+                const dateA = new Date(yearA, monthA - 1, dayA, hourA, minuteA);
+                const dateB = new Date(yearB, monthB - 1, dayB, hourB, minuteB);
+
+                return dateB - dateA;
+              }).map((metadata, index) => {
                   const formattedUploadTime = formatUploadTime(
                     metadata.uploadTime
                   );
@@ -179,7 +189,12 @@ export default function Dashboard() {
                   );
                 })
             ) : (
-              <p>No uploads available.</p>
+              <div>
+                <p>No projects available. Click the button below to upload a new file.</p>
+                <Button variant="primary" onClick={() =>navigate("/upload")}>
+                  Upload New Project
+                </Button>
+              </div>
             )}
           </div>
         )}

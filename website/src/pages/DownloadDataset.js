@@ -90,7 +90,7 @@ export default function DownloadDataset() {
     console.log(name);
 
     return (
-      `curl -o ${name}.zip https://api.datasetcolab.com/download/${name}?api="${apiKey}"`
+      `curl -o ${name}.zip https://api.datasetcolab.com/download/${name}?api=${apiKey}`
     );
   }
 
@@ -224,9 +224,6 @@ export default function DownloadDataset() {
                   </Dropdown.Toggle>
                   <Dropdown.Menu>
                     <Dropdown.Item eventKey="COCO">COCO</Dropdown.Item>
-                    <Dropdown.Item eventKey="YOLOv5 Pytorch">
-                      YOLOv5 Pytorch
-                    </Dropdown.Item>
                   </Dropdown.Menu>
                 </Dropdown>
                 {currentUser && currentUser.emailVerified ? (

@@ -78,12 +78,6 @@ public class App {
         return null;
     }
 
-    private static String generateTemporaryLink(String filename) {
-        Path basePath = Paths.get("https://api.datasetcolab.com");
-        return basePath.resolve("/download/" + filename).toString();
-    }
-
-
     private static Utils mainUtils = new Utils();
 
     public static void main(String[] args) {
@@ -122,16 +116,19 @@ public class App {
             "/view",
             ctx -> {
                 try {
-                    String uid = "";
-                    if (ctx.header("idToken") != null) {
-                        FirebaseToken decodedToken = FirebaseAuth
-                            .getInstance()
-                            .verifyIdToken(ctx.header("idToken"));
-                        uid = decodedToken.getUid();
-                    } else if (ctx.header("api") != null) {
-                        String api = ctx.header("api");
-                        uid = validAPI(api);
-                    }
+                String uid = "";
+                if (ctx.header("idToken") != null || ctx.queryParam("idToken") != null) {
+                    String idToken = ctx.header("idToken") != null ? ctx.header("idToken") : ctx.queryParam("idToken");
+                    FirebaseToken decodedToken = FirebaseAuth
+                        .getInstance()
+                        .verifyIdToken(idToken);
+                    uid = decodedToken.getUid();
+                } else if (ctx.header("api") != null || ctx.queryParam("api") != null) {
+                    String api = ctx.header("api") != null ? ctx.header("api") : ctx.queryParam("api");
+                    uid = validAPI(api);
+                } else {
+                    throw new IllegalArgumentException("Invalid request: uid is null or both idToken and api are null.");
+                }
 
                     String directoryPath = "upload/" + uid;
                     File directory = new File(directoryPath);
@@ -168,54 +165,35 @@ public class App {
 
         app.get("/view/<folderName>", ctx -> {
             try {
-                    String uid = "";
-                    if (ctx.header("idToken") != null) {
-                        FirebaseToken decodedToken = FirebaseAuth
-                            .getInstance()
-                            .verifyIdToken(ctx.header("idToken"));
-                        uid = decodedToken.getUid();
-                    } else if (ctx.header("api") != null) {
-                        String api = ctx.header("api");
-                        uid = validAPI(api);
-                    }
-
+                String uid = "";
+                if (ctx.header("idToken") != null || ctx.queryParam("idToken") != null) {
+                    String idToken = ctx.header("idToken") != null ? ctx.header("idToken") : ctx.queryParam("idToken");
+                    FirebaseToken decodedToken = FirebaseAuth
+                        .getInstance()
+                        .verifyIdToken(idToken);
+                    uid = decodedToken.getUid();
+                } else if (ctx.header("api") != null || ctx.queryParam("api") != null) {
+                    String api = ctx.header("api") != null ? ctx.header("api") : ctx.queryParam("api");
+                    uid = validAPI(api);
+                } else {
+                    throw new IllegalArgumentException("Invalid request: uid is null or both idToken and api are null.");
+                }
+                
                 String folderName = ctx.pathParam("folderName");
                 String requestedFile = "upload/" + uid + "/" + folderName;
 
-                // Check if the requested path ends with an image extension
                 if (requestedFile.matches(".*\\.(jpg|jpeg|png|webp)$")) {
-                    System.out.println(requestedFile);
                     File imageFile = new File(requestedFile);
 
-
                     if (imageFile.exists() && imageFile.isFile()) {
-                        byte[] imageBytes = Files.readAllBytes(imageFile.toPath());
-                        System.out.println(imageBytes.length);
-                        ByteArrayInputStream result = new ByteArrayInputStream(imageBytes);
-                        ctx.result(imageBytes);
-                        String contentType;
-                        if (requestedFile.matches(".*\\.jpg$")) {
-                            contentType = "image/jpeg";
-                        } else if (requestedFile.matches(".*\\.png$")) {
-                            contentType = "image/png";
-                        } else if (requestedFile.matches(".*\\.webp$")) {
-                            contentType = "image/webp";
-                        } else {
-                            // Handle unsupported image formats or set a default content type
-                            contentType = "image/jpeg"; // Change this as needed
-                        }
-
-                        ctx.contentType(contentType);
-                    } else {
+                	    ctx.result(Files.readAllBytes(imageFile.toPath()));
+		            } else {
                         ctx.result("Image file not found for the specified path.");
                     }
-
                 } else {
                     String metadataFilePath = requestedFile + "/metadata.json";
-                    System.out.println(metadataFilePath);
                     File metadataFile = new File(metadataFilePath);
 
-                    // Always return populatedTree, even if metadata does not exist
                     String folderPath = "upload/" + uid + "/" + folderName;
 
                     JSONObject treeObject = new JSONObject();
@@ -230,7 +208,6 @@ public class App {
                             ctx.json(metadata);
                         }
                     } else {
-                        // If metadata does not exist, return tree as the main response
                         JSONObject result = new JSONObject();
                         result.put("tree", treeObject);
                         ctx.json(result);
@@ -262,16 +239,19 @@ public class App {
             "/upload",
             ctx -> {
                 try {
-                    String uid = "";
-                    if (ctx.header("idToken") != null) {
-                        FirebaseToken decodedToken = FirebaseAuth
-                            .getInstance()
-                            .verifyIdToken(ctx.header("idToken"));
-                        uid = decodedToken.getUid();
-                    } else if (ctx.header("api") != null) {
-                        String api = ctx.header("api");
-                        uid = validAPI(api);
-                    }
+                String uid = "";
+                if (ctx.header("idToken") != null || ctx.queryParam("idToken") != null) {
+                    String idToken = ctx.header("idToken") != null ? ctx.header("idToken") : ctx.queryParam("idToken");
+                    FirebaseToken decodedToken = FirebaseAuth
+                        .getInstance()
+                        .verifyIdToken(idToken);
+                    uid = decodedToken.getUid();
+                } else if (ctx.header("api") != null || ctx.queryParam("api") != null) {
+                    String api = ctx.header("api") != null ? ctx.header("api") : ctx.queryParam("api");
+                    uid = validAPI(api);
+                } else {
+                    throw new IllegalArgumentException("Invalid request: uid is null or both idToken and api are null.");
+                }
 
                     Date date = new Date();
                     SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd_HH:mm");
@@ -392,16 +372,19 @@ public class App {
             "/download",
             ctx -> {
                 try {
-                    String uid = "";
-                    if (ctx.header("idToken") != null) {
-                        FirebaseToken decodedToken = FirebaseAuth
-                            .getInstance()
-                            .verifyIdToken(ctx.header("idToken"));
-                        uid = decodedToken.getUid();
-                    } else if (ctx.header("api") != null) {
-                        String api = ctx.header("api");
-                        uid = validAPI(api);
-                    }
+                String uid = "";
+                if (ctx.header("idToken") != null || ctx.queryParam("idToken") != null) {
+                    String idToken = ctx.header("idToken") != null ? ctx.header("idToken") : ctx.queryParam("idToken");
+                    FirebaseToken decodedToken = FirebaseAuth
+                        .getInstance()
+                        .verifyIdToken(idToken);
+                    uid = decodedToken.getUid();
+                } else if (ctx.header("api") != null || ctx.queryParam("api") != null) {
+                    String api = ctx.header("api") != null ? ctx.header("api") : ctx.queryParam("api");
+                    uid = validAPI(api);
+                } else {
+                    throw new IllegalArgumentException("Invalid request: uid is null or both idToken and api are null.");
+                }
 
                     String targetDataset = ctx.header("targetDataset");
                     if (targetDataset.equals("FRC2023") || targetDataset.equals("FRC2024")) {
@@ -430,16 +413,19 @@ public class App {
             String filePath = ctx.pathParam("filePath");
             if (filePath.equals("FRC2023") || filePath.equals("FRC2024")) {
                 try {
-                    String uid = "";
-                    if (ctx.header("idToken") != null) {
-                        FirebaseToken decodedToken = FirebaseAuth
-                            .getInstance()
-                            .verifyIdToken(ctx.header("idToken"));
-                        uid = decodedToken.getUid();
-                    } else if (ctx.header("api") != null) {
-                        String api = ctx.header("api");
-                        uid = validAPI(api);
-                    }
+                String uid = "";
+                if (ctx.header("idToken") != null || ctx.queryParam("idToken") != null) {
+                    String idToken = ctx.header("idToken") != null ? ctx.header("idToken") : ctx.queryParam("idToken");
+                    FirebaseToken decodedToken = FirebaseAuth
+                        .getInstance()
+                        .verifyIdToken(idToken);
+                    uid = decodedToken.getUid();
+                } else if (ctx.header("api") != null || ctx.queryParam("api") != null) {
+                    String api = ctx.header("api") != null ? ctx.header("api") : ctx.queryParam("api");
+                    uid = validAPI(api);
+                } else {
+                    throw new IllegalArgumentException("Invalid request: uid is null or both idToken and api are null.");
+                }
                     
                     File datasetFile = new File("currentDataset.json");
                     try (FileReader fileReader = new FileReader(datasetFile)) {
@@ -470,16 +456,19 @@ public class App {
             "/api",
             ctx -> {
                 try {
-                    String uid = "";
-                    if (ctx.header("idToken") != null) {
-                        FirebaseToken decodedToken = FirebaseAuth
-                            .getInstance()
-                            .verifyIdToken(ctx.header("idToken"));
-                        uid = decodedToken.getUid();
-                    } else if (ctx.header("api") != null) {
-                        String api = ctx.header("api");
-                        uid = validAPI(api);
-                    }
+                String uid = "";
+                if (ctx.header("idToken") != null || ctx.queryParam("idToken") != null) {
+                    String idToken = ctx.header("idToken") != null ? ctx.header("idToken") : ctx.queryParam("idToken");
+                    FirebaseToken decodedToken = FirebaseAuth
+                        .getInstance()
+                        .verifyIdToken(idToken);
+                    uid = decodedToken.getUid();
+                } else if (ctx.header("api") != null || ctx.queryParam("api") != null) {
+                    String api = ctx.header("api") != null ? ctx.header("api") : ctx.queryParam("api");
+                    uid = validAPI(api);
+                } else {
+                    throw new IllegalArgumentException("Invalid request: uid is null or both idToken and api are null.");
+                }
 
                     boolean newKey = false;
                     String newKeyString = ctx.header("new");
@@ -528,16 +517,19 @@ public class App {
             "/classes",
             ctx -> {
                 try {
-                    String uid = "";
-                    if (ctx.header("idToken") != null) {
-                        FirebaseToken decodedToken = FirebaseAuth
-                            .getInstance()
-                            .verifyIdToken(ctx.header("idToken"));
-                        uid = decodedToken.getUid();
-                    } else if (ctx.header("api") != null) {
-                        String api = ctx.header("api");
-                        uid = validAPI(api);
-                    }
+                String uid = "";
+                if (ctx.header("idToken") != null || ctx.queryParam("idToken") != null) {
+                    String idToken = ctx.header("idToken") != null ? ctx.header("idToken") : ctx.queryParam("idToken");
+                    FirebaseToken decodedToken = FirebaseAuth
+                        .getInstance()
+                        .verifyIdToken(idToken);
+                    uid = decodedToken.getUid();
+                } else if (ctx.header("api") != null || ctx.queryParam("api") != null) {
+                    String api = ctx.header("api") != null ? ctx.header("api") : ctx.queryParam("api");
+                    uid = validAPI(api);
+                } else {
+                    throw new IllegalArgumentException("Invalid request: uid is null or both idToken and api are null.");
+                }
 
                     String classesHeader = ctx.header("classes");
                     String mapClassesHeader = ctx.header("mapClasses");
