@@ -219,6 +219,91 @@ public class App {
             }
         });
 
+
+        app.get("/annotations/<folderName>", ctx -> {
+            try {
+                String uid = "";
+                if (ctx.header("idToken") != null || ctx.queryParam("idToken") != null) {
+                    String idToken = ctx.header("idToken") != null ? ctx.header("idToken") : ctx.queryParam("idToken");
+                    FirebaseToken decodedToken = FirebaseAuth
+                        .getInstance()
+                        .verifyIdToken(idToken);
+                    uid = decodedToken.getUid();
+                } else if (ctx.header("api") != null || ctx.queryParam("api") != null) {
+                    String api = ctx.header("api") != null ? ctx.header("api") : ctx.queryParam("api");
+                    uid = validAPI(api);
+                } else {
+                    throw new IllegalArgumentException("Invalid request: uid is null or both idToken and api are null.");
+                }
+
+                String folderName = ctx.pathParam("folderName");
+                String requestedFile = "upload/" + uid + "/" + folderName;
+
+                String[] folderNameArray = folderName.split("/");
+                List<String> folderNameList = new ArrayList<>(Arrays.asList(folderNameArray));
+
+                String imageName = folderNameList.get(folderNameList.size() - 1);
+                folderNameList.remove(folderNameList.size() - 1);
+
+                String reconstructedName = String.join("/", folderNameList);
+                String filePath = "upload/" + uid + "/" + reconstructedName;
+
+                File folder = new File(filePath);
+                File[] files = folder.listFiles((dir, name) -> name.toLowerCase().endsWith(".json"));
+
+                JSONArray outAnnotations = new JSONArray();
+
+                if (files != null) {
+                    for (File file : files) {
+                        if (file.getName().endsWith(".json")) {
+                            try (FileReader fileReader = new FileReader(file)) {
+                                JSONParser parser = new JSONParser();
+                                JSONObject json = (JSONObject) parser.parse(fileReader);
+
+                                Long imageID = null;
+                                JSONArray images = (JSONArray) json.get("images");
+                                for (Object image : images) {
+                                    JSONObject imageObj = (JSONObject) image;
+                                    if (imageObj.get("file_name").equals(imageName)) {
+                                        imageID = (Long) imageObj.get("id");
+                                        break;
+                                    }
+                                }
+
+                                JSONArray annotations = (JSONArray) json.get("annotations");
+                                for (Object annotation : annotations) {
+                                    JSONObject annotationObj = (JSONObject) annotation;
+                                    if (annotationObj.get("image_id").equals(imageID)) {
+                                
+                                        String categoryName = "";
+                                        JSONArray categories = (JSONArray) json.get("categories");
+                                        for (Object category : categories) {
+                                            JSONObject categoryObj = (JSONObject) category;
+                                            System.out.println(categoryObj);
+                                            if (categoryObj.get("id").equals(annotationObj.get("category_id"))) {
+                                                categoryName = (String) categoryObj.get("name");
+                                            }
+                                        }
+
+                                        annotationObj.put("category_name", categoryName);
+                                        outAnnotations.add(annotationObj);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    System.out.println("No json files found in the directory.");
+                }
+                System.out.println(outAnnotations);
+                ctx.json(outAnnotations);
+            } catch (FirebaseAuthException | ParseException e) {
+                e.printStackTrace();
+                ctx.status(401).result("Error: Authentication failed.");
+            }
+        });
+
+
         app.get("/delete/{folderName}", ctx -> {
             try {
                 FirebaseToken decodedToken = FirebaseAuth

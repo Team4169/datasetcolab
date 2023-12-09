@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import axios from "axios";
 import Alert from "react-bootstrap/Alert";
-import { Button, Form, FormControl } from "react-bootstrap";
+import { Button, Form } from "react-bootstrap";
 import { useParams, useNavigate, Link } from "react-router-dom";
 
 const styles = {
@@ -44,6 +44,68 @@ const styles = {
   checkboxGroup: { display: "flex", gap: "10px", flexWrap: "wrap" },
 };
 
+const AnnotationOverlay = ({ annotations, imageUrl }) => {
+  const canvasRef = useRef();
+
+  const drawAnnotations = () => {
+    const context = canvasRef.current.getContext("2d");
+
+    annotations.forEach((annotation, index) => {
+      const [x, y, width, height] = annotation.bbox;
+
+      const color = getColorByCategoryId(annotation.category_id);
+
+      context.strokeStyle = color;
+      context.lineWidth = 2;
+      context.strokeRect(x, y, width, height);
+
+      context.fillStyle = color;
+      context.fillRect(x + width - 50, y + height, 50, 20);
+      context.fillStyle = "white";
+      context.font = "12px Arial";
+      context.fillText(annotation.category_name, x + width - 45, y + height + 15);
+    });
+  };
+
+  const getColorByCategoryId = (categoryId) => {
+    const colorMap = {
+      1: "#FF8080",
+      2: "#80FF80",
+      3: "#8080FF",
+      4: "#FFFF80",
+      5: "#FF80FF",
+      6: "#80FFFF",
+    };
+
+    return colorMap[categoryId] || "#000000";
+  };
+
+  useEffect(() => {
+    const image = new Image();
+    image.src = imageUrl;
+    image.onload = () => {
+      const canvas = canvasRef.current;
+      const context = canvas.getContext("2d");
+      canvas.width = image.width;
+      canvas.height = image.height;
+      context.drawImage(image, 0, 0, image.width, image.height);
+      drawAnnotations();
+    };
+  }, [imageUrl, annotations]);
+
+  return (
+    <div>
+      <canvas
+        ref={canvasRef}
+        style={{
+          width: "100%",
+          height: "auto",
+        }}
+      />
+    </div>
+  );
+};
+
 export default function View() {
   const { currentUser } = useAuth();
   const { "*": folderName } = useParams();
@@ -54,6 +116,7 @@ export default function View() {
   const [isLoading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [imageSrc, setImageSrc] = useState(null);
+  const [annotations, setAnnotations] = useState(null);
 
   const [openSections, setOpenSections] = useState([]);
 
@@ -79,6 +142,18 @@ export default function View() {
       const idToken = await currentUser.getIdToken();
 
       if (isImageFile) {
+
+        const config = { headers: { idToken: idToken } };
+
+        const response = await axios.get(
+          `https://api.datasetcolab.com/annotations/${folderName}`,
+          config
+        );
+
+        console.log(response.data);
+
+        setAnnotations(response.data);
+        
         setImageSrc(
           `https://api.datasetcolab.com/view/${folderName}?idToken=${idToken}`
         );
@@ -185,9 +260,7 @@ export default function View() {
       >
         {Object.entries(treeData).map(([name, value], index) => (
           <li key={name}>
-            <div
-              style={treeStyle}
-            >
+            <div style={treeStyle}>
               {typeof value === "object" ? (
                 <>
                   <span onClick={() => handleToggleSection(parentName + name)}>
@@ -248,12 +321,7 @@ export default function View() {
   return (
     <div style={{ padding: "20px" }}>
       {imageSrc && (
-        <img
-          src={imageSrc}
-          alt="Image"
-          style={{ maxWidth: "100%" }}
-          onError={() => console.error("Error loading image")}
-        />
+        <AnnotationOverlay annotations={annotations} imageUrl={imageSrc} />
       )}
       {!imageSrc && (
         <div className="project-details">

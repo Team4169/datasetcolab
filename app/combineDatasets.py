@@ -35,6 +35,17 @@ def combine_datasets_without_delete(dataset1_path, dataset2_path, output_path):
     json_file2 = find_json_files(dataset2_path)[0]
     coco1 = COCO(dataset1_path + "/" + json_file1)
     coco2 = COCO(dataset2_path + "/" + json_file2)
+
+    categories1 = coco1.loadCats(coco1.getCatIds())
+    categories2 = coco2.loadCats(coco2.getCatIds())
+
+    category_mapping = {'cone': 1, 'cube': 2}  # Map category names to desired category IDs
+
+    for category in categories1:
+        category_mapping[category['name']] = category['id']
+
+    for category in categories2:
+        category_mapping[category['name']] = category['id']
     
     # Combine image and annotation data
     combined_images = coco1.loadImgs(coco1.getImgIds()) + coco2.loadImgs(coco2.getImgIds())
@@ -73,8 +84,8 @@ def combine_datasets_without_delete(dataset1_path, dataset2_path, output_path):
             'file_name': f'{new_image_name}.jpg',
             'width': image_info['width'],
             'height': image_info['height'],
-            'date_captured': image_info['date_captured'],
-            'license': image_info['license'],
+            #'date_captured': image_info['date_captured'],
+            #'license': image_info['license'],
         })
 
     annotation_id_mapping = {}
@@ -87,6 +98,11 @@ def combine_datasets_without_delete(dataset1_path, dataset2_path, output_path):
     for annotation in combined_annotations:
         old_image_id = annotation['image_id']
         new_image_id = image_id_mapping[old_image_id] - offset_image_id
+
+        old_category_id = annotation['category_id']
+        old_category_name = coco1.loadCats([old_category_id])[0]['name'] if old_category_id in coco1.getCatIds() else coco2.loadCats([old_category_id])[0]['name']
+        new_category_id = category_mapping.get(old_category_name, old_category_id)
+        annotation['category_id'] = new_category_id
 
         # Update image_id in the annotation
         annotation['image_id'] = new_image_id
@@ -147,8 +163,8 @@ def combine_datasets_and_merge(dataset1_path, dataset2_path, output_path):
             'file_name': f'{new_image_name}.jpg',
             'width': image_info['width'],
             'height': image_info['height'],
-            'date_captured': image_info['date_captured'],
-            'license': image_info['license'],
+            #'date_captured': image_info['date_captured'],
+            #'license': image_info['license'],
             # 'coco_url': image_info['coco_url'],
             # 'flickr_url': image_info['flickr_url']
         })

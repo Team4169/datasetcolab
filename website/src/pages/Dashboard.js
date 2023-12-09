@@ -81,7 +81,7 @@ export default function Dashboard() {
         setFolderMetadata([]); // Set to an empty array if response.data is not an array
       }
     } catch (err) {
-      setError("Error fetching folder metadata.");
+      setError("Error fetching projects.");
     } finally {
       setLoading(false);
     }
@@ -128,7 +128,7 @@ export default function Dashboard() {
           </Alert>
         )}
         {isLoading ? (
-          <p>Loading folder metadata...</p>
+          <p>Loading projects...</p>
         ) : (
           <div>
             {folderMetadata.length > 0 ? (
@@ -190,7 +190,7 @@ export default function Dashboard() {
                 })
             ) : (
               <div>
-                <p>No projects available. Click the button below to upload a new file.</p>
+                <p>No projects available. Click the button below to upload a new project.</p>
                 <Button variant="primary" onClick={() =>navigate("/upload")}>
                   Upload New Project
                 </Button>
