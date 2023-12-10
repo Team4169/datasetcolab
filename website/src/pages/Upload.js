@@ -147,8 +147,11 @@ export default function Upload() {
           idToken: idToken,
           classes: metadata.classes,
           mapClasses: mapClasses,
+          metadata: JSON.stringify(metadata),
         },
       };
+
+      console.log(config);
 
       await axios.get(
         "https://api.datasetcolab.com/classes",
@@ -327,12 +330,11 @@ export default function Upload() {
             style={{ marginBottom: "10px" }}
           >
             <option value="FRC2023">FRC 2023</option>
-            <option value="FRC2024">FRC 2024</option>
           </Form.Control>
           <h5 htmlFor="dataset" style={{ marginTop: "10px" }}>
             Dataset
           </h5>
-          <h5 htmlFor="fileInput" style={styles.customFileUpload}>
+          <label htmlFor="fileInput" style={styles.customFileUpload}>
             <input
               type="file"
               id="fileInput"
@@ -342,7 +344,7 @@ export default function Upload() {
               style={styles.customFileInput}
             />
             Choose File(s)
-          </h5>
+          </label>
           <p style={{ marginTop: "10px", color: "gray", fontSize: 10 }}>
             Note: Folders should be uploaded as ZIP files.
           </p>
@@ -400,7 +402,6 @@ export default function Upload() {
             style={{ marginBottom: "10px" }}
           >
             <option value="FRC2023">FRC 2023</option>
-            <option value="FRC2024">FRC 2024</option>
           </Form.Control>
         </>
       )}
@@ -421,7 +422,11 @@ export default function Upload() {
                 as="select"
                 style={{ marginLeft: "5px" }}
                 onChange={(e) =>
-                  setMapClasses(e.target.value)
+                  setMapClasses(() => {
+                    const updatedMapClasses = [...mapClasses];
+                    updatedMapClasses[index] = e.target.value;
+                    setMapClasses(updatedMapClasses);
+                  })
                 }
               >
                 <option value="cone">cone</option>

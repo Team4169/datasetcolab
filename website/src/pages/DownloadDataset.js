@@ -191,11 +191,15 @@ export default function DownloadDataset() {
             <Card key={index} style={styles.datasetCard}>
               <Card.Body>
                 <h3>{dataset.name}</h3>
+                {
+                  /*
                 <small>Images: {dataset.images}</small>
                 <br />
                 <small>Annotations: {dataset.annotations}</small>
                 <br />
                 <small>Size: {dataset.size}</small>
+                  */
+                }
                 <h5 style={{ paddingTop: "10px" }}>Dataset Classes</h5>
                 <div style={styles.checkboxGroup}>
                   {classes.map((opt, i) => (

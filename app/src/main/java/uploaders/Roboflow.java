@@ -15,6 +15,8 @@ import io.javalin.Javalin;
 import io.javalin.community.ssl.SSLPlugin;
 import io.javalin.http.UploadedFile;
 
+import java.util.*;
+
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
@@ -28,6 +30,7 @@ public class Roboflow {
 
     private Utils utils = new Utils();
     public Set<String> classes = new HashSet<>();
+    public ArrayList<Integer> classAmounts = new ArrayList();
 
     public String upload(String folderName, String roboflowUrl, String uid) {
         String apiKey = readApiKeyFromFile("roboflow.txt");
@@ -51,7 +54,9 @@ public class Roboflow {
             JSONObject classesJSON = (JSONObject) projectJSON.get("classes");
 
             for (Object className : classesJSON.keySet()) {
+                // System.out.println(classAmounts);
                 classes.add((String) className);
+                // classAmounts.add((Integer) className.get("size"))
             }
 
             return exportLink;

@@ -60,10 +60,14 @@ const AnnotationOverlay = ({ annotations, imageUrl }) => {
       context.strokeRect(x, y, width, height);
 
       context.fillStyle = color;
-      context.fillRect(x + width - 50, y + height, 50, 20);
+      context.fillRect(x + width - (context.measureText(annotation.category_name).width + 10), y + height, context.measureText(annotation.category_name).width + 11, 20);
       context.fillStyle = "white";
       context.font = "12px Arial";
-      context.fillText(annotation.category_name, x + width - 45, y + height + 15);
+      context.fillText(
+        annotation.category_name,
+        x + width - context.measureText(annotation.category_name).width - 2,
+        y + height + 15
+      );
     });
   };
 
@@ -93,6 +97,10 @@ const AnnotationOverlay = ({ annotations, imageUrl }) => {
     };
   }, [imageUrl, annotations]);
 
+  const uniqueCategories = [
+    ...new Set(annotations.map((annotation) => annotation.category_id)),
+  ];
+
   return (
     <div>
       <canvas
@@ -102,6 +110,25 @@ const AnnotationOverlay = ({ annotations, imageUrl }) => {
           height: "auto",
         }}
       />
+      <div style={styles.colorKey}>
+        {uniqueCategories.map((categoryId) => {
+          const annotation = annotations.find(
+            (annotation) => annotation.category_id === categoryId
+          );
+          return (
+            <div style={styles.colorKeyItem} key={annotation.category_id}>
+              <div
+                style={{
+                  backgroundColor: getColorByCategoryId(annotation.category_id),
+                  width: "20px",
+                  height: "20px",
+                }}
+              ></div>
+              <span>{annotation.category_name}</span>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 };
@@ -142,7 +169,6 @@ export default function View() {
       const idToken = await currentUser.getIdToken();
 
       if (isImageFile) {
-
         const config = { headers: { idToken: idToken } };
 
         const response = await axios.get(
@@ -153,7 +179,7 @@ export default function View() {
         console.log(response.data);
 
         setAnnotations(response.data);
-        
+
         setImageSrc(
           `https://api.datasetcolab.com/view/${folderName}?idToken=${idToken}`
         );
@@ -319,12 +345,14 @@ export default function View() {
   };
 
   return (
-    <div style={{ padding: "20px" }}>
+    <div style={{ padding: "20px" }} className="project-details">
       {imageSrc && (
-        <AnnotationOverlay annotations={annotations} imageUrl={imageSrc} />
+        <div>
+          <AnnotationOverlay annotations={annotations} imageUrl={imageSrc} />
+        </div>
       )}
       {!imageSrc && (
-        <div className="project-details">
+        <div>
           {isLoading ? (
             <>
               <h2>Loading project details...</h2>
@@ -340,13 +368,6 @@ export default function View() {
             </>
           ) : (
             <div style={{ position: "relative" }}>
-              {projectDetails.imageURL && (
-                <img
-                  src={projectDetails.imageURL}
-                  alt="Project Image"
-                  style={{ maxWidth: "100%" }}
-                />
-              )}
               <h2>{projectDetails.uploadName}</h2>
               {error && (
                 <Alert
@@ -376,7 +397,7 @@ export default function View() {
                 className="position-absolute top-0 end-0"
                 onClick={() => navigate("/")}
               >
-                Back to Dashboard
+                Back
               </Button>
               <Form onSubmit={handleSubmit}>
                 <Form.Control

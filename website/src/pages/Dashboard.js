@@ -118,6 +118,24 @@ export default function Dashboard() {
     navigate(`/view/${folderName}`);
   };
 
+  const [loadingText, setLoadingText] = useState("Loading projects");
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setLoadingText((prevText) => {
+        if (prevText === "Loading projects...") {
+          return "Loading projects..";
+        } else if (prevText === "Loading projects..") {
+          return "Loading projects.";
+        } else {
+          return "Loading projects...";
+        }
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <div style={{ padding: "20px" }}>
       <div className="files-preview">
@@ -128,7 +146,7 @@ export default function Dashboard() {
           </Alert>
         )}
         {isLoading ? (
-          <p>Loading projects...</p>
+          <p>{loadingText}</p>
         ) : (
           <div>
             {folderMetadata.length > 0 ? (

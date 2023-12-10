@@ -14,6 +14,7 @@ import io.javalin.community.ssl.SSLPlugin;
 import io.javalin.http.UploadedFile;
 import java.io.*;
 import java.util.*;
+import java.util.ArrayList;
 import java.text.SimpleDateFormat;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -279,7 +280,6 @@ public class App {
                                         JSONArray categories = (JSONArray) json.get("categories");
                                         for (Object category : categories) {
                                             JSONObject categoryObj = (JSONObject) category;
-                                            System.out.println(categoryObj);
                                             if (categoryObj.get("id").equals(annotationObj.get("category_id"))) {
                                                 categoryName = (String) categoryObj.get("name");
                                             }
@@ -295,7 +295,6 @@ public class App {
                 } else {
                     System.out.println("No json files found in the directory.");
                 }
-                System.out.println(outAnnotations);
                 ctx.json(outAnnotations);
             } catch (FirebaseAuthException | ParseException e) {
                 e.printStackTrace();
@@ -354,11 +353,15 @@ public class App {
                     if ("COCO".equals(datasetType)) {
                         COCO uploader = new COCO();
                         uploader.upload(folderName, ctx.uploadedFiles("files"), uid);
+                    
+                        Set < String > parsedNames = uploader.parsedNames;
+                        parsedNamesUpload.addAll(parsedNames);
+                        metadata.put("classes", parsedNamesUpload);
                     } else if ("ROBOFLOW".equals(datasetType)) {
                         Roboflow uploader = new Roboflow();
                         exportLink = uploader.upload(folderName, ctx.header("roboflowUrl"), uid);
                         uploadName = uploader.getProjectFromUrl(ctx.header("roboflowUrl"));
-                        Set < String > parsedNames = uploader.classes;
+                        Set<String> parsedNames = new HashSet<>(uploader.classes);
                         parsedNamesUpload.addAll(parsedNames);
                     }
 
@@ -369,6 +372,7 @@ public class App {
                     metadata.put("folderName", folderName);
                     metadata.put("classes", parsedNamesUpload);
                     metadata.put("status", "postprocessing");
+                    metadata.put("exportLink", exportLink);
 
                     File metadataDirectory = new File("upload/" + uid + "/" + folderName);
                     metadataDirectory.mkdirs();
@@ -385,67 +389,6 @@ public class App {
                     }
 
                     ctx.json(metadata);
-
-                    final String finalExportLink = exportLink;
-                    final String finalUid = uid;
-
-                    CompletableFuture.runAsync(() -> {
-                        try {
-                            if ("COCO".equals(datasetType)) {
-                                COCO uploader = new COCO();
-                                uploader.postUpload(finalUid, folderName);
-                                Set < String > parsedNames = uploader.parsedNames;
-                                parsedNamesUpload.addAll(parsedNames);
-                                metadata.put("classes", parsedNamesUpload);
-                            } else if ("ROBOFLOW".equals(datasetType)) {
-                                Roboflow uploader = new Roboflow();
-                                uploader.postUpload(finalUid, folderName, finalExportLink);
-                            }
-
-                            metadata.put("status", "merged");
-
-                            try (FileWriter file = new FileWriter(metadataFilePath)) {
-                                file.write(metadata.toJSONString());
-                                file.flush();
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                                ctx.status(500).result("Error: Failed to save metadata on the server.");
-                                return;
-                            }
-
-                            String tempName = mainUtils.generateRandomString(4);
-                            mainUtils.executeCommand("python3 combineDatasets.py " + targetDataset + " " + tempName);
-                            mainUtils.zipDirectory(tempName + "Main", tempName + "Main" + ".zip");
-
-                            File datasetFile = new File("currentDataset.json");
-                            try (FileReader fileReader = new FileReader(datasetFile)) {
-                                JSONParser parser = new JSONParser();
-                                JSONObject currentDataset = (JSONObject) parser.parse(fileReader);
-                                String oldTempName = (String) currentDataset.get(targetDataset);
-
-                                currentDataset.put(targetDataset, tempName + "Main.zip");
-
-                                try (FileWriter file = new FileWriter("currentDataset.json")) {
-                                    file.write(currentDataset.toJSONString());
-                                    file.flush();
-                                } catch (IOException e) {
-                                    e.printStackTrace();
-                                    ctx.status(500).result("Error: Failed to save metadata on the server.");
-                                }
-
-                                mainUtils.executeCommand("rm  " + oldTempName);
-                                mainUtils.executeCommand("rm -fr " + tempName + "Main");
-
-                            } catch (IOException | ParseException e) {
-                                e.printStackTrace();
-                                ctx.status(500).result("Error: Failed to read dataset file.");
-                            }
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                            ctx.status(500).result("Error: Failed to process dataset.");
-                        }
-                    });
-
                 } catch (FirebaseAuthException e) {
                     e.printStackTrace();
                     ctx.status(401).result("Error: Authentication failed.");
@@ -598,6 +541,7 @@ public class App {
             }
         );
 
+
         app.get(
             "/classes",
             ctx -> {
@@ -616,24 +560,130 @@ public class App {
                     throw new IllegalArgumentException("Invalid request: uid is null or both idToken and api are null.");
                 }
 
-                    String classesHeader = ctx.header("classes");
-                    String mapClassesHeader = ctx.header("mapClasses");
+                final String finalUid = uid;
+            
+                String classesHeader = ctx.header("classes");
+                String mapClassesHeader = ctx.header("mapClasses");
 
-                    Map<String, String> classMap = new HashMap<>();
+                Map<String, String> classMap = new HashMap<>();
 
-                    if (classesHeader != null && mapClassesHeader != null &&
-                        !classesHeader.isEmpty() && !mapClassesHeader.isEmpty()) {
+                if (classesHeader != null && mapClassesHeader != null &&
+                    !classesHeader.isEmpty() && !mapClassesHeader.isEmpty()) {
 
-                        String[] classes = classesHeader.split(",");
-                        String[] mapClasses = mapClassesHeader.split(",");
+                    String[] classes = classesHeader.split(",");
+                    String[] mapClasses = mapClassesHeader.split(",");
 
-                        for (int i = 0; i < classes.length; i++) {
-                            classMap.put(classes[i].trim(), mapClasses[i].trim());
-                        }
+                    for (int i = 0; i < classes.length; i++) {
+                        classMap.put(classes[i].trim(), mapClasses[i].trim());
                     }
+                }
 
-                    
+                CompletableFuture.runAsync(() -> {
+                    try {
+                        JSONObject metadata;
+                        try {
+                            metadata = new JSONObject((Map<?, ?>) new JSONParser().parse(ctx.header("metadata")));
+                        } catch (ParseException e) {
+                            e.printStackTrace();
+                            metadata = new JSONObject();
+                        }
 
+                        // unzip
+                        if ("COCO".equals(metadata.get("datasetType"))) {
+                            COCO uploader = new COCO();
+                            uploader.postUpload(finalUid, (String) metadata.get("folderName"));
+                        } else if ("ROBOFLOW".equals(metadata.get("datasetType"))) {
+                            Roboflow uploader = new Roboflow();
+                            uploader.postUpload(finalUid, (String) metadata.get("folderName"), (String) metadata.get("exportLink"));
+                        }
+
+                        metadata.put("status", "merged");
+
+                        try (FileWriter file = new FileWriter("upload/" + finalUid + "/" + metadata.get("folderName")+ "/metadata.json")) {
+                            file.write(metadata.toJSONString());
+                            file.flush();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                            ctx.status(500).result("Error: Failed to save metadata on the server.");
+                            return;
+                        }
+
+                        // class matching
+                        File folder = new File("upload/" + finalUid + "/" + metadata.get("folderName"));
+                        List<File> fileList = new ArrayList<>();
+                        Files.walk(Paths.get(folder.getAbsolutePath()))
+                            .filter(Files::isRegularFile)
+                            .filter(path -> path.toString().toLowerCase().endsWith(".json"))
+                            .forEach(path -> fileList.add(path.toFile()));
+                        File[] files = fileList.toArray(new File[0]);
+                        if (files != null) {
+                            for (File file : files) {
+                                if (!file.getName().equals("metadata.json")) {
+                                    try (FileReader fileReader = new FileReader(file)) {
+                                        JSONParser parser = new JSONParser();
+                                        JSONObject json = (JSONObject) parser.parse(fileReader);
+                                        
+                                        JSONArray categoriesArray = (JSONArray) json.get("categories");
+
+                                        for (int i = 0; i < categoriesArray.size(); i++) {
+                                            JSONObject category = (JSONObject) categoriesArray.get(i);
+                                            String oldCategoryName = (String) category.get("name");
+                                            
+                                            if (classMap.containsKey(oldCategoryName)) {
+                                                category.put("name", classMap.get(oldCategoryName));
+                                                categoriesArray.set(i, category);
+                                                json.put("categories", categoriesArray);
+                                            }
+                                        }
+
+                                        try (FileWriter fileWriter = new FileWriter(file)) {
+                                            fileWriter.write(json.toJSONString());
+                                        } catch (IOException e) {
+                                            e.printStackTrace();
+                                        }
+
+                                    }
+                                }
+                            }
+                        }
+
+                        // new download
+                        String tempName = mainUtils.generateRandomString(4);
+                        mainUtils.executeCommand("python3 combineDatasets.py " + metadata.get("targetDataset") + " " + tempName);
+                        mainUtils.zipDirectory(tempName + "Main", tempName + "Main" + ".zip");
+
+                       
+                        File datasetFile = new File("currentDataset.json");
+                        try (FileReader fileReader = new FileReader(datasetFile)) {
+                            JSONParser parser = new JSONParser();
+                            JSONObject currentDataset = (JSONObject) parser.parse(fileReader);
+                            String oldTempName = (String) currentDataset.get(metadata.get("targetDataset"));
+
+                            currentDataset.put(metadata.get("targetDataset"), tempName + "Main.zip");
+
+                            try (FileWriter file = new FileWriter("currentDataset.json")) {
+                                file.write(currentDataset.toJSONString());
+                                file.flush();
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                                ctx.status(500).result("Error: Failed to save metadata on the server.");
+                            }
+
+                            mainUtils.executeCommand("rm  " + oldTempName);
+                            mainUtils.executeCommand("rm -fr " + tempName + "Main");
+
+                        
+
+                        } catch (IOException | ParseException e) {
+                            e.printStackTrace();
+                            ctx.status(500).result("Error: Failed to read dataset file.");
+                        }
+                       
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        ctx.status(500).result("Error: Failed to process dataset.");
+                    }
+                });
                 } catch (FirebaseAuthException e) {
                     e.printStackTrace();
                     ctx.status(401).result("Error: Authentication failed.");
