@@ -66,6 +66,8 @@ export default function Settings() {
   const [loadingNewApiKey, setLoadingNewApiKey] = useState(false);
   const [apiKey, setApiKey] = useState("API_KEY");
   const [showCopyAlert, setShowCopyAlert] = useState(false);
+  const [updateEmailSuccess, setUpdateEmailSuccess] = useState(false);
+  const [updatePasswordSuccess, setUpdatePasswordSuccess] = useState(false);
 
   let navigate = useNavigate();
 
@@ -75,7 +77,8 @@ export default function Settings() {
     confirmRef,
     updateFunction,
     setLoading,
-    setError
+    setError,
+    setSuccess
   ) => {
     setLoading(true);
     setError(null);
@@ -92,6 +95,11 @@ export default function Settings() {
     }
 
     Promise.all(promises)
+      .then(() => {
+        setSuccess(true);
+        ref.current.value = "";
+        confirmRef.current.value = "";
+      })
       .catch(() => setError(`Failed to update ${type.toLowerCase()}`))
       .finally(() => setLoading(false));
   };
@@ -104,7 +112,8 @@ export default function Settings() {
       emailConfirmRef,
       updateEmail_,
       setLoadingEmail,
-      setEmailError
+      setEmailError,
+      setUpdateEmailSuccess
     );
   };
 
@@ -116,7 +125,8 @@ export default function Settings() {
       passwordConfirmRef,
       updatePassword_,
       setLoadingPassword,
-      setPasswordError
+      setPasswordError,
+      setUpdatePasswordSuccess
     );
   };
 
@@ -164,9 +174,19 @@ export default function Settings() {
   return (
     <div style={{ padding: "20px" }}>
       <h2>Settings</h2>
+      {/*
       {emailError && (
         <Alert variant="danger" onClose={() => setEmailError(null)} dismissible>
           {emailError}
+        </Alert>
+      )}
+      {updateEmailSuccess && (
+        <Alert
+          variant="success"
+          onClose={() => setUpdateEmailSuccess(false)}
+          dismissible
+        >
+          Email updated successfully
         </Alert>
       )}
       <h4>Update Email</h4>
@@ -185,7 +205,7 @@ export default function Settings() {
           disabled={loadingEmail}
           style={{ marginBottom: "20px" }}
         >
-          Update
+          Update Email
         </Button>
       </Form>
       {passwordError && (
@@ -197,6 +217,16 @@ export default function Settings() {
           {passwordError}
         </Alert>
       )}
+      {updatePasswordSuccess && (
+        <Alert
+          variant="success"
+          onClose={() => setUpdatePasswordSuccess(false)}
+          dismissible
+        >
+          Password updated successfully
+        </Alert>
+      )}
+      */}
       <h4>Update Password</h4>
       <Form onSubmit={handlePassword}>
         <Form.Group controlId="password" style={{ marginBottom: "20px" }}>
@@ -216,7 +246,7 @@ export default function Settings() {
           disabled={loadingPassword}
           style={{ marginBottom: "20px" }}
         >
-          Update
+          Update Password
         </Button>
       </Form>
       {apiKeyError && (

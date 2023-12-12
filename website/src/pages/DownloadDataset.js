@@ -131,6 +131,8 @@ export default function DownloadDataset() {
         headers: {
           idToken: idToken,
           targetDataset: dataset,
+          selectedOptions: selectedOptions[dataset].join(","),
+          datasetType: selectedDatasetType[dataset],
         },
       };
 
@@ -139,7 +141,8 @@ export default function DownloadDataset() {
         config
       );
 
-      window.location.href = 'https://api.datasetcolab.com/download/' + response.data;
+      window.location.href =
+        "https://api.datasetcolab.com/download/" + response.data;
     } catch (err) {
       setError("Error downloading dataset.");
     } finally {
@@ -150,19 +153,21 @@ export default function DownloadDataset() {
 
   const fetchApiKey = async () => {
     try {
-      const idToken = await currentUser.getIdToken();
+      if (currentUser) {
+        const idToken = await currentUser.getIdToken();
 
-      let config = {
-        headers: {
-          idToken: idToken,
-        },
-      };
+        let config = {
+          headers: {
+            idToken: idToken,
+          },
+        };
 
-      const response = await axios.get(
-        "https://api.datasetcolab.com/api",
-        config
-      );
-      setApiKey(response.data);
+        const response = await axios.get(
+          "https://api.datasetcolab.com/api",
+          config
+        );
+        setApiKey(response.data);
+      }
     } catch (err) {
       setError("Error fetching API key.");
     }
