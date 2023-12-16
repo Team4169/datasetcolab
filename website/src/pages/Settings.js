@@ -53,20 +53,19 @@ const styles = {
 };
 
 export default function Settings() {
-  const emailRef = useRef();
-  const emailConfirmRef = useRef();
+  const usernameRef = useRef();
   const passwordRef = useRef();
   const passwordConfirmRef = useRef();
-  const { currentUser, updateEmail_, updatePassword_ } = useAuth();
-  const [emailError, setEmailError] = useState(null);
+  const { currentUser, updateUsername, updatePassword_ } = useAuth();
+  const [usernameError, setUsernameError] = useState(null);
   const [passwordError, setPasswordError] = useState(null);
   const [apiKeyError, setApiKeyError] = useState(null);
-  const [loadingEmail, setLoadingEmail] = useState(false);
+  const [loadingUsername, setLoadingUsername] = useState(false);
   const [loadingPassword, setLoadingPassword] = useState(false);
   const [loadingNewApiKey, setLoadingNewApiKey] = useState(false);
   const [apiKey, setApiKey] = useState("API_KEY");
   const [showCopyAlert, setShowCopyAlert] = useState(false);
-  const [updateEmailSuccess, setUpdateEmailSuccess] = useState(false);
+  const [updateUsernameSuccess, setUpdateUsernameSuccess] = useState(false);
   const [updatePasswordSuccess, setUpdatePasswordSuccess] = useState(false);
 
   let navigate = useNavigate();
@@ -83,37 +82,40 @@ export default function Settings() {
     setLoading(true);
     setError(null);
 
-    if (ref.current.value !== confirmRef.current.value) {
+    if (type === "Password" && ref.current.value !== confirmRef.current.value) {
       setError(`${type}s do not match`);
       setLoading(false);
       return;
     }
 
     const promises = [];
-    if (ref.current.value && ref.current.value !== currentUser.email) {
+    if (ref.current.value && ref.current.value !== currentUser.username) {
       promises.push(updateFunction(ref.current.value));
     }
 
     Promise.all(promises)
       .then(() => {
         setSuccess(true);
-        ref.current.value = "";
-        confirmRef.current.value = "";
+        try {
+          ref.current.value = "";
+          confirmRef.current.value = "";
+        } catch (error) {
+        }
       })
       .catch(() => setError(`Failed to update ${type.toLowerCase()}`))
       .finally(() => setLoading(false));
   };
 
-  const handleEmail = (e) => {
+  const handleUsername = (e) => {
     e.preventDefault();
     handleUpdate(
-      "Email",
-      emailRef,
-      emailConfirmRef,
-      updateEmail_,
-      setLoadingEmail,
-      setEmailError,
-      setUpdateEmailSuccess
+      "username",
+      usernameRef,
+      null,
+      updateUsername,
+      setLoadingUsername,
+      setUsernameError,
+      setUpdateUsernameSuccess
     );
   };
 
@@ -174,38 +176,33 @@ export default function Settings() {
   return (
     <div style={{ padding: "20px" }}>
       <h2>Settings</h2>
-      {/*
-      {emailError && (
-        <Alert variant="danger" onClose={() => setEmailError(null)} dismissible>
-          {emailError}
+      {usernameError && (
+        <Alert variant="danger" onClose={() => setUsernameError(null)} dismissible>
+          {usernameError}
         </Alert>
       )}
-      {updateEmailSuccess && (
+      {updateUsernameSuccess && (
         <Alert
           variant="success"
-          onClose={() => setUpdateEmailSuccess(false)}
+          onClose={() => setUpdateUsernameSuccess(false)}
           dismissible
         >
-          Email updated successfully
+          Username updated successfully
         </Alert>
       )}
-      <h4>Update Email</h4>
-      <Form onSubmit={handleEmail}>
-        <Form.Group controlId="email" style={{ marginBottom: "20px" }}>
-          <Form.Label>Email:</Form.Label>
-          <Form.Control type="email" ref={emailRef} required />
-        </Form.Group>
-        <Form.Group controlId="emailConfirm" style={{ marginBottom: "20px" }}>
-          <Form.Label>Email Confirmation:</Form.Label>
-          <Form.Control type="email" ref={emailConfirmRef} required />
+      <h4>Update username</h4>
+      <Form onSubmit={handleUsername}>
+        <Form.Group controlId="username" style={{ marginBottom: "20px" }}>
+          <Form.Label>Username:</Form.Label>
+          <Form.Control type="username" ref={usernameRef} required />
         </Form.Group>
         <Button
           variant="primary"
           type="submit"
-          disabled={loadingEmail}
+          disabled={loadingUsername}
           style={{ marginBottom: "20px" }}
         >
-          Update Email
+          Update username
         </Button>
       </Form>
       {passwordError && (
@@ -226,7 +223,6 @@ export default function Settings() {
           Password updated successfully
         </Alert>
       )}
-      */}
       <h4>Update Password</h4>
       <Form onSubmit={handlePassword}>
         <Form.Group controlId="password" style={{ marginBottom: "20px" }}>

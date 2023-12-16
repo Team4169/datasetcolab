@@ -99,15 +99,17 @@ public class Roboflow {
         JsonObject export = json.getAsJsonObject("export");
         return export.get("link").getAsString();
     }
-
+    
     public String getWorkspaceFromUrl(String roboflowUrl) {
         String[] parts = roboflowUrl.split("/");
-        return parts[parts.length - 2];
+        int startIndex = roboflowUrl.startsWith("https://") || roboflowUrl.startsWith("http://") ? 3 : 2;
+        return parts[startIndex];
     }
 
     public String getProjectFromUrl(String roboflowUrl) {
         String[] parts = roboflowUrl.split("/");
-        return parts[parts.length - 1];
+        int startIndex = roboflowUrl.startsWith("https://") || roboflowUrl.startsWith("http://") ? 4 : 3;
+        return parts[startIndex];
     }
 }
 

@@ -7,7 +7,8 @@ import {
   updateEmail,
   updatePassword,
   sendEmailVerification,
-  deleteUser
+  deleteUser,
+  updateProfile
 } from "firebase/auth";
 import { auth } from "../firebase";
 
@@ -49,6 +50,12 @@ export function AuthProvider({ children }) {
     return updatePassword(auth.currentUser, password);
   }
 
+  function updateUsername(username) {
+    return updateProfile(auth.currentUser, {
+      displayName: username,
+    });
+  }
+  
   function deleteAccount() {
     return deleteUser(auth.currentUser);
   }
@@ -71,7 +78,8 @@ export function AuthProvider({ children }) {
     updateEmail_,
     updatePassword_,
     sendEmailVerification_,
-    deleteAccount
+    updateUsername,
+    deleteAccount,
   };
 
   return (

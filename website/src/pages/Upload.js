@@ -125,7 +125,20 @@ export default function Upload() {
       );
 
       setMetadata(response.data);
-      setMapClasses(Array(response.data.classes.length).fill("cone"));
+      setMapClasses(response.data.classes.map((className) => {
+        console.log(className);
+        if (
+          className.toLowerCase().includes("cone") ||
+          className.toLowerCase().includes("cube") ||
+          className.toLowerCase().includes("robot")
+        ) {
+          console.log("yes");
+          return className;
+        } else {
+          console.log("no");
+          return "cone";
+        }
+      }));
       setShowClassMatch(true);
     } catch (error) {
       setError("Error: " + error.message);
@@ -421,6 +434,7 @@ export default function Upload() {
               <Form.Control
                 as="select"
                 style={{ marginLeft: "5px" }}
+                value={mapClasses[index]}
                 onChange={(e) =>
                   setMapClasses(() => {
                     const updatedMapClasses = [...mapClasses];

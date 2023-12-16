@@ -62,8 +62,8 @@ export default function DownloadDataset() {
 
   const [error, setError] = useState("");
   const [selectedOptions, setSelectedOptions] = useState({
-    "FRC 2023": ["Cone", "Cube", "Robot", "Robot Bumper"],
-    "FRC 2024": ["Cone", "Cube", "Robot", "Robot Bumper"],
+    "FRC 2023": ["Cone", "Cube", "Robot"],
+    "FRC 2024": ["Cone", "Cube", "Robot"],
   });
   const [selectedDatasetType, setSelectedDatasetType] = useState({
     ["FRC 2023"]: "COCO",
@@ -78,7 +78,7 @@ export default function DownloadDataset() {
   const datasets = [
     { name: "FRC 2023", images: 1000, annotations: 500, size: "1.5GB" },
   ];
-  const classes = ["Cone", "Cube", "Robot", "Robot Bumper"];
+  const classes = ["Cone", "Cube", "Robot"];
 
   const [loading, setLoading] = useState(false);
   const [apiKey, setApiKey] = useState("API_KEY");

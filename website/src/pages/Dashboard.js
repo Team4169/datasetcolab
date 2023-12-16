@@ -123,15 +123,17 @@ export default function Dashboard() {
   useEffect(() => {
     const interval = setInterval(() => {
       setLoadingText((prevText) => {
-        if (prevText === "Loading projects...") {
+        if (prevText === "Loading projects.") {
           return "Loading projects..";
         } else if (prevText === "Loading projects..") {
-          return "Loading projects.";
-        } else {
           return "Loading projects...";
+        } else if (prevText === "Loading projects...") {
+          return "Loading projects";
+        } else {
+          return "Loading projects.";
         }
       });
-    }, 1000);
+    }, 400);
 
     return () => clearInterval(interval);
   }, []);

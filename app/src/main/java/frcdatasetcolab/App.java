@@ -36,7 +36,7 @@ public class App {
         if (folder.exists() && folder.isDirectory()) {
             File[] files = folder.listFiles();
             if (files != null) {
-                for (File file: files) {
+                for (File file : files) {
                     if (file.isDirectory()) {
                         JSONObject subFolder = new JSONObject();
                         result.put(file.getName(), subFolder);
@@ -182,24 +182,31 @@ public class App {
                 
                 String folderName = ctx.pathParam("folderName");
                 String requestedFile = "upload/" + uid + "/" + folderName;
+                if (folderName.startsWith("FRC2023")) {
+                    File datasetFile = new File("currentDataset.json");
+                    try (FileReader fileReader = new FileReader(datasetFile)) {
+                        JSONParser parser = new JSONParser();
+                        JSONObject currentDataset = (JSONObject) parser.parse(fileReader);
+                        String tempName = (String) currentDataset.get(requestedFile);
+
+                        requestedFile = "upload/" + uid + "/" + tempName + folderName.substring(folderName.indexOf("FRC2023") + 7);
+                    }
+                }
 
                 if (requestedFile.matches(".*\\.(jpg|jpeg|png|webp)$")) {
                     File imageFile = new File(requestedFile);
 
                     if (imageFile.exists() && imageFile.isFile()) {
-                	    ctx.result(Files.readAllBytes(imageFile.toPath()));
-		            } else {
+                        ctx.result(Files.readAllBytes(imageFile.toPath()));
+                    } else {
                         ctx.result("Image file not found for the specified path.");
                     }
                 } else {
                     String metadataFilePath = requestedFile + "/metadata.json";
                     File metadataFile = new File(metadataFilePath);
 
-                    String folderPath = "upload/" + uid + "/" + folderName;
-
                     JSONObject treeObject = new JSONObject();
-                    populateTree(folderPath, treeObject);
-
+                    populateTree(requestedFile, treeObject);
 
                     if (metadataFile.exists() && metadataFile.isFile()) {
                         try (FileReader fileReader = new FileReader(metadataFile)) {
@@ -597,8 +604,6 @@ public class App {
                             uploader.postUpload(finalUid, (String) metadata.get("folderName"), (String) metadata.get("exportLink"));
                         }
 
-                        metadata.put("status", "merged");
-
                         try (FileWriter file = new FileWriter("upload/" + finalUid + "/" + metadata.get("folderName")+ "/metadata.json")) {
                             file.write(metadata.toJSONString());
                             file.flush();
@@ -646,39 +651,8 @@ public class App {
                                 }
                             }
                         }
-
-                        // new download
-                        String tempName = mainUtils.generateRandomString(4);
-                        mainUtils.executeCommand("python3 combineDatasets.py " + metadata.get("targetDataset") + " " + tempName);
-                        mainUtils.zipDirectory(tempName + "Main", tempName + "Main" + ".zip");
-
-                       
-                        File datasetFile = new File("currentDataset.json");
-                        try (FileReader fileReader = new FileReader(datasetFile)) {
-                            JSONParser parser = new JSONParser();
-                            JSONObject currentDataset = (JSONObject) parser.parse(fileReader);
-                            String oldTempName = (String) currentDataset.get(metadata.get("targetDataset"));
-
-                            currentDataset.put(metadata.get("targetDataset"), tempName + "Main.zip");
-
-                            try (FileWriter file = new FileWriter("currentDataset.json")) {
-                                file.write(currentDataset.toJSONString());
-                                file.flush();
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                                ctx.status(500).result("Error: Failed to save metadata on the server.");
-                            }
-
-                            mainUtils.executeCommand("rm  " + oldTempName);
-                            mainUtils.executeCommand("rm -fr " + tempName + "Main");
-
-                        
-
-                        } catch (IOException | ParseException e) {
-                            e.printStackTrace();
-                            ctx.status(500).result("Error: Failed to read dataset file.");
-                        }
-                       
+                    
+                        metadata.put("status", "merged");
                     } catch (Exception e) {
                         e.printStackTrace();
                         ctx.status(500).result("Error: Failed to process dataset.");

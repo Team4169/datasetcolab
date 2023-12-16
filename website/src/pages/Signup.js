@@ -5,12 +5,14 @@ import Form from "react-bootstrap/Form";
 import Button from "react-bootstrap/Button";
 import Alert from "react-bootstrap/Alert";
 import axios from "axios";
+import { updateProfile } from "firebase/auth";
 
 export default function Signup() {
   const emailRef = useRef();
   const passwordRef = useRef();
   const passwordConfirmRef = useRef();
-  const { signup, sendEmailVerification_ } = useAuth();
+  const usernameRef = useRef();
+  const { signup, sendEmailVerification_, updateUsername } = useAuth();
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -30,7 +32,6 @@ export default function Signup() {
       const currentUser = (
         await signup(emailRef.current.value, passwordRef.current.value)
       ).user;
-      console.log(currentUser);
       const idToken = await currentUser.getIdToken();
       let config = {
         headers: {
@@ -38,6 +39,7 @@ export default function Signup() {
         },
       };
       await axios.get("https://api.datasetcolab.com/api", config);
+      await updateUsername(usernameRef.current.value);
       await sendEmailVerification_();
       navigate("/email-verification?to=" + destination);
     } catch {
@@ -62,6 +64,10 @@ export default function Signup() {
       <h2 style={{ marginBottom: "20px" }}>Sign Up</h2>
       {error && <Alert variant="danger">{error}</Alert>}
       <Form onSubmit={handleSubmit}>
+        <Form.Group controlId="username" style={{ marginBottom: "20px" }}>
+          <Form.Label>Username:</Form.Label>
+          <Form.Control type="text" ref={usernameRef} required />
+        </Form.Group>
         <Form.Group controlId="email" style={{ marginBottom: "20px" }}>
           <Form.Label>Email:</Form.Label>
           <Form.Control type="email" ref={emailRef} required />
