@@ -1,110 +1,126 @@
-import json
-import os
-import shutil
+import json, sys, os, shutil, random, string
 from PIL import Image
 from glob import glob
-import sys
+import datetime
 
-def find_json_file(path):
+def findJsonFile(path):
     """ Find the first JSON file in the given directory. """
-    json_files = glob(os.path.join(path, '*.json'))
-    return json_files[0] if json_files else None
+    jsonFiles = glob(os.path.join(path, '*.json'))
+    return jsonFiles[0] if jsonFiles else None
 
-def merge_coco_datasets(dataset_paths, output_path):
-    merged_data = {
+def mergeCocoDatasets(datasetPaths, outputPath):
+    mergedData = {
         'images': [],
         'annotations': [],
         'categories': None
     }
 
-    max_image_id = 0
-    max_annotation_id = 0
-    existing_filenames = set()
+    maxImageId = 0
+    maxAnnotationId = 0
+    existingFilenames = set()
 
-    for dataset_path in dataset_paths:
-        json_file = find_json_file(dataset_path)
-        if not json_file:
-            print(f"No JSON file found in {dataset_path}. Skipping this dataset.")
+    for datasetPath in datasetPaths:
+        jsonFile = findJsonFile(datasetPath)
+        if not jsonFile:
+            print(f"No JSON file found in {datasetPath}. Skipping this dataset.")
             continue
 
         # Load JSON data
-        with open(json_file) as file:
+        with open(jsonFile) as file:
             data = json.load(file)
 
         # Set categories from the first dataset (assuming all datasets have the same categories)
-        if merged_data['categories'] is None:
-            merged_data['categories'] = data['categories']
+        if mergedData['categories'] is None:
+            mergedData['categories'] = data['categories']
 
         # Update IDs in the dataset
-        id_mapping = {}
+        idMapping = {}
         for image in data['images']:
-            old_id = image['id']
-            new_id = old_id + max_image_id
-            id_mapping[old_id] = new_id
-            image['id'] = new_id
+            oldId = image['id']
+            newId = oldId + maxImageId
+            idMapping[oldId] = newId
+            image['id'] = newId
 
             # Check for duplicate filenames and rename if necessary
-            original_filename = image['file_name']
-            if original_filename in existing_filenames:
-                base, extension = os.path.splitext(original_filename)
-                new_filename = f"{base}_{new_id}{extension}"
-                image['file_name'] = new_filename
+            originalFilename = image['file_name']
+            if originalFilename in existingFilenames:
+                base, extension = os.path.splitext(originalFilename)
+                newFilename = f"{base}_{newId}{extension}"
+                image['file_name'] = newFilename
             else:
-                existing_filenames.add(original_filename)
+                existingFilenames.add(originalFilename)
 
-            merged_data['images'].append(image)
+            mergedData['images'].append(image)
 
         for annotation in data['annotations']:
-            annotation['id'] += max_annotation_id
-            annotation['image_id'] = id_mapping[annotation['image_id']]
-            merged_data['annotations'].append(annotation)
+            annotation['id'] += maxAnnotationId
+            annotation['image_id'] = idMapping[annotation['image_id']]
+            mergedData['annotations'].append(annotation)
 
         # Update max ID values for the next dataset
-        max_image_id = max([img['id'] for img in merged_data['images']], default=max_image_id)
-        max_annotation_id = max([ann['id'] for ann in merged_data['annotations']], default=max_annotation_id)
+        maxImageId = max([img['id'] for img in mergedData['images']], default=maxImageId)
+        maxAnnotationId = max([ann['id'] for ann in mergedData['annotations']], default=maxAnnotationId)
 
         # Copy images to output folder
-        os.makedirs(output_path, exist_ok=True)
-        for image_info in data['images']:
-            image_path = os.path.join(dataset_path, original_filename)
-            new_image_path = os.path.join(output_path, image_info['file_name'])
-            if os.path.exists(image_path) and not os.path.exists(new_image_path):
-                shutil.copy(image_path, new_image_path)
+        os.makedirs(outputPath, exist_ok=True)
+        for imageInfo in data['images']:
+            imagePath = os.path.join(datasetPath, originalFilename)
+            newImagePath = os.path.join(outputPath, imageInfo['file_name'])
+            if os.path.exists(imagePath) and not os.path.exists(newImagePath):
+                shutil.copy(imagePath, newImagePath)
 
     # Save merged JSON
-    with open(os.path.join(output_path, 'merged_annotations.json'), 'w') as file:
-        json.dump(merged_data, file)
+    with open(os.path.join(outputPath, '_annotations.coco.json'), 'w') as file:
+        json.dump(mergedData, file)
 
-def find_metadata_folders(directory_path, year):
-    matching_metadata_folders = []
+def findMetadataFolders(directoryPath, year):
+    matchingMetadataFolders = []
 
-    for root, dirs, files in os.walk(directory_path):
+    for root, dirs, files in os.walk(directoryPath):
         if 'metadata.json' in files:
-            metadata_file_path = os.path.join(root, 'metadata.json')
+            metadataFilePath = os.path.join(root, 'metadata.json')
 
-            with open(metadata_file_path, 'r') as f:
+            with open(metadataFilePath, 'r') as f:
                 metadata = json.load(f)
 
             # Assuming 'targetDataset' is a key in metadata.json
-            target_dataset_value = metadata.get('targetDataset')
+            targetDatasetValue = metadata.get('targetDataset')
             status = metadata.get('status')
 
-            if target_dataset_value == year:
+            if targetDatasetValue == year:
                 if status == 'merged':
-                    matching_metadata_folders.append(root)
+                    matchingMetadataFolders.append(root)
             
-    return matching_metadata_folders
+    return matchingMetadataFolders
 
-year = sys.argv[1]
-tempname = sys.argv[2]
+year = "FRC2023"
+tempName = ''.join(random.choices(string.ascii_lowercase + string.digits, k=4))
 
-directory_path = '/home/team4169/frcdatasetcolab/app/upload'
-metadata_folders = find_metadata_folders(directory_path, year)
-testFolders = [s + "/test" for s in metadata_folders]
-trainFolders = [s + "/train" for s in metadata_folders]
-validFolders = [s + "/valid" for s in metadata_folders]
+directoryPath = '/home/team4169/frcdatasetcolab/app/upload'
+metadataFolders = findMetadataFolders(directoryPath, year)
+testFolders = [s + "/test" for s in metadataFolders]
+trainFolders = [s + "/train" for s in metadataFolders]
+validFolders = [s + "/valid" for s in metadataFolders]
 
-output_path_main = '/home/team4169/frcdatasetcolab/app/' + tempname + "Main"
-merge_coco_datasets(testFolders, output_path_main + "/test")
-merge_coco_datasets(trainFolders, output_path_main + "/train")
-merge_coco_datasets(validFolders, output_path_main + "/valid")
+outputPathMain = '/home/team4169/frcdatasetcolab/app/upload/' + tempName
+mergeCocoDatasets(testFolders, outputPathMain + "/test")
+mergeCocoDatasets(trainFolders, outputPathMain + "/train")
+mergeCocoDatasets(validFolders, outputPathMain + "/valid")
+
+metadata = {
+    "folderName": tempName,
+    "uploadName": "FRC 2023",
+    "datasetType": "COCO"
+}
+
+metadataFilePath = '/home/team4169/frcdatasetcolab/app/upload/' + tempName + '/metadata.json'
+with open(metadataFilePath, 'w') as f:
+    json.dump(metadata, f)
+
+currentDatasetPath = '/home/team4169/frcdatasetcolab/app/currentDataset.json'
+with open(currentDatasetPath, 'r') as f:
+    currentDataset = json.load(f)
+shutil.rmtree('/home/team4169/frcdatasetcolab/app/upload/' + currentDataset[year])
+currentDataset[year] = tempName
+with open(currentDatasetPath, 'w') as f:
+    json.dump(currentDataset, f)

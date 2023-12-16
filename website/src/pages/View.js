@@ -60,7 +60,12 @@ const AnnotationOverlay = ({ annotations, imageUrl }) => {
       context.strokeRect(x, y, width, height);
 
       context.fillStyle = color;
-      context.fillRect(x + width - (context.measureText(annotation.category_name).width + 10), y + height, context.measureText(annotation.category_name).width + 11, 20);
+      context.fillRect(
+        x + width - (context.measureText(annotation.category_name).width + 10),
+        y + height,
+        context.measureText(annotation.category_name).width + 11,
+        20
+      );
       context.fillStyle = "white";
       context.font = "12px Arial";
       context.fillText(
@@ -378,24 +383,42 @@ export default function View() {
                   {error}
                 </Alert>
               )}
-              <small>
-                <strong>Upload Time:</strong>{" "}
-                {formatUploadTime(projectDetails.uploadTime)}
-              </small>
-              <br />
-              <small>
-                <strong>Dataset Type:</strong> {projectDetails.datasetType}
-              </small>
-              <br />
-              <small>
-                <strong>Target Dataset:</strong>{" "}
-                {formatTargetDataset(projectDetails.targetDataset)}
-              </small>
-              <br />
+              {projectDetails.uploadTime && (
+                <>
+                  <small>
+                    <strong>Upload Time:</strong>{" "}
+                    {formatUploadTime(projectDetails.uploadTime)}
+                  </small>
+                  <br />
+                </>
+              )}
+              {projectDetails.datasetType && (
+                <>
+                  <small>
+                    <strong>Dataset Type:</strong> {projectDetails.datasetType}
+                  </small>
+                  <br />
+                </>
+              )}
+              {projectDetails.targetDataset && (
+                <>
+                  <small>
+                    <strong>Target Dataset:</strong>{" "}
+                    {formatTargetDataset(projectDetails.targetDataset)}
+                  </small>
+                  <br />
+                </>
+              )}
               <Button
                 variant="primary"
                 className="position-absolute top-0 end-0"
-                onClick={() => navigate("/")}
+                onClick={() => {
+                  if (folderName === "FRC2023") {
+                    navigate("/download");
+                  } else {
+                    navigate("/");
+                  }
+                }}
               >
                 Back
               </Button>
@@ -410,11 +433,13 @@ export default function View() {
               <div style={styles.treeContainer}>
                 {renderTree(currentFileTree, "", true)}
               </div>
-              <div style={{ padding: "10px 0" }}>
-                <Button variant="danger" onClick={handleDeleteProject}>
-                  Delete Project
-                </Button>
-              </div>
+              {folderName !== "FRC2023" && (
+                <div style={{ padding: "10px 0" }}>
+                  <Button variant="danger" onClick={handleDeleteProject}>
+                    Delete Project
+                  </Button>
+                </div>
+              )}
             </div>
           )}
         </div>

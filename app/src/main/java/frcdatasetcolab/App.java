@@ -117,19 +117,19 @@ public class App {
             "/view",
             ctx -> {
                 try {
-                String uid = "";
-                if (ctx.header("idToken") != null || ctx.queryParam("idToken") != null) {
-                    String idToken = ctx.header("idToken") != null ? ctx.header("idToken") : ctx.queryParam("idToken");
-                    FirebaseToken decodedToken = FirebaseAuth
-                        .getInstance()
-                        .verifyIdToken(idToken);
-                    uid = decodedToken.getUid();
-                } else if (ctx.header("api") != null || ctx.queryParam("api") != null) {
-                    String api = ctx.header("api") != null ? ctx.header("api") : ctx.queryParam("api");
-                    uid = validAPI(api);
-                } else {
-                    throw new IllegalArgumentException("Invalid request: uid is null or both idToken and api are null.");
-                }
+                    String uid = "";
+                    if (ctx.header("idToken") != null || ctx.queryParam("idToken") != null) {
+                        String idToken = ctx.header("idToken") != null ? ctx.header("idToken") : ctx.queryParam("idToken");
+                        FirebaseToken decodedToken = FirebaseAuth
+                            .getInstance()
+                            .verifyIdToken(idToken);
+                        uid = decodedToken.getUid();
+                    } else if (ctx.header("api") != null || ctx.queryParam("api") != null) {
+                        String api = ctx.header("api") != null ? ctx.header("api") : ctx.queryParam("api");
+                        uid = validAPI(api);
+                    } else {
+                        throw new IllegalArgumentException("Invalid request: uid is null or both idToken and api are null.");
+                    }
 
                     String directoryPath = "upload/" + uid;
                     File directory = new File(directoryPath);
@@ -187,11 +187,16 @@ public class App {
                     try (FileReader fileReader = new FileReader(datasetFile)) {
                         JSONParser parser = new JSONParser();
                         JSONObject currentDataset = (JSONObject) parser.parse(fileReader);
-                        String tempName = (String) currentDataset.get(requestedFile);
+                        String tempName = (String) currentDataset.get("FRC2023");
 
-                        requestedFile = "upload/" + uid + "/" + tempName + folderName.substring(folderName.indexOf("FRC2023") + 7);
+                        if (folderName.substring(folderName.indexOf("FRC2023") + 7).equals("")) {
+                            requestedFile = "upload/" + tempName;
+                        } else {
+                            requestedFile = "upload/" + tempName + folderName.substring(folderName.indexOf("FRC2023") + 7);
+                        }
                     }
                 }
+                System.out.println(requestedFile);
 
                 if (requestedFile.matches(".*\\.(jpg|jpeg|png|webp)$")) {
                     File imageFile = new File(requestedFile);
@@ -244,8 +249,21 @@ public class App {
                     throw new IllegalArgumentException("Invalid request: uid is null or both idToken and api are null.");
                 }
 
-                String folderName = ctx.pathParam("folderName");
-                String requestedFile = "upload/" + uid + "/" + folderName;
+                String folderName = "upload/" + uid + "/" + ctx.pathParam("folderName");
+                if (ctx.pathParam("folderName").startsWith("FRC2023")) {
+                    File datasetFile = new File("currentDataset.json");
+                    try (FileReader fileReader = new FileReader(datasetFile)) {
+                        JSONParser parser = new JSONParser();
+                        JSONObject currentDataset = (JSONObject) parser.parse(fileReader);
+                        String tempName = (String) currentDataset.get("FRC2023");
+
+                        if (folderName.substring(folderName.indexOf("FRC2023") + 7).equals("")) {
+                            folderName = "upload/" + tempName;
+                        } else {
+                            folderName = "upload/" + tempName + folderName.substring(folderName.indexOf("FRC2023") + 7);
+                        }
+                    }
+                }
 
                 String[] folderNameArray = folderName.split("/");
                 List<String> folderNameList = new ArrayList<>(Arrays.asList(folderNameArray));
@@ -253,8 +271,7 @@ public class App {
                 String imageName = folderNameList.get(folderNameList.size() - 1);
                 folderNameList.remove(folderNameList.size() - 1);
 
-                String reconstructedName = String.join("/", folderNameList);
-                String filePath = "upload/" + uid + "/" + reconstructedName;
+                String filePath = String.join("/", folderNameList);
 
                 File folder = new File(filePath);
                 File[] files = folder.listFiles((dir, name) -> name.toLowerCase().endsWith(".json"));
@@ -312,10 +329,19 @@ public class App {
 
         app.get("/delete/{folderName}", ctx -> {
             try {
-                FirebaseToken decodedToken = FirebaseAuth
-                    .getInstance()
-                    .verifyIdToken(ctx.header("idToken"));
-                String uid = decodedToken.getUid();
+                String uid = "";
+                if (ctx.header("idToken") != null || ctx.queryParam("idToken") != null) {
+                    String idToken = ctx.header("idToken") != null ? ctx.header("idToken") : ctx.queryParam("idToken");
+                    FirebaseToken decodedToken = FirebaseAuth
+                        .getInstance()
+                        .verifyIdToken(idToken);
+                    uid = decodedToken.getUid();
+                } else if (ctx.header("api") != null || ctx.queryParam("api") != null) {
+                    String api = ctx.header("api") != null ? ctx.header("api") : ctx.queryParam("api");
+                    uid = validAPI(api);
+                } else {
+                    throw new IllegalArgumentException("Invalid request: uid is null or both idToken and api are null.");
+                }
 
                 String folderName = ctx.pathParam("folderName");
 
@@ -403,51 +429,8 @@ public class App {
             }
         );
 
-        app.get(
-            "/download",
-            ctx -> {
-                try {
-                String uid = "";
-                if (ctx.header("idToken") != null || ctx.queryParam("idToken") != null) {
-                    String idToken = ctx.header("idToken") != null ? ctx.header("idToken") : ctx.queryParam("idToken");
-                    FirebaseToken decodedToken = FirebaseAuth
-                        .getInstance()
-                        .verifyIdToken(idToken);
-                    uid = decodedToken.getUid();
-                } else if (ctx.header("api") != null || ctx.queryParam("api") != null) {
-                    String api = ctx.header("api") != null ? ctx.header("api") : ctx.queryParam("api");
-                    uid = validAPI(api);
-                } else {
-                    throw new IllegalArgumentException("Invalid request: uid is null or both idToken and api are null.");
-                }
-
-                    String targetDataset = ctx.header("targetDataset");
-                    if (targetDataset.equals("FRC2023") || targetDataset.equals("FRC2024")) {
-
-                        File datasetFile = new File("currentDataset.json");
-                        try (FileReader fileReader = new FileReader(datasetFile)) {
-                            JSONParser parser = new JSONParser();
-                            JSONObject currentDataset = (JSONObject) parser.parse(fileReader);
-                            String tempName = (String) currentDataset.get(targetDataset);
-
-                            ctx.result(tempName);
-                        }
-                    } else {
-                        ctx.result("Error: Invalid target dataset.");
-                    }
-
-                } catch (FirebaseAuthException e) {
-                    e.printStackTrace();
-                    ctx.status(401).result("Error: Authentication failed.");
-                }
-
-            }
-        );
-
         app.get("/download/<filePath>", ctx -> {
-            String filePath = ctx.pathParam("filePath");
-            if (filePath.equals("FRC2023") || filePath.equals("FRC2024")) {
-                try {
+            try {
                 String uid = "";
                 if (ctx.header("idToken") != null || ctx.queryParam("idToken") != null) {
                     String idToken = ctx.header("idToken") != null ? ctx.header("idToken") : ctx.queryParam("idToken");
@@ -461,29 +444,38 @@ public class App {
                 } else {
                     throw new IllegalArgumentException("Invalid request: uid is null or both idToken and api are null.");
                 }
-                    
+
+                String filePath = ctx.pathParam("filePath");
+                if (filePath.equals("FRC2023") || filePath.equals("FRC2024")) {
                     File datasetFile = new File("currentDataset.json");
                     try (FileReader fileReader = new FileReader(datasetFile)) {
                         JSONParser parser = new JSONParser();
                         JSONObject currentDataset = (JSONObject) parser.parse(fileReader);
-                        String tempName = (String) currentDataset.get(filePath);
+                        String folderName = "upload/" + (String) currentDataset.get(filePath);
+                        String zipName = "upload/" + mainUtils.generateRandomString(6) + ".zip";
 
-                        File zipFile = new File(tempName);
+                        mainUtils.executeCommand("zip -r " + zipName + " " + folderName);
+
+                        File zipFile = new File(zipName);
                         byte[] zipBytes = Files.readAllBytes(zipFile.toPath());
 
                         ctx.result(zipBytes)
                             .contentType("application/zip")
-                            .header("Content-Disposition", "attachment; filename=" + tempName);
-                    }
-                } catch (FirebaseAuthException e) {
-                    e.printStackTrace();
-                    ctx.status(401).result("Error: Authentication failed.");
-                }
-            } else {
-                File file = new File(filePath);
+                            .header("Content-Disposition", "attachment; filename=FRC2023.zip");
 
-                ctx.result(Files.readAllBytes(file.toPath()))
-                    .header("Content-Disposition", "attachment; filename=FRC2023.zip");
+                        CompletableFuture.runAsync(() -> {
+                            mainUtils.executeCommand("rm " + zipName);
+                        });
+                    }
+                } else {
+                    File file = new File(filePath);
+
+                    ctx.result(Files.readAllBytes(file.toPath()))
+                        .header("Content-Disposition", "attachment; filename=" + filePath);
+                }
+            } catch (FirebaseAuthException e) {
+                e.printStackTrace();
+                ctx.status(401).result("Error: Authentication failed.");
             }
         });
 

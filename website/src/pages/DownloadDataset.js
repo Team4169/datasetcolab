@@ -9,7 +9,7 @@ import {
   ToggleButton,
 } from "react-bootstrap";
 import { useAuth } from "../contexts/AuthContext";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 
 const styles = {
@@ -83,6 +83,8 @@ export default function DownloadDataset() {
   const [loading, setLoading] = useState(false);
   const [apiKey, setApiKey] = useState("API_KEY");
   const [data, setData] = useState(null);
+  
+  const navigate = useNavigate();
 
   const handleDownloadCurl = (dataset) => {
     console.log(dataset.name);
@@ -124,25 +126,9 @@ export default function DownloadDataset() {
   const handleDirectDownload = async (dataset) => {
     try {
       setLoading(true);
-
+      
       const idToken = await currentUser.getIdToken();
-
-      let config = {
-        headers: {
-          idToken: idToken,
-          targetDataset: dataset,
-          selectedOptions: selectedOptions[dataset].join(","),
-          datasetType: selectedDatasetType[dataset],
-        },
-      };
-
-      const response = await axios.get(
-        "https://api.datasetcolab.com/download",
-        config
-      );
-
-      window.location.href =
-        "https://api.datasetcolab.com/download/" + response.data;
+      window.location.href = "https://api.datasetcolab.com/download/" + dataset + "?idToken=" + idToken;
     } catch (err) {
       setError("Error downloading dataset.");
     } finally {
@@ -150,6 +136,9 @@ export default function DownloadDataset() {
     }
   };
 
+  const redirectToView = (folderName) => {
+    navigate(`/view/${folderName}`);
+  };
 
   const fetchApiKey = async () => {
     try {
@@ -293,6 +282,13 @@ export default function DownloadDataset() {
                           </Button>
                         </div>
                       )}
+                      <Button
+                        variant="primary"
+                        className="position-absolute top-0 end-0 m-3"
+                        onClick={() => redirectToView(dataset.name.replace(" ", ""))}
+                      >
+                        View
+                      </Button>
                     </div>
                   </>
                 ) : (

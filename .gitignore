@@ -36,9 +36,10 @@ replay_pid*
 app/upload
 roboflow.txt
 app/*.json
-app/currentDataset.json
+*.json
 
 # Ignore Gradle build output directory
 build
 
 app/run.sh
+app/currentDataset.json
