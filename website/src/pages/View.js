@@ -171,7 +171,11 @@ export default function View() {
     try {
       setLoading(true);
 
-      const idToken = await currentUser.getIdToken();
+      const idToken = "";
+      try {
+        idToken = await currentUser.getIdToken();
+      } catch {
+      }
 
       if (isImageFile) {
         const config = { headers: { idToken: idToken } };
@@ -210,7 +214,12 @@ export default function View() {
 
   const handleDeleteProject = async () => {
     try {
-      const idToken = await currentUser.getIdToken();
+      const idToken = "";
+      try {
+        idToken = await currentUser.getIdToken();
+      } catch {
+      }
+
       const config = { headers: { idToken: idToken } };
 
       await axios.get(

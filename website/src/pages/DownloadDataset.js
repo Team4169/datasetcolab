@@ -83,7 +83,7 @@ export default function DownloadDataset() {
   const [loading, setLoading] = useState(false);
   const [apiKey, setApiKey] = useState("API_KEY");
   const [data, setData] = useState(null);
-  
+
   const navigate = useNavigate();
 
   const handleDownloadCurl = (dataset) => {
@@ -91,10 +91,8 @@ export default function DownloadDataset() {
     const name = dataset.name.replace(" ", "");
     console.log(name);
 
-    return (
-      `curl -o ${name}.zip https://api.datasetcolab.com/download/${name}?api=${apiKey}`
-    );
-  }
+    return `curl -o ${name}.zip https://api.datasetcolab.com/download/${name}?api=${apiKey}`;
+  };
 
   const handleDownloadMethodChange = (dataset, value) => {
     setDownloadMethod((prevMethods) => ({ ...prevMethods, [dataset]: value }));
@@ -126,9 +124,13 @@ export default function DownloadDataset() {
   const handleDirectDownload = async (dataset) => {
     try {
       setLoading(true);
-      
+
       const idToken = await currentUser.getIdToken();
-      window.location.href = "https://api.datasetcolab.com/download/" + dataset + "?idToken=" + idToken;
+      window.location.href =
+        "https://api.datasetcolab.com/download/" +
+        dataset +
+        "?idToken=" +
+        idToken;
     } catch (err) {
       setError("Error downloading dataset.");
     } finally {
@@ -185,15 +187,13 @@ export default function DownloadDataset() {
             <Card key={index} style={styles.datasetCard}>
               <Card.Body>
                 <h3>{dataset.name}</h3>
-                {
-                  /*
+                {/*
                 <small>Images: {dataset.images}</small>
                 <br />
                 <small>Annotations: {dataset.annotations}</small>
                 <br />
                 <small>Size: {dataset.size}</small>
-                  */
-                }
+                  */}
                 <h5 style={{ paddingTop: "10px" }}>Dataset Classes</h5>
                 <div style={styles.checkboxGroup}>
                   {classes.map((opt, i) => (
@@ -224,6 +224,13 @@ export default function DownloadDataset() {
                     <Dropdown.Item eventKey="COCO">COCO</Dropdown.Item>
                   </Dropdown.Menu>
                 </Dropdown>
+                <Button
+                  variant="primary"
+                  className="position-absolute top-0 end-0 m-3"
+                  onClick={() => redirectToView(dataset.name.replace(" ", ""))}
+                >
+                  View
+                </Button>
                 {currentUser && currentUser.emailVerified ? (
                   <>
                     <h5 style={{ paddingTop: "10px" }}>Download Method</h5>
@@ -274,7 +281,11 @@ export default function DownloadDataset() {
                         <div style={{ width: "100%" }}>
                           <Button
                             variant="primary"
-                            onClick={() => handleDirectDownload(dataset.name.replace(" ", ""))}
+                            onClick={() =>
+                              handleDirectDownload(
+                                dataset.name.replace(" ", "")
+                              )
+                            }
                             style={{ width: "100%" }}
                             disabled={loading}
                           >
@@ -282,13 +293,6 @@ export default function DownloadDataset() {
                           </Button>
                         </div>
                       )}
-                      <Button
-                        variant="primary"
-                        className="position-absolute top-0 end-0 m-3"
-                        onClick={() => redirectToView(dataset.name.replace(" ", ""))}
-                      >
-                        View
-                      </Button>
                     </div>
                   </>
                 ) : (

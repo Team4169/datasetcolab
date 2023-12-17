@@ -167,18 +167,21 @@ public class App {
         app.get("/view/<folderName>", ctx -> {
             try {
                 String uid = "";
-                if (ctx.header("idToken") != null || ctx.queryParam("idToken") != null) {
-                    String idToken = ctx.header("idToken") != null ? ctx.header("idToken") : ctx.queryParam("idToken");
-                    FirebaseToken decodedToken = FirebaseAuth
-                        .getInstance()
-                        .verifyIdToken(idToken);
-                    uid = decodedToken.getUid();
-                } else if (ctx.header("api") != null || ctx.queryParam("api") != null) {
-                    String api = ctx.header("api") != null ? ctx.header("api") : ctx.queryParam("api");
-                    uid = validAPI(api);
-                } else {
-                    throw new IllegalArgumentException("Invalid request: uid is null or both idToken and api are null.");
+                if (!ctx.pathParam("folderName").startsWith("FRC2023")) {
+                    if (ctx.header("idToken") != null || ctx.queryParam("idToken") != null) {
+                        String idToken = ctx.header("idToken") != null ? ctx.header("idToken") : ctx.queryParam("idToken");
+                        FirebaseToken decodedToken = FirebaseAuth
+                            .getInstance()
+                            .verifyIdToken(idToken);
+                        uid = decodedToken.getUid();
+                    } else if (ctx.header("api") != null || ctx.queryParam("api") != null) {
+                        String api = ctx.header("api") != null ? ctx.header("api") : ctx.queryParam("api");
+                        uid = validAPI(api);
+                    } else {
+                        throw new IllegalArgumentException("Invalid request: uid is null or both idToken and api are null.");
+                    }
                 }
+
                 
                 String folderName = ctx.pathParam("folderName");
                 String requestedFile = "upload/" + uid + "/" + folderName;
@@ -236,17 +239,19 @@ public class App {
         app.get("/annotations/<folderName>", ctx -> {
             try {
                 String uid = "";
-                if (ctx.header("idToken") != null || ctx.queryParam("idToken") != null) {
-                    String idToken = ctx.header("idToken") != null ? ctx.header("idToken") : ctx.queryParam("idToken");
-                    FirebaseToken decodedToken = FirebaseAuth
-                        .getInstance()
-                        .verifyIdToken(idToken);
-                    uid = decodedToken.getUid();
-                } else if (ctx.header("api") != null || ctx.queryParam("api") != null) {
-                    String api = ctx.header("api") != null ? ctx.header("api") : ctx.queryParam("api");
-                    uid = validAPI(api);
-                } else {
-                    throw new IllegalArgumentException("Invalid request: uid is null or both idToken and api are null.");
+                if (!ctx.pathParam("folderName").startsWith("FRC2023")) {
+                    if (ctx.header("idToken") != null || ctx.queryParam("idToken") != null) {
+                        String idToken = ctx.header("idToken") != null ? ctx.header("idToken") : ctx.queryParam("idToken");
+                        FirebaseToken decodedToken = FirebaseAuth
+                            .getInstance()
+                            .verifyIdToken(idToken);
+                        uid = decodedToken.getUid();
+                    } else if (ctx.header("api") != null || ctx.queryParam("api") != null) {
+                        String api = ctx.header("api") != null ? ctx.header("api") : ctx.queryParam("api");
+                        uid = validAPI(api);
+                    } else {
+                        throw new IllegalArgumentException("Invalid request: uid is null or both idToken and api are null.");
+                    }
                 }
 
                 String folderName = "upload/" + uid + "/" + ctx.pathParam("folderName");
