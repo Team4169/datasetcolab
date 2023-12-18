@@ -171,11 +171,11 @@ export default function View() {
     try {
       setLoading(true);
 
-      const idToken = "";
-      try {
+      let idToken = "";
+      if (currentUser) {
         idToken = await currentUser.getIdToken();
-      } catch {
       }
+      console.log(idToken);
 
       if (isImageFile) {
         const config = { headers: { idToken: idToken } };
@@ -214,11 +214,7 @@ export default function View() {
 
   const handleDeleteProject = async () => {
     try {
-      const idToken = "";
-      try {
-        idToken = await currentUser.getIdToken();
-      } catch {
-      }
+      const idToken = await currentUser.getIdToken();
 
       const config = { headers: { idToken: idToken } };
 

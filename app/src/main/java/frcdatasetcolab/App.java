@@ -410,13 +410,11 @@ public class App {
                     metadata.put("folderName", folderName);
                     metadata.put("classes", parsedNamesUpload);
                     metadata.put("status", "postprocessing");
-                    metadata.put("exportLink", exportLink);
 
                     File metadataDirectory = new File("upload/" + uid + "/" + folderName);
                     metadataDirectory.mkdirs();
 
                     String metadataFilePath = metadataDirectory.getPath() + "/metadata.json";
-
                     try (FileWriter file = new FileWriter(metadataFilePath)) {
                         file.write(metadata.toJSONString());
                         file.flush();
@@ -426,7 +424,21 @@ public class App {
                         return;
                     }
 
+                    final String finalUid = uid;
+                    final String finalExportLink = exportLink;
+
                     ctx.json(metadata);
+
+                    CompletableFuture.runAsync(() -> {
+                        if ("COCO".equals(metadata.get("datasetType"))) {
+                            COCO uploader = new COCO();
+                            uploader.postUpload(finalUid, (String) metadata.get("folderName"));
+                        } else if ("ROBOFLOW".equals(metadata.get("datasetType"))) {
+                            Roboflow uploader = new Roboflow();
+                            uploader.postUpload(finalUid, (String) metadata.get("folderName"), (String) finalExportLink);
+                        }
+                    });
+
                 } catch (FirebaseAuthException e) {
                     e.printStackTrace();
                     ctx.status(401).result("Error: Authentication failed.");
@@ -488,19 +500,19 @@ public class App {
             "/api",
             ctx -> {
                 try {
-                String uid = "";
-                if (ctx.header("idToken") != null || ctx.queryParam("idToken") != null) {
-                    String idToken = ctx.header("idToken") != null ? ctx.header("idToken") : ctx.queryParam("idToken");
-                    FirebaseToken decodedToken = FirebaseAuth
-                        .getInstance()
-                        .verifyIdToken(idToken);
-                    uid = decodedToken.getUid();
-                } else if (ctx.header("api") != null || ctx.queryParam("api") != null) {
-                    String api = ctx.header("api") != null ? ctx.header("api") : ctx.queryParam("api");
-                    uid = validAPI(api);
-                } else {
-                    throw new IllegalArgumentException("Invalid request: uid is null or both idToken and api are null.");
-                }
+                    String uid = "";
+                    if (ctx.header("idToken") != null || ctx.queryParam("idToken") != null) {
+                        String idToken = ctx.header("idToken") != null ? ctx.header("idToken") : ctx.queryParam("idToken");
+                        FirebaseToken decodedToken = FirebaseAuth
+                            .getInstance()
+                            .verifyIdToken(idToken);
+                        uid = decodedToken.getUid();
+                    } else if (ctx.header("api") != null || ctx.queryParam("api") != null) {
+                        String api = ctx.header("api") != null ? ctx.header("api") : ctx.queryParam("api");
+                        uid = validAPI(api);
+                    } else {
+                        throw new IllegalArgumentException("Invalid request: uid is null or both idToken and api are null.");
+                    }
 
                     boolean newKey = false;
                     String newKeyString = ctx.header("new");
@@ -590,24 +602,6 @@ public class App {
                         } catch (ParseException e) {
                             e.printStackTrace();
                             metadata = new JSONObject();
-                        }
-
-                        // unzip
-                        if ("COCO".equals(metadata.get("datasetType"))) {
-                            COCO uploader = new COCO();
-                            uploader.postUpload(finalUid, (String) metadata.get("folderName"));
-                        } else if ("ROBOFLOW".equals(metadata.get("datasetType"))) {
-                            Roboflow uploader = new Roboflow();
-                            uploader.postUpload(finalUid, (String) metadata.get("folderName"), (String) metadata.get("exportLink"));
-                        }
-
-                        try (FileWriter file = new FileWriter("upload/" + finalUid + "/" + metadata.get("folderName")+ "/metadata.json")) {
-                            file.write(metadata.toJSONString());
-                            file.flush();
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                            ctx.status(500).result("Error: Failed to save metadata on the server.");
-                            return;
                         }
 
                         // class matching
