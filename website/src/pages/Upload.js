@@ -130,7 +130,8 @@ export default function Upload() {
         if (
           className.toLowerCase().includes("cone") ||
           className.toLowerCase().includes("cube") ||
-          className.toLowerCase().includes("robot")
+          className.toLowerCase().includes("robot") ||
+          className.toLowerCase().includes("bumper")
         ) {
           console.log("yes");
           return className;
@@ -448,6 +449,7 @@ export default function Upload() {
                 <option value="cone">cone</option>
                 <option value="cube">cube</option>
                 <option value="robot">robot</option>
+                <option value="bumper">bumper</option>
               </Form.Control>
             </div>
           ))}

@@ -43,3 +43,4 @@ build
 
 app/run.sh
 app/currentDataset.json
+app/download

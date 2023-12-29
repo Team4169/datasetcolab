@@ -193,9 +193,9 @@ public class App {
                         String tempName = (String) currentDataset.get("FRC2023");
 
                         if (folderName.substring(folderName.indexOf("FRC2023") + 7).equals("")) {
-                            requestedFile = "upload/" + tempName;
+                            requestedFile = "download/" + tempName;
                         } else {
-                            requestedFile = "upload/" + tempName + folderName.substring(folderName.indexOf("FRC2023") + 7);
+                            requestedFile = "download/" + tempName + folderName.substring(folderName.indexOf("FRC2023") + 7);
                         }
                     }
                 }
@@ -263,9 +263,9 @@ public class App {
                         String tempName = (String) currentDataset.get("FRC2023");
 
                         if (folderName.substring(folderName.indexOf("FRC2023") + 7).equals("")) {
-                            folderName = "upload/" + tempName;
+                            folderName = "download/" + tempName;
                         } else {
-                            folderName = "upload/" + tempName + folderName.substring(folderName.indexOf("FRC2023") + 7);
+                            folderName = "download/" + tempName + folderName.substring(folderName.indexOf("FRC2023") + 7);
                         }
                     }
                 }
@@ -414,7 +414,7 @@ public class App {
                     File metadataDirectory = new File("upload/" + uid + "/" + folderName);
                     metadataDirectory.mkdirs();
 
-                    String metadataFilePath = metadataDirectory.getPath() + "/metadata.json";
+                    final String metadataFilePath = metadataDirectory.getPath() + "/metadata.json";
                     try (FileWriter file = new FileWriter(metadataFilePath)) {
                         file.write(metadata.toJSONString());
                         file.flush();
@@ -436,6 +436,17 @@ public class App {
                         } else if ("ROBOFLOW".equals(metadata.get("datasetType"))) {
                             Roboflow uploader = new Roboflow();
                             uploader.postUpload(finalUid, (String) metadata.get("folderName"), (String) finalExportLink);
+                        }
+
+                        metadata.put("status", "pendingmerge");
+                        
+                        try (FileWriter file = new FileWriter(metadataFilePath)) {
+                            file.write(metadata.toJSONString());
+                            file.flush();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                            ctx.status(500).result("Error: Failed to save metadata on the server.");
+                            return;
                         }
                     });
 
@@ -468,8 +479,8 @@ public class App {
                     try (FileReader fileReader = new FileReader(datasetFile)) {
                         JSONParser parser = new JSONParser();
                         JSONObject currentDataset = (JSONObject) parser.parse(fileReader);
-                        String folderName = "upload/" + (String) currentDataset.get(filePath);
-                        String zipName = "upload/" + mainUtils.generateRandomString(6) + ".zip";
+                        String folderName = "download/" + (String) currentDataset.get(filePath);
+                        String zipName = "download/" + mainUtils.generateRandomString(6) + ".zip";
 
                         mainUtils.executeCommand("zip -r " + zipName + " " + folderName);
 
@@ -579,7 +590,7 @@ public class App {
                 final String finalUid = uid;
             
                 String classesHeader = ctx.header("classes");
-                String mapClassesHeader = ctx.header("mapClasses");
+                final String mapClassesHeader = ctx.header("mapClasses");
 
                 Map<String, String> classMap = new HashMap<>();
 
@@ -604,6 +615,18 @@ public class App {
                             metadata = new JSONObject();
                         }
 
+                        // wait for postprocessing to complete
+                        File metadataFile = new File("upload/" + finalUid + "/" + metadata.get("folderName") + "/metadata.json");
+                        while (!metadata.get("status").equals("pendingmerge")) {
+                            try (FileReader fileReader = new FileReader(metadataFile)) {
+                                JSONParser parser = new JSONParser();
+                                metadata = (JSONObject) parser.parse(fileReader);
+                            } catch (IOException | ParseException e) {
+                                e.printStackTrace();
+                            }
+                            Thread.sleep(5000);
+                        }
+
                         // class matching
                         File folder = new File("upload/" + finalUid + "/" + metadata.get("folderName"));
                         List<File> fileList = new ArrayList<>();
@@ -618,13 +641,13 @@ public class App {
                                     try (FileReader fileReader = new FileReader(file)) {
                                         JSONParser parser = new JSONParser();
                                         JSONObject json = (JSONObject) parser.parse(fileReader);
-                                        
+
                                         JSONArray categoriesArray = (JSONArray) json.get("categories");
 
                                         for (int i = 0; i < categoriesArray.size(); i++) {
                                             JSONObject category = (JSONObject) categoriesArray.get(i);
                                             String oldCategoryName = (String) category.get("name");
-                                            
+
                                             if (classMap.containsKey(oldCategoryName)) {
                                                 category.put("name", classMap.get(oldCategoryName));
                                                 categoriesArray.set(i, category);
@@ -642,8 +665,14 @@ public class App {
                                 }
                             }
                         }
-                    
-                        metadata.put("status", "merged");
+
+                        // Save new classes to metadata file
+                        metadata.put("classes", Arrays.asList(mapClassesHeader.split(",")));
+                        try (FileWriter fileWriter = new FileWriter(metadataFile)) {
+                            fileWriter.write(metadata.toJSONString());
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
                     } catch (Exception e) {
                         e.printStackTrace();
                         ctx.status(500).result("Error: Failed to process dataset.");
