@@ -125,8 +125,8 @@ export default function Upload() {
       );
 
       setMetadata(response.data);
-      setMapClasses(response.data.classes.map((className) => {
-        console.log(className);
+
+      const preprocessMapClasses = response.data.classes.map((className) => {
         if (
           className.toLowerCase().includes("cone") ||
           className.toLowerCase().includes("cube") ||
@@ -138,7 +138,10 @@ export default function Upload() {
           console.log("no");
           return "cone";
         }
-      }));
+      });
+      console.log(preprocessMapClasses);
+
+      setMapClasses(preprocessMapClasses);
       setShowClassMatch(true);
     } catch (error) {
       setError("Error: " + error.message);
@@ -435,12 +438,11 @@ export default function Upload() {
                 as="select"
                 style={{ marginLeft: "5px" }}
                 value={mapClasses[index]}
-                onChange={(e) =>
-                  setMapClasses(() => {
+                onChange={(e) => {
                     const updatedMapClasses = [...mapClasses];
                     updatedMapClasses[index] = e.target.value;
                     setMapClasses(updatedMapClasses);
-                  })
+                  }
                 }
               >
                 <option value="cone">cone</option>
