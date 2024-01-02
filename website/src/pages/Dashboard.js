@@ -114,6 +114,18 @@ export default function Dashboard() {
     return formattedTargetDataset;
   }
 
+  function formatStatus(status) {
+    if (status == "merged") {
+      return "Merged";
+    } else if (status == "pendingmerge") {
+      return "Pending Merge";
+    } else if (status == "postprocessing") {
+      return "Postprocessing";
+    } else {
+      return status;
+    }
+  }
+  
   const redirectToView = (folderName) => {
     navigate(`/view/${folderName}`);
   };
@@ -176,12 +188,13 @@ export default function Dashboard() {
                   const formattedTargetDataset = formatTargetDataset(
                     metadata.targetDataset
                   );
+                  const formattedStatus = formatStatus(metadata.status)
 
                   return (
                     <div key={index}>
                       <Card key={index} style={styles.datasetCard}>
                         <Card.Body>
-                          <h3>{metadata.uploadName}</h3>
+                          <h3>{metadata.uploadName.length > 25 ? `${metadata.uploadName.slice(0, 25)}...` : metadata.uploadName}</h3>
                           <small>
                             <strong>Upload Time:</strong> {formattedUploadTime}
                           </small>
@@ -194,6 +207,11 @@ export default function Dashboard() {
                           <small>
                             <strong>Target Dataset:</strong>{" "}
                             {formattedTargetDataset}
+                          </small>
+                          <br />
+                          <small>
+                            <strong>Status:</strong>{" "}
+                            {formattedStatus}
                           </small>
                           <br />
                           <Button

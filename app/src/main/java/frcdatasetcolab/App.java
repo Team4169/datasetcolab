@@ -20,15 +20,16 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import org.json.simple.JSONArray;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
 import java.util.concurrent.CompletableFuture;
 
 import io.javalin.Javalin;
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
+
 public class App {
 
     public static void populateTree(String folderPath, JSONObject result) {
@@ -42,7 +43,9 @@ public class App {
                         result.put(file.getName(), subFolder);
                         populateTree(file.getPath(), subFolder);
                     } else {
-                        if (isImageFile(file)) {
+                        String fileName = file.getName().toLowerCase();
+                        if (fileName.endsWith(".jpg") || fileName.endsWith(".jpeg") || fileName.endsWith(".png") ||
+            fileName.endsWith(".gif") || fileName.endsWith(".bmp") || fileName.endsWith(".webp")) {
                             result.put(file.getName(), "Image");
                         }
                     }
@@ -52,13 +55,7 @@ public class App {
             result.put("error", "Invalid folder path or not a directory.");
         }
     }
-
-    private static boolean isImageFile(File file) {
-        String fileName = file.getName().toLowerCase();
-        return fileName.endsWith(".jpg") || fileName.endsWith(".jpeg") || fileName.endsWith(".png") ||
-            fileName.endsWith(".gif") || fileName.endsWith(".bmp") || fileName.endsWith(".webp");
-    }
-
+    
     private static String validAPI(String api) {
         JSONObject apiJsonObject;
         try {
@@ -186,7 +183,7 @@ public class App {
                 String folderName = ctx.pathParam("folderName");
                 String requestedFile = "upload/" + uid + "/" + folderName;
                 if (folderName.startsWith("FRC2023")) {
-                    File datasetFile = new File("currentDataset.json");
+                    File datasetFile = new File("important.json");
                     try (FileReader fileReader = new FileReader(datasetFile)) {
                         JSONParser parser = new JSONParser();
                         JSONObject currentDataset = (JSONObject) parser.parse(fileReader);
@@ -256,7 +253,7 @@ public class App {
 
                 String folderName = "upload/" + uid + "/" + ctx.pathParam("folderName");
                 if (ctx.pathParam("folderName").startsWith("FRC2023")) {
-                    File datasetFile = new File("currentDataset.json");
+                    File datasetFile = new File("important.json");
                     try (FileReader fileReader = new FileReader(datasetFile)) {
                         JSONParser parser = new JSONParser();
                         JSONObject currentDataset = (JSONObject) parser.parse(fileReader);

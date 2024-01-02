@@ -34,13 +34,10 @@ replay_pid*
 # Ignore Gradle project-specific cache directory
 .gradle
 app/upload
-roboflow.txt
+app/download
+
 app/*.json
 *.json
 
 # Ignore Gradle build output directory
 build
-
-app/run.sh
-app/currentDataset.json
-app/download

@@ -250,6 +250,18 @@ export default function View() {
     return targetDataset.replace(/FRC(\d{4})/, "FRC $1");
   }
 
+  function formatStatus(status) {
+    if (status == "merged") {
+      return "Merged";
+    } else if (status == "pendingmerge") {
+      return "Pending Merge";
+    } else if (status == "postprocessing") {
+      return "Postprocessing";
+    } else {
+      return status;
+    }
+  }
+
   const searchFiles = (treeData, searchTerm) => {
     const result = {};
 
@@ -410,6 +422,15 @@ export default function View() {
                   <small>
                     <strong>Target Dataset:</strong>{" "}
                     {formatTargetDataset(projectDetails.targetDataset)}
+                  </small>
+                  <br />
+                </>
+              )}
+              {projectDetails.status && (
+                <>
+                  <small>
+                    <strong>Status:</strong>{" "}
+                    {formatStatus(projectDetails.status)}
                   </small>
                   <br />
                 </>

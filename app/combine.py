@@ -86,7 +86,6 @@ tempName = ''.join(random.choices(string.ascii_lowercase + string.digits, k=4))
 
 directoryPath = '/home/team4169/frcdatasetcolab/app/upload'
 metadataFolders = findMetadataFolders(directoryPath, year)
-print("Sjdskdjaksdjalsdjaldjlskdljaskdljsaasdsd " + str(metadataFolders))
 testFolders = [s + "/test" for s in metadataFolders]
 trainFolders = [s + "/train" for s in metadataFolders]
 validFolders = [s + "/valid" for s in metadataFolders]
@@ -105,10 +104,9 @@ metadataFilePath = '/home/team4169/frcdatasetcolab/app/download/' + tempName + '
 with open(metadataFilePath, 'w') as f:
     json.dump(metadata, f)
 
-currentDatasetPath = '/home/team4169/frcdatasetcolab/app/currentDataset.json'
+currentDatasetPath = '/home/team4169/frcdatasetcolab/app/important.json'
 with open(currentDatasetPath, 'r') as f:
     currentDataset = json.load(f)
-print(currentDataset[year])
 shutil.rmtree('/home/team4169/frcdatasetcolab/app/download/' + currentDataset[year])
 currentDataset[year] = tempName
 with open(currentDatasetPath, 'w') as f:

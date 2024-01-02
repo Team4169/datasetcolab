@@ -14,17 +14,29 @@ import com.google.firebase.auth.FirebaseToken;
 import io.javalin.Javalin;
 import io.javalin.community.ssl.SSLPlugin;
 import io.javalin.http.UploadedFile;
-
+import java.io.*;
 import java.util.*;
-
+import java.util.ArrayList;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-import java.text.ParseException;  // Add this import statement
+
 import java.util.HashSet;
 import java.util.Set;
+import java.text.SimpleDateFormat;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
+import org.json.simple.JSONArray;
+import java.util.concurrent.CompletableFuture;
+
+import io.javalin.Javalin;
+import java.io.File;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 
 public class Roboflow {
 
@@ -54,9 +66,7 @@ public class Roboflow {
             JSONObject classesJSON = (JSONObject) projectJSON.get("classes");
 
             for (Object className : classesJSON.keySet()) {
-                // System.out.println(classAmounts);
                 classes.add((String) className);
-                // classAmounts.add((Integer) className.get("size"))
             }
 
             return exportLink;
@@ -79,9 +89,11 @@ public class Roboflow {
     }
 
     private String readApiKeyFromFile(String filePath) {
-        try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
-            return reader.readLine().trim();
-        } catch (IOException e) {
+        try {
+            String content = Files.readString(Path.of("important.json"));
+            JSONObject jsonObject = new JSONObject((Map <?,?> ) new JSONParser().parse(content));
+            return (String) jsonObject.get("ROBOFLOW_API");
+        } catch (IOException | ParseException e) {
             e.printStackTrace();
             return null;
         }
