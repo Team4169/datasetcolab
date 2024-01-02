@@ -41,5 +41,5 @@ java {
 
 application {
     // Define the main class for the application.
-    mainClass = 'frcdatasetcolab.App'
+    mainClass = 'datasetcolab.App'
 }

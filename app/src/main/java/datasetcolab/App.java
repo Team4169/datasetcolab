@@ -1,4 +1,4 @@
-package frcdatasetcolab;
+package datasetcolab;
 import uploaders.Roboflow;
 import uploaders.COCO;
 import utils.Utils;
@@ -101,7 +101,7 @@ public class App {
                 });
                 config.plugins.register(
                     new SSLPlugin(ssl -> {
-                        ssl.host = "10.0.0.142";
+                        ssl.host = "10.0.0.106";
                         ssl.insecurePort = 80;
                         ssl.securePort = 443;
                         ssl.pemFromPath("fullchain.pem", "privkey.pem");
@@ -358,19 +358,19 @@ public class App {
             "/upload",
             ctx -> {
                 try {
-                String uid = "";
-                if (ctx.header("idToken") != null || ctx.queryParam("idToken") != null) {
-                    String idToken = ctx.header("idToken") != null ? ctx.header("idToken") : ctx.queryParam("idToken");
-                    FirebaseToken decodedToken = FirebaseAuth
-                        .getInstance()
-                        .verifyIdToken(idToken);
-                    uid = decodedToken.getUid();
-                } else if (ctx.header("api") != null || ctx.queryParam("api") != null) {
-                    String api = ctx.header("api") != null ? ctx.header("api") : ctx.queryParam("api");
-                    uid = validAPI(api);
-                } else {
-                    throw new IllegalArgumentException("Invalid request: uid is null or both idToken and api are null.");
-                }
+                    String uid = "";
+                    if (ctx.header("idToken") != null || ctx.queryParam("idToken") != null) {
+                        String idToken = ctx.header("idToken") != null ? ctx.header("idToken") : ctx.queryParam("idToken");
+                        FirebaseToken decodedToken = FirebaseAuth
+                            .getInstance()
+                            .verifyIdToken(idToken);
+                        uid = decodedToken.getUid();
+                    } else if (ctx.header("api") != null || ctx.queryParam("api") != null) {
+                        String api = ctx.header("api") != null ? ctx.header("api") : ctx.queryParam("api");
+                        uid = validAPI(api);
+                    } else {
+                        throw new IllegalArgumentException("Invalid request: uid is null or both idToken and api are null.");
+                    }
 
                     Date date = new Date();
                     SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd_HH:mm");
@@ -388,10 +388,9 @@ public class App {
                     if ("COCO".equals(datasetType)) {
                         COCO uploader = new COCO();
                         uploader.upload(folderName, ctx.uploadedFiles("files"), uid);
-                    
-                        Set < String > parsedNames = uploader.parsedNames;
+                        Set<String> parsedNames = uploader.parsedNames;
+                        System.out.println(parsedNames);
                         parsedNamesUpload.addAll(parsedNames);
-                        metadata.put("classes", parsedNamesUpload);
                     } else if ("ROBOFLOW".equals(datasetType)) {
                         Roboflow uploader = new Roboflow();
                         exportLink = uploader.upload(folderName, ctx.header("roboflowUrl"), uid);
@@ -427,10 +426,7 @@ public class App {
                     ctx.json(metadata);
 
                     CompletableFuture.runAsync(() -> {
-                        if ("COCO".equals(metadata.get("datasetType"))) {
-                            COCO uploader = new COCO();
-                            uploader.postUpload(finalUid, (String) metadata.get("folderName"));
-                        } else if ("ROBOFLOW".equals(metadata.get("datasetType"))) {
+                        if ("ROBOFLOW".equals(metadata.get("datasetType"))) {
                             Roboflow uploader = new Roboflow();
                             uploader.postUpload(finalUid, (String) metadata.get("folderName"), (String) finalExportLink);
                         }

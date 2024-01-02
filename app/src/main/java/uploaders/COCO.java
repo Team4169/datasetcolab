@@ -56,11 +56,8 @@ public class COCO {
                 unzip(filePath, directory.getPath());
             }
 
+	        parsedNames = utils.parseFiles("upload/" + uid + "/" + folderName);
         }
-    }
-
-    public void postUpload(String uid, String folderName) {
-	    utils.parseFiles("upload/" + uid + "/" + folderName);
     }
 
     private void unzip(String zipFilePath, String destDirectory) {

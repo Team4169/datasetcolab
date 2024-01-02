@@ -155,9 +155,11 @@ public class Utils {
             JsonArray categories = jsonObject.getAsJsonArray("categories");
 
             if (categories != null && categories.size() > 0) {
-                JsonObject firstCategory = categories.get(0).getAsJsonObject();
-                String categoryName = firstCategory.get("name").getAsString();
-                parsedNames.add(categoryName);
+                for (int i = 0; i < categories.size(); i++) {
+                    JsonObject firstCategory = categories.get(i).getAsJsonObject();
+                    String categoryName = firstCategory.get("name").getAsString();
+                    parsedNames.add(categoryName);
+                }
             }
 
         } catch (IOException e) {
