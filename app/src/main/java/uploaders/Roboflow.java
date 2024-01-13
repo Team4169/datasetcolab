@@ -49,14 +49,30 @@ public class Roboflow {
 
         String workspace = getWorkspaceFromUrl(roboflowUrl);
         String project = getProjectFromUrl(roboflowUrl);
+        System.out.println(workspace);
+        System.out.println(project);
 
         String apiUrl = "https://api.roboflow.com/" + workspace;
         String apiKeyParam = "?api_key=" + apiKey;
 
+
         String versionsJSONString = utils.executeCommand("curl https://api.roboflow.com/" + workspace + "/" + project + "?api_key=" + apiKey);
         String latestVersionId = parseLatestVersionId(versionsJSONString);
         String versionJSON = utils.executeCommand("curl https://api.roboflow.com/" + latestVersionId + "/coco?api_key=" + apiKey);
+        System.out.println(versionJSON);
         String exportLink = parseExportLink(versionJSON);
+
+        if (exportLink == null) {
+            int tries = 0;
+            while (exportLink == null && tries < 5) {
+                versionsJSONString = utils.executeCommand("curl https://api.roboflow.com/" + workspace + "/" + project + "?api_key=" + apiKey);
+                latestVersionId = parseLatestVersionId(versionsJSONString);
+                versionJSON = utils.executeCommand("curl https://api.roboflow.com/" + latestVersionId + "/coco?api_key=" + apiKey);
+                exportLink = parseExportLink(versionJSON);
+
+                tries++;
+            }
+        }
 
         try {
             JSONParser parser = new JSONParser();

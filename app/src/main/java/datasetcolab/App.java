@@ -101,7 +101,7 @@ public class App {
                 });
                 config.plugins.register(
                     new SSLPlugin(ssl -> {
-                        ssl.host = "10.0.0.106";
+                        ssl.host = "10.0.0.107";
                         ssl.insecurePort = 80;
                         ssl.securePort = 443;
                         ssl.pemFromPath("fullchain.pem", "privkey.pem");
@@ -164,7 +164,7 @@ public class App {
         app.get("/view/<folderName>", ctx -> {
             try {
                 String uid = "";
-                if (!ctx.pathParam("folderName").startsWith("FRC2023")) {
+                if (!ctx.pathParam("folderName").startsWith("FRC2023") || ctx.pathParam("folderName").startsWith("FRC2024")) {
                     if (ctx.header("idToken") != null || ctx.queryParam("idToken") != null) {
                         String idToken = ctx.header("idToken") != null ? ctx.header("idToken") : ctx.queryParam("idToken");
                         FirebaseToken decodedToken = FirebaseAuth
@@ -182,17 +182,25 @@ public class App {
                 
                 String folderName = ctx.pathParam("folderName");
                 String requestedFile = "upload/" + uid + "/" + folderName;
-                if (folderName.startsWith("FRC2023")) {
+                if (folderName.startsWith("FRC2023") || folderName.startsWith("FRC2024")) {
                     File datasetFile = new File("important.json");
                     try (FileReader fileReader = new FileReader(datasetFile)) {
                         JSONParser parser = new JSONParser();
                         JSONObject currentDataset = (JSONObject) parser.parse(fileReader);
-                        String tempName = (String) currentDataset.get("FRC2023");
+                        String tempName = "";
 
-                        if (folderName.substring(folderName.indexOf("FRC2023") + 7).equals("")) {
-                            requestedFile = "download/" + tempName;
-                        } else {
-                            requestedFile = "download/" + tempName + folderName.substring(folderName.indexOf("FRC2023") + 7);
+                        if (folderName.startsWith("FRC2023")) {
+                            tempName = (String) currentDataset.get("FRC2023");
+                        } else if (folderName.startsWith("FRC2024")) {
+                            tempName = (String) currentDataset.get("FRC2024");
+                        }
+
+                        if (tempName != null) {
+                            if (folderName.substring(folderName.indexOf(tempName) + tempName.length()).equals("")) {
+                                requestedFile = "download/" + tempName;
+                            } else {
+                                requestedFile = "download/" + tempName + folderName.substring(folderName.indexOf(tempName) + tempName.length());
+                            }
                         }
                     }
                 }
@@ -236,7 +244,7 @@ public class App {
         app.get("/annotations/<folderName>", ctx -> {
             try {
                 String uid = "";
-                if (!ctx.pathParam("folderName").startsWith("FRC2023")) {
+                if (!ctx.pathParam("folderName").startsWith("FRC2023") && !ctx.pathParam("folderName").startsWith("FRC2024")) {
                     if (ctx.header("idToken") != null || ctx.queryParam("idToken") != null) {
                         String idToken = ctx.header("idToken") != null ? ctx.header("idToken") : ctx.queryParam("idToken");
                         FirebaseToken decodedToken = FirebaseAuth
@@ -252,17 +260,24 @@ public class App {
                 }
 
                 String folderName = "upload/" + uid + "/" + ctx.pathParam("folderName");
-                if (ctx.pathParam("folderName").startsWith("FRC2023")) {
+                if (ctx.pathParam("folderName").startsWith("FRC2023") || ctx.pathParam("folderName").startsWith("FRC2024")) {
                     File datasetFile = new File("important.json");
                     try (FileReader fileReader = new FileReader(datasetFile)) {
                         JSONParser parser = new JSONParser();
                         JSONObject currentDataset = (JSONObject) parser.parse(fileReader);
-                        String tempName = (String) currentDataset.get("FRC2023");
+                        String tempName = "";
+                        if (folderName.startsWith("FRC2023")) {
+                            tempName = (String) currentDataset.get("FRC2023");
+                        } else if (folderName.startsWith("FRC2024")) {
+                            tempName = (String) currentDataset.get("FRC2024");
+                        }
 
-                        if (folderName.substring(folderName.indexOf("FRC2023") + 7).equals("")) {
-                            folderName = "download/" + tempName;
-                        } else {
-                            folderName = "download/" + tempName + folderName.substring(folderName.indexOf("FRC2023") + 7);
+                        if (tempName != null) {
+                            if (folderName.substring(folderName.indexOf(tempName) + tempName.length()).equals("")) {
+                                folderName = "download/" + tempName;
+                            } else {
+                                folderName = "download/" + tempName + folderName.substring(folderName.indexOf(tempName) + tempName.length());
+                            }
                         }
                     }
                 }
@@ -480,9 +495,10 @@ public class App {
                         File zipFile = new File(zipName);
                         byte[] zipBytes = Files.readAllBytes(zipFile.toPath());
 
+                        String zipFileName = filePath.equals("FRC2023") ? "FRC2023.zip" : "FRC2024.zip";
                         ctx.result(zipBytes)
                             .contentType("application/zip")
-                            .header("Content-Disposition", "attachment; filename=FRC2023.zip");
+                            .header("Content-Disposition", "attachment; filename=" + zipFileName);
 
                         CompletableFuture.runAsync(() -> {
                             mainUtils.executeCommand("rm " + zipName);

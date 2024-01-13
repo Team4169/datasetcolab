@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import axios from "axios";
 import Alert from "react-bootstrap/Alert";
-import { Card, Button } from "react-bootstrap";
+import { Card, Button, ToggleButton, ButtonGroup, Form } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 
 const styles = {
@@ -57,6 +57,8 @@ export default function Dashboard() {
   const [folderMetadata, setFolderMetadata] = useState([]);
   const [isLoading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  const [show, setShow] = useState("all");
 
   const fetchFolderMetadata = async () => {
     try {
@@ -159,6 +161,34 @@ export default function Dashboard() {
             {error}
           </Alert>
         )}
+        <Form.Group style={{ marginBottom: "10px" }}>
+          <ButtonGroup toggle>
+            <ToggleButton
+              type="radio"
+              variant="outline-primary"
+              checked={show === "all"}
+              onClick={() => setShow("all")}
+            >
+              All
+            </ToggleButton>
+            <ToggleButton
+              type="radio"
+              variant="outline-primary"
+              checked={show === "FRC2024"}
+              onClick={() => setShow("FRC2024")}
+            >
+              FRC 2024
+            </ToggleButton>
+            <ToggleButton
+              type="radio"
+              variant="outline-primary"
+              checked={show === "FRC2023"}
+              onClick={() => setShow("FRC2023")}
+            >
+              FRC 2023
+            </ToggleButton>
+          </ButtonGroup>
+        </Form.Group>
         {isLoading ? (
           <p>{loadingText}</p>
         ) : (
@@ -181,6 +211,12 @@ export default function Dashboard() {
                 const dateB = new Date(yearB, monthB - 1, dayB, hourB, minuteB);
 
                 return dateB - dateA;
+              }).filter((metadata) => {
+                if (show === "all") {
+                  return metadata.targetDataset === "FRC2023" || metadata.targetDataset === "FRC2024";
+                } else {
+                  return metadata.targetDataset === show;
+                }
               }).map((metadata, index) => {
                   const formattedUploadTime = formatUploadTime(
                     metadata.uploadTime

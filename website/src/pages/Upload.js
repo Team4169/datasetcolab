@@ -79,12 +79,18 @@ export default function Upload() {
   const [classesLoading, setClassesLoading] = useState(false);
   const [uploadName, setUploadName] = useState(generateRandomName());
   const [datasetType, setDatasetType] = useState("COCO");
-  const [targetDataset, setTargetDataset] = useState("FRC2023");
+  const [targetDataset, setTargetDataset] = useState("FRC2024");
   const [uploadMethod, setUploadMethod] = useState("roboflow");
   const [roboflowUrl, setRoboflowUrl] = useState("");
   const [metadata, setMetadata] = useState({});
   const [mapClasses, setMapClasses] = useState([]);
   const [showClassMatch, setShowClassMatch] = useState(false);
+
+
+  const [classes, setClasses] = useState({
+    "FRC2023": ["cone", "cube", "robot", "REMOVE"],
+    "FRC2024": ["note", "robot", "REMOVE"],
+  });
 
   let navigate = useNavigate();
 
@@ -125,19 +131,21 @@ export default function Upload() {
       );
 
       setMetadata(response.data);
+      console.log(response.data.targetDataset);
 
       const preprocessMapClasses = response.data.classes.map((className) => {
-        if (
-          className.toLowerCase().includes("cone") ||
-          className.toLowerCase().includes("cube") ||
-          className.toLowerCase().includes("robot") ||
-          className.toLowerCase().includes("bumper")
-        ) {
-          console.log("yes");
-          return className;
-        } else {
-          console.log("no");
+        if (className.toLowerCase().includes("cone")) {
           return "cone";
+        } else if (className.toLowerCase().includes("cube")) {
+          return "cube";
+        } else if (className.toLowerCase().includes("robot")) {
+          return "robot";
+        } else if (className.toLowerCase().includes("note")) {
+          return "note";
+        } else if (response.data.targetDataset.includes("2023")) {
+          return "cone";
+        } else if (response.data.targetDataset.includes("2024")) {
+          return "note";
         }
       });
       console.log(preprocessMapClasses);
@@ -146,6 +154,7 @@ export default function Upload() {
       setShowClassMatch(true);
     } catch (error) {
       setError("Error: " + error.message);
+      setUploadLoading(false);
     }
   };
 
@@ -346,6 +355,7 @@ export default function Upload() {
             onChange={(e) => setTargetDataset(e.target.value)}
             style={{ marginBottom: "10px" }}
           >
+            <option value="FRC2024">FRC 2024</option>
             <option value="FRC2023">FRC 2023</option>
           </Form.Control>
           <h5 htmlFor="dataset" style={{ marginTop: "10px" }}>
@@ -418,6 +428,7 @@ export default function Upload() {
             onChange={(e) => setTargetDataset(e.target.value)}
             style={{ marginBottom: "10px" }}
           >
+            <option value="FRC2024">FRC 2024</option>
             <option value="FRC2023">FRC 2023</option>
           </Form.Control>
         </>
@@ -440,16 +451,15 @@ export default function Upload() {
                 style={{ marginLeft: "5px" }}
                 value={mapClasses[index]}
                 onChange={(e) => {
-                    const updatedMapClasses = [...mapClasses];
-                    updatedMapClasses[index] = e.target.value;
-                    setMapClasses(updatedMapClasses);
-                  }
+                  const updatedMapClasses = [...mapClasses];
+                  updatedMapClasses[index] = e.target.value;
+                  setMapClasses(updatedMapClasses);
+                }
                 }
               >
-                <option value="cone">cone</option>
-                <option value="cube">cube</option>
-                <option value="robot">robot</option>
-                <option value="bumper">bumper</option>
+                {classes[metadata.targetDataset].map((className, index) => (
+                  <option key={index} value={className}>{className}</option>
+                ))}
               </Form.Control>
             </div>
           ))}

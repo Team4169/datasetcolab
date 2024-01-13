@@ -81,36 +81,43 @@ def findMetadataFolders(directoryPath, year):
             
     return matchingMetadataFolders
 
-year = "FRC2023"
-tempName = ''.join(random.choices(string.ascii_lowercase + string.digits, k=4))
+years = ["FRC2023", "FRC2024"]
+tempNames = []
 
-directoryPath = '/home/team4169/datasetcolab/app/upload'
-metadataFolders = findMetadataFolders(directoryPath, year)
-testFolders = [s + "/test" for s in metadataFolders]
-trainFolders = [s + "/train" for s in metadataFolders]
-validFolders = [s + "/valid" for s in metadataFolders]
+for year in years:
+    tempName = ''.join(random.choices(string.ascii_lowercase + string.digits, k=4))
+    tempNames.append(tempName)
 
-outputPathMain = '/home/team4169/datasetcolab/app/download/' + tempName
-mergeCocoDatasets(testFolders, outputPathMain + "/test")
-mergeCocoDatasets(trainFolders, outputPathMain + "/train")
-mergeCocoDatasets(validFolders, outputPathMain + "/valid")
-metadata = {
-    "folderName": tempName,
-    "uploadName": "FRC 2023",
-    "datasetType": "COCO"
-}
+    directoryPath = '/home/team4169/datasetcolab/app/upload'
+    metadataFolders = findMetadataFolders(directoryPath, year)
+    testFolders = [s + "/test" for s in metadataFolders]
+    trainFolders = [s + "/train" for s in metadataFolders]
+    validFolders = [s + "/valid" for s in metadataFolders]
 
-metadataFilePath = '/home/team4169/datasetcolab/app/download/' + tempName + '/metadata.json'
-with open(metadataFilePath, 'w') as f:
-    json.dump(metadata, f)
+    outputPathMain = '/home/team4169/datasetcolab/app/download/' + tempName
+    mergeCocoDatasets(testFolders, outputPathMain + "/test")
+    mergeCocoDatasets(trainFolders, outputPathMain + "/train")
+    mergeCocoDatasets(validFolders, outputPathMain + "/valid")
+    metadata = {
+        "folderName": tempName,
+        "uploadName": year,
+        "datasetType": "COCO"
+    }
+
+    metadataFilePath = '/home/team4169/datasetcolab/app/download/' + tempName + '/metadata.json'
+    with open(metadataFilePath, 'w') as f:
+        json.dump(metadata, f)
 
 currentDatasetPath = '/home/team4169/datasetcolab/app/important.json'
 with open(currentDatasetPath, 'r') as f:
     currentDataset = json.load(f)
-try:
-    shutil.rmtree('/home/team4169/datasetcolab/app/download/' + currentDataset[year])
-except:
-    pass
-currentDataset[year] = tempName
+
+for i, year in enumerate(years):
+    try:
+        shutil.rmtree('/home/team4169/datasetcolab/app/download/' + currentDataset[year])
+    except:
+        pass
+    currentDataset[year] = tempNames[i]
+
 with open(currentDatasetPath, 'w') as f:
     json.dump(currentDataset, f)

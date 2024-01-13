@@ -63,7 +63,7 @@ export default function DownloadDataset() {
   const [error, setError] = useState("");
   const [selectedOptions, setSelectedOptions] = useState({
     "FRC 2023": ["Cone", "Cube", "Robot"],
-    "FRC 2024": ["Cone", "Cube", "Robot"],
+    "FRC 2024": ["Note", "Robot"],
   });
   const [selectedDatasetType, setSelectedDatasetType] = useState({
     ["FRC 2023"]: "COCO",
@@ -76,9 +76,14 @@ export default function DownloadDataset() {
   const [showCopyAlert, setShowCopyAlert] = useState(false);
 
   const datasets = [
+    { name: "FRC 2024", images: 1000, annotations: 500, size: "1.5GB" },
     { name: "FRC 2023", images: 1000, annotations: 500, size: "1.5GB" },
   ];
-  const classes = ["Cone", "Cube", "Robot"];
+
+  const [classes, setClasses] = useState({
+    "FRC 2023": ["Cone", "Cube", "Robot"],
+    "FRC 2024": ["Note", "Robot"],
+  });
 
   const [loading, setLoading] = useState(false);
   const [apiKey, setApiKey] = useState("API_KEY");
@@ -196,7 +201,7 @@ export default function DownloadDataset() {
                   */}
                 <h5 style={{ paddingTop: "10px" }}>Dataset Classes</h5>
                 <div style={styles.checkboxGroup}>
-                  {classes.map((opt, i) => (
+                  {classes[dataset.name].map((opt, i) => (
                     <Form.Check
                       key={i}
                       type="checkbox"

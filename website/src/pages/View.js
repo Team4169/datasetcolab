@@ -439,7 +439,7 @@ export default function View() {
                 variant="primary"
                 className="position-absolute top-0 end-0"
                 onClick={() => {
-                  if (folderName === "FRC2023") {
+                  if (folderName === "FRC2023" || folderName === "FRC2024") {
                     navigate("/download");
                   } else {
                     navigate("/");
@@ -459,7 +459,7 @@ export default function View() {
               <div style={styles.treeContainer}>
                 {renderTree(currentFileTree, "", true)}
               </div>
-              {folderName !== "FRC2023" && (
+              {folderName !== "FRC2023" && folderName !== "FRC2024" && (
                 <div style={{ padding: "10px 0" }}>
                   <Button variant="danger" onClick={handleDeleteProject}>
                     Delete Project
