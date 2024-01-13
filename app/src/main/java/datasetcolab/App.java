@@ -164,7 +164,7 @@ public class App {
         app.get("/view/<folderName>", ctx -> {
             try {
                 String uid = "";
-                if (!ctx.pathParam("folderName").startsWith("FRC2023") || ctx.pathParam("folderName").startsWith("FRC2024")) {
+                if (!ctx.pathParam("folderName").startsWith("FRC2023") && !ctx.pathParam("folderName").startsWith("FRC2024")) {
                     if (ctx.header("idToken") != null || ctx.queryParam("idToken") != null) {
                         String idToken = ctx.header("idToken") != null ? ctx.header("idToken") : ctx.queryParam("idToken");
                         FirebaseToken decodedToken = FirebaseAuth
@@ -191,16 +191,10 @@ public class App {
 
                         if (folderName.startsWith("FRC2023")) {
                             tempName = (String) currentDataset.get("FRC2023");
+                            requestedFile = "download/" + tempName + folderName.substring(folderName.indexOf("FRC2023") + 7);
                         } else if (folderName.startsWith("FRC2024")) {
                             tempName = (String) currentDataset.get("FRC2024");
-                        }
-
-                        if (tempName != null) {
-                            if (folderName.substring(folderName.indexOf(tempName) + tempName.length()).equals("")) {
-                                requestedFile = "download/" + tempName;
-                            } else {
-                                requestedFile = "download/" + tempName + folderName.substring(folderName.indexOf(tempName) + tempName.length());
-                            }
+                            requestedFile = "download/" + tempName + folderName.substring(folderName.indexOf("FRC2024") + 7);
                         }
                     }
                 }
@@ -266,21 +260,18 @@ public class App {
                         JSONParser parser = new JSONParser();
                         JSONObject currentDataset = (JSONObject) parser.parse(fileReader);
                         String tempName = "";
-                        if (folderName.startsWith("FRC2023")) {
-                            tempName = (String) currentDataset.get("FRC2023");
-                        } else if (folderName.startsWith("FRC2024")) {
-                            tempName = (String) currentDataset.get("FRC2024");
-                        }
 
-                        if (tempName != null) {
-                            if (folderName.substring(folderName.indexOf(tempName) + tempName.length()).equals("")) {
-                                folderName = "download/" + tempName;
-                            } else {
-                                folderName = "download/" + tempName + folderName.substring(folderName.indexOf(tempName) + tempName.length());
-                            }
+                        if (ctx.pathParam("folderName").startsWith("FRC2023")) {
+                            System.out.println(ctx.pathParam("folderName").substring(ctx.pathParam("folderName").indexOf("FRC2023") + 7));
+                            tempName = (String) currentDataset.get("FRC2023");
+                            folderName = "download/" + tempName + ctx.pathParam("folderName").substring(ctx.pathParam("folderName").indexOf("FRC2023") + 7);
+                        } else if (ctx.pathParam("folderName").startsWith("FRC2024")) {
+                            tempName = (String) currentDataset.get("FRC2024");
+                            folderName = "download/" + tempName + ctx.pathParam("folderName").substring(ctx.pathParam("folderName").indexOf("FRC2024") + 7);
                         }
                     }
                 }
+                System.out.println(folderName);
 
                 String[] folderNameArray = folderName.split("/");
                 List<String> folderNameList = new ArrayList<>(Arrays.asList(folderNameArray));
@@ -289,6 +280,7 @@ public class App {
                 folderNameList.remove(folderNameList.size() - 1);
 
                 String filePath = String.join("/", folderNameList);
+                System.out.println(filePath);
 
                 File folder = new File(filePath);
                 File[] files = folder.listFiles((dir, name) -> name.toLowerCase().endsWith(".json"));
