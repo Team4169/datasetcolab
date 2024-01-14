@@ -66,22 +66,22 @@ export default function Signup() {
       <Form onSubmit={handleSubmit}>
         <Form.Group controlId="username" style={{ marginBottom: "20px" }}>
           <Form.Label>Username:</Form.Label>
-          <Form.Control type="text" ref={usernameRef} required />
+          <Form.Control type="text" ref={usernameRef} required autocomplete="username"/>
         </Form.Group>
         <Form.Group controlId="email" style={{ marginBottom: "20px" }}>
           <Form.Label>Email:</Form.Label>
-          <Form.Control type="email" ref={emailRef} required />
+          <Form.Control type="email" ref={emailRef} required autocomplete="email"/>
         </Form.Group>
         <Form.Group controlId="password" style={{ marginBottom: "20px" }}>
           <Form.Label>Password:</Form.Label>
-          <Form.Control type="password" ref={passwordRef} required />
+          <Form.Control type="password" ref={passwordRef} required autocomplete="new-password"/>
         </Form.Group>
         <Form.Group
           controlId="passwordConfirm"
           style={{ marginBottom: "20px" }}
         >
           <Form.Label>Password Confirmation:</Form.Label>
-          <Form.Control type="password" ref={passwordConfirmRef} required />
+          <Form.Control type="password" ref={passwordConfirmRef} required autocomplete="new-password"/>
         </Form.Group>
         <Button variant="primary" type="submit" disabled={loading}>
           Sign Up

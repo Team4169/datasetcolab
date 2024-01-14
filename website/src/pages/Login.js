@@ -77,11 +77,11 @@ export default function Login() {
       <Form onSubmit={handleSubmit}>
         <Form.Group controlId="email" style={{ marginBottom: "20px" }}>
           <Form.Label>Email:</Form.Label>
-          <Form.Control type="email" ref={emailRef} required />
+          <Form.Control type="email" ref={emailRef} required autocomplete="email"/>
         </Form.Group>
         <Form.Group controlId="password" style={{ marginBottom: "20px" }}>
           <Form.Label>Password:</Form.Label>
-          <Form.Control type="password" ref={passwordRef} required />
+          <Form.Control type="password" ref={passwordRef} required autocomplete="current-password"/>
         </Form.Group>
         <Button variant="primary" type="submit" disabled={loading}>
           Login
