@@ -35,6 +35,7 @@ replay_pid*
 .gradle
 app/upload
 app/download
+app/download2
 
 app/*.json
 *.json

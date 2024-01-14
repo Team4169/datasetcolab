@@ -474,8 +474,9 @@ public class App {
                 }
 
                 String filePath = ctx.pathParam("filePath");
+                System.out.println(filePath);
                 if (filePath.equals("FRC2023") || filePath.equals("FRC2024")) {
-                    File datasetFile = new File("currentDataset.json");
+                    File datasetFile = new File("important.json");
                     try (FileReader fileReader = new FileReader(datasetFile)) {
                         JSONParser parser = new JSONParser();
                         JSONObject currentDataset = (JSONObject) parser.parse(fileReader);

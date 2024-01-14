@@ -17,7 +17,7 @@ def mergeCocoDatasets(dataset_paths, output_path):
     merged_data = {
         'images': [],
         'annotations': [],
-        'categories': None
+        'categories': [{"name": "objects", "supercategory": "none", "id": 0}]
     }
 
     max_image_id = 0
@@ -38,14 +38,15 @@ def mergeCocoDatasets(dataset_paths, output_path):
             data = json.load(file)
 
         # Set categories from the first dataset (assuming all datasets have the same categories)
-        if merged_data['categories'] is None:
-            merged_data['categories'] = data['categories']
-        else:
-            for category in data['categories']:
-                if category not in merged_data['categories']:
-                    merged_data['categories'].append(category)
+        for category in data['categories']:
+            if category["name"] not in [cat["name"] for cat in merged_data['categories']] and category["supercategory"] != "none":
+                print(category)
+                merged_data['categories'].append({ "name": category["name"], "supercategory": "objects", "id": len(merged_data['categories']) })
+
+    print(merged_data)
 
     for dataset_path in updated_dataset_paths:
+        json_file = findJsonFile(dataset_path)
         with open(json_file) as file:
             data = json.load(file)
             
@@ -59,6 +60,22 @@ def mergeCocoDatasets(dataset_paths, output_path):
             merged_data['images'].append(image)
 
         for annotation in data['annotations']:
+            category_name = None
+            for category in data['categories']:
+                if category['id'] == annotation['category_id']:
+                    category_name = category['name']
+                    break
+                    
+            if category_name is not None:
+                for category in merged_data['categories']:
+                    if category['name'] == category_name:
+                        annotation['category_id'] = category['id']
+                        break
+                else:
+                    print(f"Category '{category_name}' not found in merged data.")
+            else:
+                print("Category name is None.")
+
             annotation['id'] += max_annotation_id
             annotation['image_id'] = id_mapping[annotation['image_id']]
             merged_data['annotations'].append(annotation)
@@ -103,7 +120,7 @@ def findMetadataFolders(directoryPath, year):
             
     return matchingMetadataFolders
 
-years = ["FRC2023", "FRC2024"]
+years = ["FRC2024"]
 tempNames = []
 
 for year in years:
