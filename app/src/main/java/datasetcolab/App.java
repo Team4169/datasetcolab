@@ -473,28 +473,57 @@ public class App {
                     throw new IllegalArgumentException("Invalid request: uid is null or both idToken and api are null.");
                 }
 
+       
                 String filePath = ctx.pathParam("filePath");
                 System.out.println(filePath);
+
                 if (filePath.equals("FRC2023") || filePath.equals("FRC2024")) {
                     File datasetFile = new File("important.json");
+
                     try (FileReader fileReader = new FileReader(datasetFile)) {
                         JSONParser parser = new JSONParser();
                         JSONObject currentDataset = (JSONObject) parser.parse(fileReader);
                         String zipName = "download/" + (String) currentDataset.get(filePath) + ".zip";
 
-                        File zipFile = new File(zipName);
-                        byte[] zipBytes = Files.readAllBytes(zipFile.toPath());
+                        try (InputStream is = Files.newInputStream(Path.of(zipName))) {
+                            System.out.println("Sending file: " + zipName);
 
-                        String zipFileName = filePath.equals("FRC2023") ? "FRC2023.zip" : "FRC2024.zip";
-                        ctx.result(zipBytes)
-                            .contentType("application/zip")
-                            .header("Content-Disposition", "attachment; filename=" + zipFileName);
+                            // Set response headers
+                            ctx.header("Content-Disposition", "attachment; filename=" + filePath + ".zip");
+                            ctx.contentType("application/zip");
+
+                            // Get the OutputStream from the HttpServletResponse
+                            OutputStream outputStream = ctx.res().getOutputStream();
+
+                            // Write the input stream to the response output stream
+                            byte[] buffer = new byte[4096]; // Adjust the buffer size as needed
+                            int bytesRead;
+
+                            while ((bytesRead = is.read(buffer)) != -1) {
+                                outputStream.write(buffer, 0, bytesRead);
+                            }
+
+                            // Close the input stream and output stream
+                            is.close();
+                            outputStream.close();
+                        } catch (IOException e) {
+                            // Handle exceptions
+                            ctx.status(500).result("Error: Failed to read or stream the file.");
+                        }
+
+                    } catch (IOException | ParseException e) {
+                        // Handle exceptions
+                        ctx.status(500).result("Error: Failed to read or parse JSON file.");
                     }
                 } else {
                     File file = new File(filePath);
 
-                    ctx.result(Files.readAllBytes(file.toPath()))
-                        .header("Content-Disposition", "attachment; filename=" + filePath);
+                    if (file.exists() && file.isFile()) {
+                        ctx.result(Files.readAllBytes(file.toPath()))
+                                .header("Content-Disposition", "attachment; filename=" + file.getName());
+                    } else {
+                        ctx.status(404).result("Error: File not found.");
+                    }
                 }
             } catch (FirebaseAuthException e) {
                 e.printStackTrace();
