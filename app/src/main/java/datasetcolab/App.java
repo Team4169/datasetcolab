@@ -480,10 +480,7 @@ public class App {
                     try (FileReader fileReader = new FileReader(datasetFile)) {
                         JSONParser parser = new JSONParser();
                         JSONObject currentDataset = (JSONObject) parser.parse(fileReader);
-                        String folderName = "download/" + (String) currentDataset.get(filePath);
-                        String zipName = "download/" + mainUtils.generateRandomString(6) + ".zip";
-
-                        mainUtils.executeCommand("zip -r " + zipName + " " + folderName);
+                        String zipName = "download/" + (String) currentDataset.get(filePath) + ".zip";
 
                         File zipFile = new File(zipName);
                         byte[] zipBytes = Files.readAllBytes(zipFile.toPath());
@@ -492,10 +489,6 @@ public class App {
                         ctx.result(zipBytes)
                             .contentType("application/zip")
                             .header("Content-Disposition", "attachment; filename=" + zipFileName);
-
-                        CompletableFuture.runAsync(() -> {
-                            mainUtils.executeCommand("rm " + zipName);
-                        });
                     }
                 } else {
                     File file = new File(filePath);

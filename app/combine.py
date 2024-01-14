@@ -1,4 +1,4 @@
-import json, sys, os, shutil, random, string, datetime, concurrent.futures
+import json, sys, os, shutil, random, string, datetime, concurrent.futures, zipfile
 from PIL import Image
 from glob import glob
 
@@ -40,10 +40,8 @@ def mergeCocoDatasets(dataset_paths, output_path):
         # Set categories from the first dataset (assuming all datasets have the same categories)
         for category in data['categories']:
             if category["name"] not in [cat["name"] for cat in merged_data['categories']] and category["supercategory"] != "none":
-                print(category)
                 merged_data['categories'].append({ "name": category["name"], "supercategory": "objects", "id": len(merged_data['categories']) })
 
-    print(merged_data)
 
     for dataset_path in updated_dataset_paths:
         json_file = findJsonFile(dataset_path)
@@ -120,6 +118,14 @@ def findMetadataFolders(directoryPath, year):
             
     return matchingMetadataFolders
 
+
+def zipDataset(dataset_path, output_path):
+    with zipfile.ZipFile(output_path, 'w') as zipf:
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            for root, dirs, files in os.walk(dataset_path):
+                for file in files:
+                    zipf.write(os.path.join(root, file), os.path.relpath(os.path.join(root, file), dataset_path))
+
 years = ["FRC2023", "FRC2024"]
 tempNames = []
 
@@ -147,6 +153,9 @@ for year in years:
     with open(metadataFilePath, 'w') as f:
         json.dump(metadata, f)
 
+    outputZipPath = '/home/team4169/datasetcolab/app/download/' + tempName + '.zip'
+    zipDataset(outputPathMain, outputZipPath)
+
 currentDatasetPath = '/home/team4169/datasetcolab/app/important.json'
 with open(currentDatasetPath, 'r') as f:
     currentDataset = json.load(f)
@@ -154,6 +163,9 @@ with open(currentDatasetPath, 'r') as f:
 for i, year in enumerate(years):
     try:
         shutil.rmtree('/home/team4169/datasetcolab/app/download/' + currentDataset[year])
+        oldZipPath = '/home/team4169/datasetcolab/app/download/' + currentDataset[year] + '.zip'
+        if os.path.exists(oldZipPath):
+            os.remove(oldZipPath)
     except:
         pass
     currentDataset[year] = tempNames[i]
