@@ -35,7 +35,7 @@ root.render(
                   exact
                   path="/"
                   element={
-                    <PrivateRoute noAuth={<Navigate to="/signup" />}>
+                    <PrivateRoute noAuth={<Navigate to="/download" />}>
                       <Dashboard />
                     </PrivateRoute>
                   }
