@@ -194,7 +194,13 @@ export default function View() {
 
         setProjectDetails(response.data);
         setCurrentPage(Object.fromEntries(Object.keys(response.data.tree).map(key => [key, 1])));
-        setCurrentFileTree(response.data.tree);
+        const reorderedFileTree = {
+          ...(response.data.tree.train && { train: response.data.tree.train }),
+          ...(response.data.tree.test && { test: response.data.tree.test }),
+          ...(response.data.tree.valid && { valid: response.data.tree.valid }),
+          ...response.data.tree,
+        };
+        setCurrentFileTree(reorderedFileTree);
         setImageSrc(null);
       }
     } catch (err) {

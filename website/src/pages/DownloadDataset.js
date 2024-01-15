@@ -92,10 +92,12 @@ export default function DownloadDataset() {
   const navigate = useNavigate();
 
   const handleDownloadCurl = (dataset) => {
-    console.log(dataset.name)
+    console.log(dataset.name);
     const name = dataset.name.replace(" ", "");
-    console.log(name)
-    return `curl -o ${name}.zip 'https://api.datasetcolab.com/download/${name}?api=${apiKey}&datasetType=${selectedDatasetType[dataset.name]}'`;
+    console.log(name);
+    return `curl -o ${name}.zip 'https://api.datasetcolab.com/download/${name}?api=${apiKey}&datasetType=${
+      selectedDatasetType[dataset.name]
+    }'`;
   };
 
   const handleDownloadMethodChange = (dataset, value) => {
@@ -134,7 +136,7 @@ export default function DownloadDataset() {
         "https://api.datasetcolab.com/download/" +
         dataset +
         "?idToken=" +
-        idToken + 
+        idToken +
         "&datasetType=" +
         selectedDatasetType[dataset.slice(0, 3) + " " + dataset.slice(3)];
     } catch (err) {
@@ -215,23 +217,56 @@ export default function DownloadDataset() {
                   ))}
                 </div>
                 <h5 style={{ paddingTop: "10px" }}>Dataset Type</h5>
-                <Dropdown
-                  onSelect={(type) =>
-                    setSelectedDatasetType((prevTypes) => ({
-                      ...prevTypes,
-                      [dataset.name]: type,
-                    }))
-                  }
-                >
-                  <Dropdown.Toggle variant="blue" id="dropdown-basic">
-                    {selectedDatasetType[dataset.name] || "Select Type"}
-                  </Dropdown.Toggle>
-                  <Dropdown.Menu>
-                    <Dropdown.Item eventKey="COCO">COCO</Dropdown.Item>
-                    <Dropdown.Item eventKey="YOLO">YOLO</Dropdown.Item>
-                    <Dropdown.Item eventKey="TFRecord">TFRecord</Dropdown.Item>
-                  </Dropdown.Menu>
-                </Dropdown>
+
+                <Form.Group>
+                  <ButtonGroup toggle>
+                    <ToggleButton
+                      type="radio"
+                      variant="outline-primary"
+                      name={`datasetTpe-${dataset.name}`}
+                      value="COCO"
+                      checked={selectedDatasetType[dataset.name] === "COCO"}
+                      onClick={() =>
+                        setSelectedDatasetType((prevTypes) => ({
+                          ...prevTypes,
+                          [dataset.name]: "COCO",
+                        }))
+                      }
+                    >
+                      COCO
+                    </ToggleButton>
+                    <ToggleButton
+                      type="radio"
+                      variant="outline-primary"
+                      name={`datasetTpe-${dataset.name}`}
+                      value="YOLO"
+                      checked={selectedDatasetType[dataset.name] === "YOLO"}
+                      onClick={() =>
+                        setSelectedDatasetType((prevTypes) => ({
+                          ...prevTypes,
+                          [dataset.name]: "YOLO",
+                        }))
+                      }
+                    >
+                      YOLO
+                    </ToggleButton>
+                    <ToggleButton
+                      type="radio"
+                      variant="outline-primary"
+                      name={`datasetTpe-${dataset.name}`}
+                      value="TFRecord"
+                      checked={selectedDatasetType[dataset.name] === "TFRecord"}
+                      onClick={() =>
+                        setSelectedDatasetType((prevTypes) => ({
+                          ...prevTypes,
+                          [dataset.name]: "TFRecord",
+                        }))
+                      }
+                    >
+                      TFRecord
+                    </ToggleButton>
+                  </ButtonGroup>
+                </Form.Group>
                 <Button
                   variant="primary"
                   className="position-absolute top-0 end-0 m-3"
