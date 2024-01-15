@@ -117,11 +117,11 @@ export default function Dashboard() {
   }
 
   function formatStatus(status) {
-    if (status == "merged") {
+    if (status === "merged") {
       return "Merged";
-    } else if (status == "pendingmerge") {
+    } else if (status === "pendingmerge") {
       return "Pending Merge";
-    } else if (status == "postprocessing") {
+    } else if (status === "postprocessing") {
       return "Postprocessing";
     } else {
       return status;

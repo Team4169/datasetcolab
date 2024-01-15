@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import axios from "axios";
 import Alert from "react-bootstrap/Alert";
-import { Button, Form } from "react-bootstrap";
+import { Button, Form, Pagination } from "react-bootstrap";
 import { useParams, useNavigate, Link } from "react-router-dom";
 
 const styles = {
@@ -149,18 +149,10 @@ export default function View() {
   const [error, setError] = useState(null);
   const [imageSrc, setImageSrc] = useState(null);
   const [annotations, setAnnotations] = useState(null);
+  const [currentPage, setCurrentPage] = useState([]);
 
-  const [openSections, setOpenSections] = useState([]);
 
-  const handleToggleSection = (sectionName) => {
-    setOpenSections((prevOpenSections) =>
-      prevOpenSections.includes(sectionName)
-        ? prevOpenSections.filter((section) => section !== sectionName)
-        : [...prevOpenSections, sectionName]
-    );
-  };
-
-  const isSectionOpen = (sectionName) => openSections.includes(sectionName);
+  console.log(currentFileTree)
 
   const fetchProjectDetails = async () => {
     const imageFileTypes = [".jpg", ".png", ".webp"];
@@ -201,6 +193,7 @@ export default function View() {
         );
 
         setProjectDetails(response.data);
+        setCurrentPage(Object.fromEntries(Object.keys(response.data.tree).map(key => [key, 1])));
         setCurrentFileTree(response.data.tree);
         setImageSrc(null);
       }
@@ -293,78 +286,7 @@ export default function View() {
     fetchProjectDetails();
   }, [folderName]);
 
-  const renderTree = (treeData, parentName = "", first = false) => {
-    const treeStyle = {
-      cursor: "pointer",
-      backgroundColor: "white",
-      padding: "5px",
-      marginBottom: "5px",
-    };
-    treeStyle.marginLeft = first ? "" : "25px";
-    return (
-      <ul
-        className="list-unstyled"
-        style={parentName === "" ? { paddingLeft: 0 } : {}}
-      >
-        {Object.entries(treeData).map(([name, value], index) => (
-          <li key={name}>
-            <div style={treeStyle}>
-              {typeof value === "object" ? (
-                <>
-                  <span onClick={() => handleToggleSection(parentName + name)}>
-                    {isSectionOpen(parentName + name) ? "▼" : "►"}{" "}
-                    {name.length < 63
-                      ? name
-                      : name.substring(0, 40) +
-                        "..." +
-                        name.substring(name.length - 20)}
-                  </span>
-                  {isSectionOpen(parentName + name) &&
-                    renderTree(value, parentName + name)}
-                </>
-              ) : (
-                <Link
-                  to={
-                    "/view/" +
-                    folderName +
-                    "/" +
-                    (parentName !== "" ? parentName + "/" : "") +
-                    name
-                  }
-                  onClick={(e) => {
-                    e.stopPropagation(); // Prevent closing the folder when clicking on the link
-                  }}
-                >
-                  {name.length < 63
-                    ? name
-                    : name.substring(0, 40) +
-                      "..." +
-                      name.substring(name.length - 20)}
-                </Link>
-              )}
-            </div>
-            {isSectionOpen(parentName + name) &&
-              index === 9 &&
-              Object.entries(treeData).length > 10 && (
-                <div
-                  style={{
-                    cursor: "pointer",
-                    backgroundColor: "white",
-                    padding: "5px",
-                    marginBottom: "5px",
-                  }}
-                  onClick={() => handleToggleSection(parentName + "more")}
-                >
-                  Show more
-                </div>
-              )}
-          </li>
-        ))}
-        {isSectionOpen(parentName + "more") &&
-          renderTree(Object.entries(treeData).slice(10), parentName + "more")}
-      </ul>
-    );
-  };
+  console.log(currentPage);
 
   return (
     <div style={{ padding: "20px" }} className="project-details">
@@ -456,9 +378,70 @@ export default function View() {
                   style={{ margin: "20px 0px" }}
                 />
               </Form>
-              <div style={styles.treeContainer}>
-                {renderTree(currentFileTree, "", true)}
-              </div>
+              {currentFileTree && (
+                <>
+                  {Object.keys(currentFileTree).map((key) => (
+                    <div key={key}>
+                      <h5>{key.charAt(0).toUpperCase() + key.slice(1)}</h5>
+                      <Pagination className="pagination">
+                        <div style={{ marginBottom: "10px", width: "100%"  }}>
+                          {Object.keys(currentFileTree[key])
+                            .slice((currentPage[key] - 1) * 20, currentPage[key] * 20)
+                            .map((item, index) => (
+                              <div key={index} style={{ marginBottom: "10px", width: "100%" }}>
+                                <Pagination.Item
+                                  active={item === currentPage[key]}
+                                  onClick={() => {
+                                    navigate(
+                                      "/view/" +
+                                      folderName +
+                                      "/" +
+                                      (key !== "" ? key + "/" : "") +
+                                      item
+                                    );
+                                  }}
+                                >
+                                  {item.length > 58
+                                    ? `${item.substring(0, 55)}...`
+                                    : item}
+                                </Pagination.Item>
+                              </div>
+                            ))}
+                        </div>
+                      </Pagination>
+                      {(!(currentPage[key] === 1 && currentPage[key] === Math.ceil(Object.keys(currentFileTree).reduce((total, key) => total + Object.keys(currentFileTree[key]).length, 0) / 20)) && Object.keys(currentFileTree[key]).length >= 20) && (
+                        <div style={{ display: "flex", justifyContent: "center" }}>
+                          <Button
+                            variant="primary"
+                            disabled={currentPage[key] === 1}
+                            onClick={() => setCurrentPage({ ...currentPage, [key]: currentPage[key] - 1 })}
+                            style={{ marginRight: "10px" }}
+                          >
+                            Back
+                          </Button>
+                          <Button
+                            variant="primary"
+                            disabled={
+                              currentPage[key] ===
+                              Math.ceil(
+                                Object.keys(currentFileTree).reduce(
+                                  (total, key) =>
+                                    total + Object.keys(currentFileTree[key]).length,
+                                  0
+                                ) / 20
+                              ) || Object.keys(currentFileTree[key]).length < 20
+                            }
+                            onClick={() => setCurrentPage({ ...currentPage, [key]: currentPage[key] + 1 })}
+                          >
+                            Forward
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+
+                </>
+              )}
               {folderName !== "FRC2023" && folderName !== "FRC2024" && (
                 <div style={{ padding: "10px 0" }}>
                   <Button variant="danger" onClick={handleDeleteProject}>
