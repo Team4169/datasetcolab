@@ -126,6 +126,24 @@ def zipDataset(dataset_path, output_path):
                 for file in files:
                     zipf.write(os.path.join(root, file), os.path.relpath(os.path.join(root, file), dataset_path))
 
+def countImages(folder_path):
+    image_count = 0
+    for root, dirs, files in os.walk(folder_path):
+        for file in files:
+            if file.endswith(('.jpg', '.jpeg', '.png')):
+                image_count += 1
+    return image_count
+
+def countAnnotations(folder_path):
+    annotation_count = 0
+    for root, dirs, files in os.walk(folder_path):
+        for file in files:
+            if file.endswith('.json'):
+                with open(os.path.join(root, file), 'r') as f:
+                    data = json.load(f)
+                    annotation_count += len(data['annotations'])
+    return annotation_count
+
 years = ["FRC2023", "FRC2024"]
 tempNamesCOCO = []
 tempNamesYOLO = []
@@ -150,10 +168,26 @@ for year in years:
     mergeCocoDatasets(testFolders, outputPathCOCO + "/test")
     mergeCocoDatasets(trainFolders, outputPathCOCO + "/train")
     mergeCocoDatasets(validFolders, outputPathCOCO + "/valid")
+
+    test_image_count = countImages(outputPathCOCO + "/test")
+    train_image_count = countImages(outputPathCOCO + "/train")
+    valid_image_count = countImages(outputPathCOCO + "/valid")
+    test_annotation_count = countAnnotations(outputPathCOCO + "/test")
+    train_annotation_count = countAnnotations(outputPathCOCO + "/train")
+    valid_annotation_count = countAnnotations(outputPathCOCO + "/valid")
+
     metadata = {
         "folderName": tempNameCOCO,
         "uploadName": year,
         "datasetType": "COCO, YOLO, TFRecord",
+        "testImageCount": test_image_count,
+        "trainImageCount": train_image_count,
+        "validImageCount": valid_image_count,
+        "totalImageCount": test_image_count + train_image_count + valid_image_count,
+        "testAnnotationCount": test_annotation_count,
+        "trainAnnotationCount": train_annotation_count,
+        "validAnnotationCount": valid_annotation_count,
+        "totalAnnotationCount": test_annotation_count + train_annotation_count + valid_annotation_count,
     }
 
     metadataFilePath = outputPathCOCO + '/metadata.json'
