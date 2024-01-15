@@ -131,7 +131,6 @@ export default function Upload() {
       );
 
       setMetadata(response.data);
-      console.log(response.data.targetDataset);
 
       const preprocessMapClasses = response.data.classes.map((className) => {
         if (className.toLowerCase().includes("cone")) {
@@ -148,7 +147,6 @@ export default function Upload() {
           return "note";
         }
       });
-      console.log(preprocessMapClasses);
 
       setMapClasses(preprocessMapClasses);
       setShowClassMatch(true);
@@ -176,8 +174,6 @@ export default function Upload() {
           metadata: JSON.stringify(metadata),
         },
       };
-
-      console.log(config);
 
       await axios.get(
         "https://api.datasetcolab.com/classes",

@@ -151,9 +151,6 @@ export default function View() {
   const [annotations, setAnnotations] = useState(null);
   const [currentPage, setCurrentPage] = useState([]);
 
-
-  console.log(currentFileTree)
-
   const fetchProjectDetails = async () => {
     const imageFileTypes = [".jpg", ".png", ".webp"];
     const isImageFile = imageFileTypes.some((fileType) =>
@@ -167,7 +164,6 @@ export default function View() {
       if (currentUser) {
         idToken = await currentUser.getIdToken();
       }
-      console.log(idToken);
 
       if (isImageFile) {
         const config = { headers: { idToken: idToken } };
@@ -176,8 +172,6 @@ export default function View() {
           `https://api.datasetcolab.com/annotations/${folderName}`,
           config
         );
-
-        console.log(response.data);
 
         setAnnotations(response.data);
 
@@ -204,7 +198,6 @@ export default function View() {
         setImageSrc(null);
       }
     } catch (err) {
-      console.log(err);
       setError("Error fetching project details.");
     } finally {
       setLoading(false);
@@ -291,8 +284,6 @@ export default function View() {
   useEffect(() => {
     fetchProjectDetails();
   }, [folderName]);
-
-  console.log(currentPage);
 
   return (
     <div style={{ padding: "20px" }} className="project-details">

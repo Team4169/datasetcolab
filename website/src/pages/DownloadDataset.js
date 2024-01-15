@@ -75,10 +75,10 @@ export default function DownloadDataset() {
   });
   const [showCopyAlert, setShowCopyAlert] = useState(false);
 
-  const datasets = [
-    { name: "FRC 2024", images: 1000, annotations: 500, size: "1.5GB" },
-    { name: "FRC 2023", images: 1000, annotations: 500, size: "1.5GB" },
-  ];
+  const [datasets, setDatasets] = useState([
+    { name: "FRC 2024", images: 0, annotations: 0, size: 0 },
+    { name: "FRC 2023", images: 0, annotations: 0, size: 0 },
+  ]);
 
   const [classes, setClasses] = useState({
     "FRC 2023": ["cone", "cube", "robot"],
@@ -92,9 +92,7 @@ export default function DownloadDataset() {
   const navigate = useNavigate();
 
   const handleDownloadCurl = (dataset) => {
-    console.log(dataset.name);
     const name = dataset.name.replace(" ", "");
-    console.log(name);
     return `curl -o ${name}.zip 'https://api.datasetcolab.com/download/${name}?api=${apiKey}&datasetType=${
       selectedDatasetType[dataset.name]
     }'`;
@@ -172,8 +170,45 @@ export default function DownloadDataset() {
     }
   };
 
+
+  const fetchProjectDetailsForMultipleFolders = async (folderNames) => {
+    try {
+      for (const folderName of folderNames) {
+        let idToken = "";
+        if (currentUser) {
+          idToken = await currentUser.getIdToken();
+        }
+
+        const config = { headers: { idToken: idToken } };
+
+        const response = await axios.get(
+          `https://api.datasetcolab.com/view/${folderName}`,
+          config
+        );
+
+        setDatasets((prevDatasets) => {
+          const newDatasets = [...prevDatasets];
+          const index = newDatasets.findIndex(
+            (dataset) => dataset.name === (folderName.substring(0, 3) + " " + folderName.substring(3))
+          );
+          newDatasets[index] = {
+            name: folderName.substring(0, 3) + " " + folderName.substring(3),
+            images: response.data.totalImageCount,
+            annotations: response.data.totalAnnotationCount,
+          };
+          return newDatasets;
+        }); 
+      }
+    } catch (err) {
+      setError("Error fetching project details.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchApiKey();
+    fetchProjectDetailsForMultipleFolders(["FRC2024", "FRC2023"]);
     const alertTimeout = setTimeout(() => setShowCopyAlert(false), 5000);
     return () => clearTimeout(alertTimeout);
   }, [showCopyAlert]);
@@ -195,13 +230,13 @@ export default function DownloadDataset() {
             <Card key={index} style={styles.datasetCard}>
               <Card.Body>
                 <h3>{dataset.name}</h3>
-                {/*
-                <small>Images: {dataset.images}</small>
-                <br />
-                <small>Annotations: {dataset.annotations}</small>
-                <br />
-                <small>Size: {dataset.size}</small>
+                <small>
+                  <strong>Images:</strong> {dataset.images.toLocaleString()} &nbsp;&nbsp;&nbsp;
+                  <strong>Annotations:</strong> {dataset.annotations.toLocaleString()} &nbsp;&nbsp;&nbsp;
+                  {/*
+                  <strong>Size:</strong> {dataset.size}
                   */}
+                </small>
                 <h5 style={{ paddingTop: "10px" }}>Dataset Classes</h5>
                 <div style={styles.checkboxGroup}>
                   {classes[dataset.name].map((opt, i) => (
