@@ -473,14 +473,7 @@ public class App {
                     throw new IllegalArgumentException("Invalid request: uid is null or both idToken and api are null.");
                 }
 
-                System.out.println(ctx.queryParamMap());
-                System.out.println(ctx.queryString());
-                System.out.println(ctx.fullUrl());
-                System.out.println(ctx.queryParam("api"));
-                System.out.println(ctx.queryParam("datasetType"));
-       
                 String filePath = ctx.pathParam("filePath");
-                System.out.println(filePath);
 
                 if (filePath.equals("FRC2023") || filePath.equals("FRC2024")) {
                     File datasetFile = new File("important.json");
@@ -488,9 +481,7 @@ public class App {
                     try (FileReader fileReader = new FileReader(datasetFile)) {
                         JSONParser parser = new JSONParser();
                         JSONObject currentDataset = (JSONObject) parser.parse(fileReader);
-                        System.out.println(filePath + ctx.queryParam("datasetType"));
                         String zipName = "download/" + (String) currentDataset.get(filePath + ctx.queryParam("datasetType")) + ".zip";
-                        System.out.println(zipName);
 
                         try (InputStream is = Files.newInputStream(Path.of(zipName))) {
                             System.out.println("Sending file: " + zipName);

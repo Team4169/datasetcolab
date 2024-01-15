@@ -135,7 +135,8 @@ export default function DownloadDataset() {
         dataset +
         "?idToken=" +
         idToken + 
-        "&datasetType=COCO";
+        "&datasetType=" +
+        selectedDatasetType[dataset.slice(0, 3) + " " + dataset.slice(3)];
     } catch (err) {
       setError("Error downloading dataset.");
     } finally {
