@@ -84,8 +84,33 @@ def convert_coco_json(json_dir, dataset_dir, images_dir, use_segments=False, cls
 
             bboxes = []
             segments = []
-            # Processing bboxes and segments as per your existing logic
-            # ...
+
+            for ann in anns:
+                if ann['iscrowd']:
+                    continue
+                # The COCO box format is [top left x, top left y, width, height]
+                box = np.array(ann['bbox'], dtype=np.float64)
+                box[:2] += box[2:] / 2  # xy top-left corner to center
+                box[[0, 2]] /= w  # normalize x
+                box[[1, 3]] /= h  # normalize y
+                if box[2] <= 0 or box[3] <= 0:  # if w <= 0 and h <= 0
+                    continue
+
+                cls = coco80[ann['category_id'] - 1] if cls91to80 else ann['category_id'] - 1  # class
+                box = [cls] + box.tolist()
+                if box not in bboxes:
+                    bboxes.append(box)
+                # Segments
+                if use_segments:
+                    if len(ann['segmentation']) > 1:
+                        s = merge_multi_segment(ann['segmentation'])
+                        s = (np.concatenate(s, axis=0) / np.array([w, h])).reshape(-1).tolist()
+                    else:
+                        s = [j for i in ann['segmentation'] for j in i]  # all segments concatenated
+                        s = (np.array(s).reshape(-1, 2) / np.array([w, h])).reshape(-1).tolist()
+                    s = [cls] + s
+                    if s not in segments:
+                        segments.append(s)
 
             with open(labels_dir_path / f'{Path(f).stem}.txt', 'a') as file:
                 for i in range(len(bboxes)):
