@@ -1,4 +1,4 @@
-import json, sys, os, shutil, random, string, datetime, concurrent.futures, zipfile
+import json, sys, os, shutil, random, string, datetime, concurrent.futures, zipfile, subprocess
 from PIL import Image
 from glob import glob
 
@@ -127,48 +127,76 @@ def zipDataset(dataset_path, output_path):
                     zipf.write(os.path.join(root, file), os.path.relpath(os.path.join(root, file), dataset_path))
 
 years = ["FRC2023", "FRC2024"]
-tempNames = []
+tempNamesCOCO = []
+tempNamesYOLO = []
+tempNamesTFRecord = []
 
 for year in years:
-    tempName = ''.join(random.choices(string.ascii_lowercase + string.digits, k=4))
-    tempNames.append(tempName)
+    tempNameCOCO = ''.join(random.choices(string.ascii_lowercase + string.digits, k=4))
+    tempNameYOLO = ''.join(random.choices(string.ascii_lowercase + string.digits, k=4))
+    tempNameTFRecord = ''.join(random.choices(string.ascii_lowercase + string.digits, k=4))
+    tempNamesCOCO.append(tempNameCOCO)
+    tempNamesYOLO.append(tempNameYOLO)
+    tempNamesTFRecord.append(tempNameTFRecord)
 
+    # Combine COCO
     directoryPath = '/home/team4169/datasetcolab/app/upload'
     metadataFolders = findMetadataFolders(directoryPath, year)
     testFolders = [s + "/test" for s in metadataFolders]
     trainFolders = [s + "/train" for s in metadataFolders]
     validFolders = [s + "/valid" for s in metadataFolders]
 
-    outputPathMain = '/home/team4169/datasetcolab/app/download/' + tempName
-    mergeCocoDatasets(testFolders, outputPathMain + "/test")
-    mergeCocoDatasets(trainFolders, outputPathMain + "/train")
-    mergeCocoDatasets(validFolders, outputPathMain + "/valid")
+    outputPathCOCO = '/home/team4169/datasetcolab/app/download/' + tempNameCOCO
+    mergeCocoDatasets(testFolders, outputPathCOCO + "/test")
+    mergeCocoDatasets(trainFolders, outputPathCOCO + "/train")
+    mergeCocoDatasets(validFolders, outputPathCOCO + "/valid")
     metadata = {
-        "folderName": tempName,
+        "folderName": tempNameCOCO,
         "uploadName": year,
-        "datasetType": "COCO"
+        "datasetType": "COCO, YOLO, TFRecord",
     }
 
-    metadataFilePath = '/home/team4169/datasetcolab/app/download/' + tempName + '/metadata.json'
+    metadataFilePath = outputPathCOCO + '/metadata.json'
     with open(metadataFilePath, 'w') as f:
         json.dump(metadata, f)
 
-    outputZipPath = '/home/team4169/datasetcolab/app/download/' + tempName + '.zip'
-    zipDataset(outputPathMain, outputZipPath)
+    zipDataset(outputPathCOCO, outputPathCOCO + '.zip')
+
+    # Convert to YOLO
+    outputPathYOLO = '/home/team4169/datasetcolab/app/download/' + tempNameYOLO
+    shutil.copytree(outputPathCOCO, outputPathYOLO)
+    subprocess.run(['python3', 'COCOtoYOLO.py', outputPathYOLO])
+    
+    zipDataset(outputPathYOLO, outputPathYOLO + '.zip')
+
+    # Convert to TFRecord
+    outputPathTFRecord = '/home/team4169/datasetcolab/app/download/' + tempNameTFRecord
+    subprocess.run(['python3', 'COCOtoTFRecord.py', "--annotation_info_file=" + outputPathCOCO + "/train/_annotations.coco.json", "--image_dir=" + outputPathCOCO + "/train", "--output_dir=" + outputPathTFRecord + "/train", "--shards=800"])
+    subprocess.run(['python3', 'COCOtoTFRecord.py', "--annotation_info_file=" + outputPathCOCO + "/test/_annotations.coco.json", "--image_dir=" + outputPathCOCO + "/test", "--output_dir=" + outputPathTFRecord + "/test", "--shards=800"])
+    subprocess.run(['python3', 'COCOtoTFRecord.py', "--annotation_info_file=" + outputPathCOCO + "/valid/_annotations.coco.json", "--image_dir=" + outputPathCOCO + "/valid", "--output_dir=" + outputPathTFRecord + "/valid", "--shards=800"])
+
+    zipDataset(outputPathTFRecord, outputPathTFRecord + '.zip')
 
 currentDatasetPath = '/home/team4169/datasetcolab/app/important.json'
 with open(currentDatasetPath, 'r') as f:
     currentDataset = json.load(f)
 
 for i, year in enumerate(years):
-    try:
-        shutil.rmtree('/home/team4169/datasetcolab/app/download/' + currentDataset[year])
-        oldZipPath = '/home/team4169/datasetcolab/app/download/' + currentDataset[year] + '.zip'
-        if os.path.exists(oldZipPath):
-            os.remove(oldZipPath)
-    except:
-        pass
-    currentDataset[year] = tempNames[i]
+    for dataset in ["COCO", "YOLO", "TFRecord"]:
+        try:
+            shutil.rmtree('/home/team4169/datasetcolab/app/download/' + currentDataset[year + dataset])
+            oldZipPath = '/home/team4169/datasetcolab/app/download/' + currentDataset[year + dataset] + '.zip'
+            if os.path.exists(oldZipPath):
+                os.remove(oldZipPath)
+        except:
+            pass
+        
+        if dataset == "COCO":
+            currentDataset[year + dataset] = tempNamesCOCO[i]
+        elif dataset == "YOLO":
+            currentDataset[year + dataset] = tempNamesYOLO[i]
+        elif dataset == "TFRecord":
+            currentDataset[year + dataset] = tempNamesTFRecord[i]
 
 with open(currentDatasetPath, 'w') as f:
     json.dump(currentDataset, f)

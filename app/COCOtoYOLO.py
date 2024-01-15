@@ -6,6 +6,7 @@ from collections import defaultdict
 from tqdm import tqdm
 import os
 import shutil
+import sys
 
 def convert_coco_json(json_dir, dataset_dir, images_dir, use_segments=False, cls91to80=False):
     def make_dirs():
@@ -102,31 +103,25 @@ def create_data_yaml(dataset_dir, num_classes, class_names):
     with open(Path(dataset_dir) / 'data.yaml', 'w') as file:
         yaml.dump(data, file, default_flow_style=False)
 
-def main():
+overall_dir = sys.argv[1]
 
-    overall_dir = '/Users/arjungoray/Downloads/RobotDetectionv2icoco/'
+valid_dir = os.path.join(overall_dir, 'valid')
+train_dir = os.path.join(overall_dir, 'train')
+test_dir = os.path.join(overall_dir, 'test')
 
-    # Convert COCO to YOLO format
-    valid_dir = os.path.join(overall_dir, 'valid')
-    train_dir = os.path.join(overall_dir, 'train')
-    test_dir = os.path.join(overall_dir, 'test')
-   
-    convert_coco_json(valid_dir, valid_dir, valid_dir)
-    convert_coco_json(train_dir, train_dir, train_dir)
-    convert_coco_json(test_dir, test_dir, test_dir)
+convert_coco_json(valid_dir, valid_dir, valid_dir)
+convert_coco_json(train_dir, train_dir, train_dir)
+convert_coco_json(test_dir, test_dir, test_dir)
 
-    # Create data.yaml
-    num_classes = 1  # Update with your actual number of classes
-    class_names = ['robot']  # Update with your actual class names
-    create_data_yaml(overall_dir, num_classes, class_names)
+# Create data.yaml
+num_classes = 1  # Update with your actual number of classes
+class_names = ['robot']  # Update with your actual class names
+create_data_yaml(overall_dir, num_classes, class_names)
 
-    # Delete JSON file
-    for json_file in Path(valid_dir).glob('*.json'):
-        json_file.unlink()
-    for json_file in Path(train_dir).glob('*.json'):
-        json_file.unlink()
-    for json_file in Path(test_dir).glob('*.json'):
-        json_file.unlink()
-
-if __name__ == '__main__':
-    main()
+# Delete JSON file
+for json_file in Path(valid_dir).glob('*.json'):
+    json_file.unlink()
+for json_file in Path(train_dir).glob('*.json'):
+    json_file.unlink()
+for json_file in Path(test_dir).glob('*.json'):
+    json_file.unlink()

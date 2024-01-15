@@ -62,8 +62,8 @@ export default function DownloadDataset() {
 
   const [error, setError] = useState("");
   const [selectedOptions, setSelectedOptions] = useState({
-    "FRC 2023": ["Cone", "Cube", "Robot"],
-    "FRC 2024": ["Note", "Robot"],
+    "FRC 2023": ["cone", "cube", "robot"],
+    "FRC 2024": ["note", "robot"],
   });
   const [selectedDatasetType, setSelectedDatasetType] = useState({
     ["FRC 2023"]: "COCO",
@@ -81,8 +81,8 @@ export default function DownloadDataset() {
   ];
 
   const [classes, setClasses] = useState({
-    "FRC 2023": ["Cone", "Cube", "Robot"],
-    "FRC 2024": ["Note", "Robot"],
+    "FRC 2023": ["cone", "cube", "robot"],
+    "FRC 2024": ["note", "robot"],
   });
 
   const [loading, setLoading] = useState(false);
@@ -92,11 +92,10 @@ export default function DownloadDataset() {
   const navigate = useNavigate();
 
   const handleDownloadCurl = (dataset) => {
-    console.log(dataset.name);
+    console.log(dataset.name)
     const name = dataset.name.replace(" ", "");
-    console.log(name);
-
-    return `curl -o ${name}.zip https://api.datasetcolab.com/download/${name}?api=${apiKey}`;
+    console.log(name)
+    return `curl -o ${name}.zip 'https://api.datasetcolab.com/download/${name}?api=${apiKey}&datasetType=${selectedDatasetType[dataset.name]}'`;
   };
 
   const handleDownloadMethodChange = (dataset, value) => {
@@ -120,8 +119,8 @@ export default function DownloadDataset() {
     });
   };
 
-  const handleCopyToClipboard = () => {
-    const curlCommand = handleDownloadCurl(datasets[0]);
+  const handleCopyToClipboard = (dataset) => {
+    const curlCommand = handleDownloadCurl(dataset);
     navigator.clipboard.writeText(curlCommand);
     setShowCopyAlert(true);
   };
@@ -135,7 +134,8 @@ export default function DownloadDataset() {
         "https://api.datasetcolab.com/download/" +
         dataset +
         "?idToken=" +
-        idToken;
+        idToken + 
+        "&datasetType=COCO";
     } catch (err) {
       setError("Error downloading dataset.");
     } finally {
@@ -227,6 +227,8 @@ export default function DownloadDataset() {
                   </Dropdown.Toggle>
                   <Dropdown.Menu>
                     <Dropdown.Item eventKey="COCO">COCO</Dropdown.Item>
+                    <Dropdown.Item eventKey="YOLO">YOLO</Dropdown.Item>
+                    <Dropdown.Item eventKey="TFRecord">TFRecord</Dropdown.Item>
                   </Dropdown.Menu>
                 </Dropdown>
                 <Button
@@ -274,7 +276,7 @@ export default function DownloadDataset() {
                             <code>{handleDownloadCurl(dataset)}</code>
                             <div
                               style={styles.copyButton}
-                              onClick={handleCopyToClipboard}
+                              onClick={() => handleCopyToClipboard(dataset)}
                             >
                               <span role="img" aria-label="Copy">
                                 📋
