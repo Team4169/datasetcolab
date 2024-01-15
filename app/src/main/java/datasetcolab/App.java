@@ -190,10 +190,10 @@ public class App {
                         String tempName = "";
 
                         if (folderName.startsWith("FRC2023")) {
-                            tempName = (String) currentDataset.get("FRC2023");
+                            tempName = (String) currentDataset.get("FRC2023COCO");
                             requestedFile = "download/" + tempName + folderName.substring(folderName.indexOf("FRC2023") + 7);
                         } else if (folderName.startsWith("FRC2024")) {
-                            tempName = (String) currentDataset.get("FRC2024");
+                            tempName = (String) currentDataset.get("FRC2024COCO");
                             requestedFile = "download/" + tempName + folderName.substring(folderName.indexOf("FRC2024") + 7);
                         }
                     }
