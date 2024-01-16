@@ -79,7 +79,9 @@ def mergeCocoDatasets(dataset_paths, output_path):
             merged_data['annotations'].append(annotation)
 
         # Remove images without annotations
+        print(len(merged_data['images']))
         merged_data['images'] = [image for image in merged_data['images'] if any(annotation['image_id'] == image['id'] for annotation in merged_data['annotations'])]
+        print(len(merged_data['images']))
 
         # Update max ID values for the next dataset
         max_image_id = max([img['id'] for img in merged_data['images']], default=max_image_id)
@@ -90,7 +92,7 @@ def mergeCocoDatasets(dataset_paths, output_path):
 
         with concurrent.futures.ThreadPoolExecutor() as executor:
             futures = []
-            for image_info in data['images']:
+            for image_info in merged_data['images']:
                 future = executor.submit(copy_image, image_info, dataset_path, output_path)
                 futures.append(future)
 
