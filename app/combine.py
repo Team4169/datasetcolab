@@ -196,12 +196,16 @@ for year in years:
 
     zipDataset(outputPathCOCO, outputPathCOCO + '.zip')
 
+    coco_zip_size = os.path.getsize(outputPathCOCO + '.zip')
+    metadata["cocoZipSize"] = coco_zip_size
+
     # Convert to YOLO
     outputPathYOLO = '/home/team4169/datasetcolab/app/download/' + tempNameYOLO
     shutil.copytree(outputPathCOCO, outputPathYOLO)
     subprocess.run(['python3', 'COCOtoYOLO.py', outputPathYOLO])
     
     zipDataset(outputPathYOLO, outputPathYOLO + '.zip')
+    metadata["yoloZipSize"] = os.path.getsize(outputPathYOLO + '.zip')
 
     # Convert to TFRecord
     outputPathTFRecord = '/home/team4169/datasetcolab/app/download/' + tempNameTFRecord
@@ -210,6 +214,20 @@ for year in years:
     subprocess.run(['python3', 'COCOtoTFRecord.py', "--annotation_info_file=" + outputPathCOCO + "/valid/_annotations.coco.json", "--image_dir=" + outputPathCOCO + "/valid", "--output_dir=" + outputPathTFRecord + "/valid", "--shards=800"])
 
     zipDataset(outputPathTFRecord, outputPathTFRecord + '.zip')
+    metadata["tfrecordZipSize"] = os.path.getsize(outputPathTFRecord + '.zip')
+
+    # Update metadata
+    metadataFilePathCOCO = outputPathCOCO + '/metadata.json'
+    with open(metadataFilePathCOCO, 'w') as f:
+        json.dump(metadata, f)
+
+    metadataFilePathYOLO = outputPathYOLO + '/metadata.json'
+    with open(metadataFilePathYOLO, 'w') as f:
+        json.dump(metadata, f)
+
+    metadataFilePathTFRecord = outputPathTFRecord + '/metadata.json'
+    with open(metadataFilePathTFRecord, 'w') as f:
+        json.dump(metadata, f)
 
 currentDatasetPath = '/home/team4169/datasetcolab/app/important.json'
 with open(currentDatasetPath, 'r') as f:
