@@ -195,6 +195,9 @@ export default function DownloadDataset() {
             name: folderName.substring(0, 3) + " " + folderName.substring(3),
             images: response.data.totalImageCount,
             annotations: response.data.totalAnnotationCount,
+            cocoZipSize: response.data.cocoZipSize,
+            yoloZipSize: response.data.yoloZipSize,
+            tfrecordZipSize: response.data.tfrecordZipSize,
           };
           return newDatasets;
         }); 
@@ -233,9 +236,7 @@ export default function DownloadDataset() {
                 <small>
                   <strong>Images:</strong> {dataset.images.toLocaleString()} &nbsp;&nbsp;&nbsp;
                   <strong>Annotations:</strong> {dataset.annotations.toLocaleString()} &nbsp;&nbsp;&nbsp;
-                  {/*
-                  <strong>Size:</strong> {dataset.size}
-                  */}
+                    <strong>Size:</strong> {((selectedDatasetType[dataset.name] === "COCO" ? dataset.cocoZipSize : selectedDatasetType[dataset.name] === "YOLO" ? dataset.yoloZipSize : dataset.tfrecordZipSize) / (1024 * 1024 * 1024)).toFixed(2)} GB
                 </small>
                 <h5 style={{ paddingTop: "10px" }}>Dataset Classes</h5>
                 <div style={styles.checkboxGroup}>
