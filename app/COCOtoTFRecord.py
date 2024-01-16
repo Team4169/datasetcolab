@@ -30,7 +30,7 @@ flags.DEFINE_multi_string(
   'image_dir', '', 'Directory containing images.'
 )
 flags.DEFINE_string(
-  'output_dir', '/tmp/train', 'Directory to store output file'
+  'output_dir', './tmp/train', 'Directory to store output file'
 )
 flags.DEFINE_integer(
   'shards', 1, 'Number of shards for output file'
@@ -424,6 +424,20 @@ def generate_annotations(images, image_dirs,
 
     yield (image, image_dirs, panoptic_masks_dir, object_annotation,
            id_to_name_map, caption_annotaion, is_category_thing, include_panoptic_masks, include_masks)
+    
+def _create_pbtxt_from_label_map(img_to_obj_annotation):
+  pbtext = ""
+  for i in range(len(img_to_obj_annotation)):
+      pbtext += "item {\n"
+      pbtext += "\tname: \"" + img_to_obj_annotation[i] + "\",\n"
+      pbtext +="\tid: " + str(i) + ",\n"
+      pbtext += "\tdisplay_name: \"" + img_to_obj_annotation[i] + "\"\n}\n"
+
+  pbtextfile = open(FLAGS.output_dir + "out.pbtxt", 'w')
+  pbtextfile.write(pbtext)
+  pbtextfile.close()
+
+      
 
 def _create_tf_record_from_coco_annotations(images_info_file,
                                             image_dirs,
@@ -453,6 +467,8 @@ def _create_tf_record_from_coco_annotations(images_info_file,
   if object_annotations_file:
     img_to_obj_annotation, id_to_name_map = (
         _load_object_annotations(object_annotations_file))
+    
+    # print(id_to_name_map)
 
   coco_annotations_iter = generate_annotations(
       images=images,
@@ -466,6 +482,8 @@ def _create_tf_record_from_coco_annotations(images_info_file,
   num_skipped = write_tf_record_dataset(
       output_path, coco_annotations_iter, create_tf_example, num_shards=FLAGS.shards,
       multiple_processes=0)
+  
+  _create_pbtxt_from_label_map(id_to_name_map)
   
  
 

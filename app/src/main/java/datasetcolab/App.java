@@ -263,10 +263,10 @@ public class App {
 
                         if (ctx.pathParam("folderName").startsWith("FRC2023")) {
                             System.out.println(ctx.pathParam("folderName").substring(ctx.pathParam("folderName").indexOf("FRC2023") + 7));
-                            tempName = (String) currentDataset.get("FRC2023");
+                            tempName = (String) currentDataset.get("FRC2023COCO");
                             folderName = "download/" + tempName + ctx.pathParam("folderName").substring(ctx.pathParam("folderName").indexOf("FRC2023") + 7);
                         } else if (ctx.pathParam("folderName").startsWith("FRC2024")) {
-                            tempName = (String) currentDataset.get("FRC2024");
+                            tempName = (String) currentDataset.get("FRC2024COCO");
                             folderName = "download/" + tempName + ctx.pathParam("folderName").substring(ctx.pathParam("folderName").indexOf("FRC2024") + 7);
                         }
                     }

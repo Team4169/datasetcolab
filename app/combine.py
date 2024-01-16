@@ -47,7 +47,7 @@ def mergeCocoDatasets(dataset_paths, output_path):
         json_file = findJsonFile(dataset_path)
         with open(json_file) as file:
             data = json.load(file)
-            
+
         # Update IDs in the dataset
         id_mapping = {}
         for image in data['images']:
@@ -63,7 +63,7 @@ def mergeCocoDatasets(dataset_paths, output_path):
                 if category['id'] == annotation['category_id']:
                     category_name = category['name']
                     break
-                    
+
             if category_name is not None:
                 for category in merged_data['categories']:
                     if category['name'] == category_name:
@@ -77,6 +77,9 @@ def mergeCocoDatasets(dataset_paths, output_path):
             annotation['id'] += max_annotation_id
             annotation['image_id'] = id_mapping[annotation['image_id']]
             merged_data['annotations'].append(annotation)
+
+        # Remove images without annotations
+        merged_data['images'] = [image for image in merged_data['images'] if any(annotation['image_id'] == image['id'] for annotation in merged_data['annotations'])]
 
         # Update max ID values for the next dataset
         max_image_id = max([img['id'] for img in merged_data['images']], default=max_image_id)
@@ -144,7 +147,7 @@ def countAnnotations(folder_path):
                     annotation_count += len(data['annotations'])
     return annotation_count
 
-years = ["FRC2023", "FRC2024"]
+years = ["FRC2024"] # "FRC2023", 
 tempNamesCOCO = []
 tempNamesYOLO = []
 tempNamesTFRecord = []

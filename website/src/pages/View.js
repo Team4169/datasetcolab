@@ -173,6 +173,7 @@ export default function View() {
           config
         );
 
+        console.log(response.data);
         setAnnotations(response.data);
 
         setImageSrc(
