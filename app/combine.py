@@ -207,7 +207,7 @@ for year in years:
     # Convert to YOLO
     outputPathYOLO = '/home/team4169/datasetcolab/app/download/' + tempNameYOLO
     shutil.copytree(outputPathCOCO, outputPathYOLO)
-    subprocess.run(['python3', 'COCOtoYOLO.py', outputPathYOLO])
+    subprocess.run(['python3', 'COCOtoYOLO.py', outputPathYOLO, year])
     
     zipDataset(outputPathYOLO, outputPathYOLO + '.zip')
     metadata["yoloZipSize"] = os.path.getsize(outputPathYOLO + '.zip')
