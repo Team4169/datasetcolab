@@ -61,8 +61,8 @@ export default function DownloadDataset() {
 
   const [error, setError] = useState("");
   const [selectedOptions, setSelectedOptions] = useState({
-    "FRC 2023": ["cone", "cube", "robot"],
-    "FRC 2024": ["note", "robot"],
+    "FRC 2023": ["cone", "cube"],
+    "FRC 2024": ["note"],
   });
   const [selectedDatasetType, setSelectedDatasetType] = useState({
     ["FRC 2023"]: "COCO",
@@ -197,12 +197,15 @@ export default function DownloadDataset() {
           idToken = await currentUser.getIdToken();
         }
 
-        const selectedOptionsAbbreviated = selectedOptions[folderName.slice(0, 3) + " " + folderName.slice(3)].map(option => option.slice(0, 2))
+        const splitFolderName = folderName.substring(0, 3) + " " + folderName.substring(3);
+        const selectedOptionsAbbreviated = selectedOptions[splitFolderName].map(option => option.slice(0, 2));
+        const classesParam = selectedOptionsAbbreviated.length > 0 ? selectedOptionsAbbreviated.join("").toUpperCase() : "NULL";
 
-        const config = { headers: { idToken: idToken, noTree: true, datasetType: selectedDatasetType[folderName.slice(0, 3) + " " + folderName.slice(3)], classes: (selectedOptionsAbbreviated?.length > 0 ? selectedOptionsAbbreviated.join("").toUpperCase() : "") } };
+        const config = { headers: { idToken: idToken } };
         console.log(config);
         const response = await axios.get(
-          `https://api.datasetcolab.com/view/${folderName}`,
+          `https://api.datasetcolab.com/metadata/${folderName}${selectedDatasetType[splitFolderName]
+          }${classesParam}`,
           config
         );
 
@@ -212,15 +215,13 @@ export default function DownloadDataset() {
         setDatasets((prevDatasets) => {
           const newDatasets = [...prevDatasets];
           const index = newDatasets.findIndex(
-            (dataset) => dataset.name === (folderName.substring(0, 3) + " " + folderName.substring(3))
+            (dataset) => dataset.name === splitFolderName
           );
           newDatasets[index] = {
             name: folderName.substring(0, 3) + " " + folderName.substring(3),
             images: response.data.totalImageCount,
             annotations: response.data.totalAnnotationCount,
-            cocoZipSize: response.data.cocoZipSize,
-            yoloZipSize: response.data.yoloZipSize,
-            tfrecordZipSize: response.data.tfrecordZipSize,
+            zipSize: response.data.zipSize,
           };
           return newDatasets;
         });
@@ -235,7 +236,7 @@ export default function DownloadDataset() {
 
   useEffect(() => {
     fetchApiKey();
-    // fetchProjectDetailsForMultipleFolders(["FRC2024"]); // , "FRC2023"
+    fetchProjectDetailsForMultipleFolders(["FRC2024"]); // , "FRC2023"
     const alertTimeout = setTimeout(() => setShowCopyAlert(false), 5000);
     return () => clearTimeout(alertTimeout);
   }, [showCopyAlert, selectedOptions, selectedDatasetType]);
@@ -257,13 +258,11 @@ export default function DownloadDataset() {
             <Card key={index} style={styles.datasetCard}>
               <Card.Body>
                 <h3>{dataset.name}</h3>
-                {/*
                 <small>
                   <strong>Images:</strong> {dataset.images.toLocaleString()} &nbsp;&nbsp;&nbsp;
                   <strong>Annotations:</strong> {dataset.annotations.toLocaleString()} &nbsp;&nbsp;&nbsp;
-                  <strong>Size:</strong> {((selectedDatasetType[dataset.name] === "COCO" ? dataset.cocoZipSize : selectedDatasetType[dataset.name] === "YOLO" ? dataset.yoloZipSize : dataset.tfrecordZipSize) / (1024 * 1024 * 1024)).toFixed(2)} GB
+                  <strong>Size:</strong> {(dataset.zipSize / (1024 * 1024 * 1024)).toFixed(2)} GB
                 </small>
-                */}
                 <h5 style={{ paddingTop: "10px" }}>Dataset Classes</h5>
                 <div style={styles.checkboxGroup}>
                   {classes[dataset.name].map((opt, i) => (
@@ -331,7 +330,7 @@ export default function DownloadDataset() {
                 <Button
                   variant="primary"
                   className="position-absolute top-0 end-0 m-3"
-                  onClick={() => redirectToView(dataset.name.replace(" ", "") + selectedDatasetType[dataset.name] + selectedOptions[dataset.name].map(option => option.slice(0, 2)).join("").toUpperCase())}
+                  onClick={() => redirectToView(dataset.name.replace(" ", "") + "COCO" + selectedOptions[dataset.name].map(option => option.slice(0, 2)).join("").toUpperCase())}
                 >
                   View
                 </Button>

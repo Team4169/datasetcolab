@@ -239,6 +239,57 @@ public class App {
             }
         });
 
+        app.get("/metadata/<folderName>", ctx -> {
+            try {
+                String uid = "";
+                if (!ctx.pathParam("folderName").startsWith("FRC2023") && !ctx.pathParam("folderName").startsWith("FRC2024")) {
+                    if (ctx.header("idToken") != null || ctx.queryParam("idToken") != null) {
+                        String idToken = ctx.header("idToken") != null ? ctx.header("idToken") : ctx.queryParam("idToken");
+                        FirebaseToken decodedToken = FirebaseAuth
+                            .getInstance()
+                            .verifyIdToken(idToken);
+                        uid = decodedToken.getUid();
+                    } else if (ctx.header("api") != null || ctx.queryParam("api") != null) {
+                        String api = ctx.header("api") != null ? ctx.header("api") : ctx.queryParam("api");
+                        uid = validAPI(api);
+                    } else {
+                        throw new IllegalArgumentException("Invalid request: uid is null or both idToken and api are null.");
+                    }
+                }
+
+                String folderName = ctx.pathParam("folderName");
+                if (folderName.startsWith("FRC2023") || folderName.startsWith("FRC2024")) {
+                    File datasetFile = new File("important.json");
+                    try (FileReader readFileReader = new FileReader(datasetFile)) {
+                        JSONParser parser = new JSONParser();
+                        JSONObject currentDataset = (JSONObject) parser.parse(readFileReader);
+                        System.out.println(folderName);
+                        System.out.println(currentDataset.get(folderName));
+                        if (currentDataset.get(folderName) != null) {
+                            String metadataFilePath = "download/" + (String) currentDataset.get(folderName) + "/metadata.json";
+                            File metadataFile = new File(metadataFilePath);
+
+                            if (metadataFile.exists() && metadataFile.isFile()) {
+                                try (FileReader writeFileReader = new FileReader(metadataFile)) {
+                                    JSONParser writeParser = new JSONParser();
+                                    JSONObject metadata = (JSONObject) writeParser.parse(writeFileReader);
+                                    ctx.json(metadata);
+                                }
+                            }
+                        } else {
+                            JSONObject result = new JSONObject();
+                            result.put("totalImageCount", 0);
+                            result.put("totalAnnotationCount", 0);
+                            result.put("zipSize", 0);
+                            ctx.json(result);
+                        }
+                    }
+                }
+            } catch (FirebaseAuthException | ParseException e) {
+                e.printStackTrace();
+                ctx.status(401).result("Error: Authentication failed.");
+            }
+        });
 
         app.get("/annotations/<folderName>", ctx -> {
             try {

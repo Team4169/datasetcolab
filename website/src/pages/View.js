@@ -310,7 +310,9 @@ export default function View() {
             </>
           ) : (
             <div style={{ position: "relative" }}>
-              <h2>{projectDetails.uploadName}</h2>
+              <h2>
+                {projectDetails.uploadName && (projectDetails.uploadName.startsWith("FRC2023") ? "FRC 2023" : projectDetails.uploadName.startsWith("FRC2024") ? "FRC 2024" : projectDetails.uploadName)}
+              </h2>
               {error && (
                 <Alert
                   variant="danger"
@@ -359,7 +361,7 @@ export default function View() {
                 variant="primary"
                 className="position-absolute top-0 end-0"
                 onClick={() => {
-                  if (folderName === "FRC2023" || folderName === "FRC2024") {
+                  if (folderName.startsWith("FRC2023") || folderName.startsWith("FRC2024")) {
                     navigate("/download");
                   } else {
                     navigate("/");
@@ -440,7 +442,7 @@ export default function View() {
 
                 </>
               )}
-              {folderName !== "FRC2023" && folderName !== "FRC2024" && (
+                {!folderName.startsWith("FRC2023") && !folderName.startsWith("FRC2024") && (
                 <div style={{ padding: "10px 0" }}>
                   <Button variant="danger" onClick={handleDeleteProject}>
                     Delete Project
