@@ -179,7 +179,6 @@ public class App {
                     }
                 }
 
-                
                 String folderName = ctx.pathParam("folderName");
                 String requestedFile = "upload/" + uid + "/" + folderName;
                 if (folderName.startsWith("FRC2023") || folderName.startsWith("FRC2024")) {
@@ -190,11 +189,11 @@ public class App {
                         String tempName = "";
 
                         if (folderName.startsWith("FRC2023")) {
-                            tempName = (String) currentDataset.get("FRC2023COCO");
-                            requestedFile = "download/" + tempName + folderName.substring(folderName.indexOf("FRC2023") + 7);
+                            tempName = (String) currentDataset.get(folderName);
+                            requestedFile = "download/" + tempName + folderName.substring(folderName.indexOf(folderName) + folderName.length());
                         } else if (folderName.startsWith("FRC2024")) {
-                            tempName = (String) currentDataset.get("FRC2024COCO");
-                            requestedFile = "download/" + tempName + folderName.substring(folderName.indexOf("FRC2024") + 7);
+                            tempName = (String) currentDataset.get(folderName);
+                            requestedFile = "download/" + tempName + folderName.substring(folderName.indexOf(folderName) + folderName.length());
                         }
                     }
                 }
@@ -213,18 +212,24 @@ public class App {
                     File metadataFile = new File(metadataFilePath);
 
                     JSONObject treeObject = new JSONObject();
-                    populateTree(requestedFile, treeObject);
+                    if (ctx.header("noTree") == null || !Boolean.parseBoolean(ctx.header("noTree"))) {
+                        populateTree(requestedFile, treeObject);
+                    }
 
                     if (metadataFile.exists() && metadataFile.isFile()) {
                         try (FileReader fileReader = new FileReader(metadataFile)) {
                             JSONParser parser = new JSONParser();
                             JSONObject metadata = (JSONObject) parser.parse(fileReader);
-                            metadata.put("tree", treeObject);
+                            if (ctx.header("noTree") == null || !Boolean.parseBoolean(ctx.header("noTree"))) {
+                                metadata.put("tree", treeObject);
+                            }
                             ctx.json(metadata);
                         }
                     } else {
                         JSONObject result = new JSONObject();
-                        result.put("tree", treeObject);
+                        if (ctx.header("noTree") == null || !Boolean.parseBoolean(ctx.header("noTree"))) {
+                            result.put("tree", treeObject);
+                        }
                         ctx.json(result);
                     }
                 }
@@ -264,10 +269,10 @@ public class App {
                         if (ctx.pathParam("folderName").startsWith("FRC2023")) {
                             System.out.println(ctx.pathParam("folderName").substring(ctx.pathParam("folderName").indexOf("FRC2023") + 7));
                             tempName = (String) currentDataset.get("FRC2023COCO");
-                            folderName = "download/" + tempName + ctx.pathParam("folderName").substring(ctx.pathParam("folderName").indexOf("FRC2023") + 7);
+                            folderName = "download/" + tempName + ctx.pathParam("folderName").substring(ctx.pathParam("folderName").indexOf("FRC2023") + ctx.pathParam("folderName").length());
                         } else if (ctx.pathParam("folderName").startsWith("FRC2024")) {
                             tempName = (String) currentDataset.get("FRC2024COCO");
-                            folderName = "download/" + tempName + ctx.pathParam("folderName").substring(ctx.pathParam("folderName").indexOf("FRC2024") + 7);
+                            folderName = "download/" + tempName + ctx.pathParam("folderName").substring(ctx.pathParam("folderName").indexOf("FRC2024") + ctx.pathParam("folderName").length());
                         }
                     }
                 }
@@ -475,13 +480,17 @@ public class App {
 
                 String filePath = ctx.pathParam("filePath");
 
+                if (ctx.queryParam("classes") == null) {
+                    return;
+                }
+
                 if (filePath.equals("FRC2023") || filePath.equals("FRC2024")) {
                     File datasetFile = new File("important.json");
 
                     try (FileReader fileReader = new FileReader(datasetFile)) {
                         JSONParser parser = new JSONParser();
                         JSONObject currentDataset = (JSONObject) parser.parse(fileReader);
-                        String zipName = "download/" + (String) currentDataset.get(filePath + ctx.queryParam("datasetType")) + ".zip";
+                        String zipName = "download/" + (String) currentDataset.get(filePath + ctx.queryParam("datasetType") + ctx.queryParam("classes")) + ".zip";
 
                         try (InputStream is = Files.newInputStream(Path.of(zipName))) {
                             System.out.println("Sending file: " + zipName);

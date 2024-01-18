@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import Alert from "react-bootstrap/Alert";
 import {
   Card,
-  Dropdown,
   Form,
   Button,
   ButtonGroup,
@@ -93,9 +92,10 @@ export default function DownloadDataset() {
 
   const handleDownloadCurl = (dataset) => {
     const name = dataset.name.replace(" ", "");
-    return `curl -o ${name}.zip 'https://api.datasetcolab.com/download/${name}?api=${apiKey}&datasetType=${
-      selectedDatasetType[dataset.name]
-    }'`;
+    const selectedOptionsAbbreviated = selectedOptions[dataset.name].map(option => option.slice(0, 2));
+    const classesParam = selectedOptionsAbbreviated.length > 0 ? `&classes=${selectedOptionsAbbreviated.join("").toUpperCase()}` : "&classes=NULL";
+    return `curl -o ${name}.zip 'https://api.datasetcolab.com/download/${name}?api=${apiKey}&datasetType=${selectedDatasetType[dataset.name]
+      }${classesParam}'`;
   };
 
   const handleDownloadMethodChange = (dataset, value) => {
@@ -107,12 +107,16 @@ export default function DownloadDataset() {
       const selectedOptionsCopy = { ...prevOptions };
       const index = selectedOptionsCopy[dataset]?.indexOf(option);
       if (index !== -1) {
-        selectedOptionsCopy[dataset].splice(index, 1);
+        // Remove option if already selected
+        selectedOptionsCopy[dataset] = selectedOptionsCopy[dataset].filter(
+          (item) => item !== option
+        );
       } else {
+        // Add option if not selected
         selectedOptionsCopy[dataset] = [
           ...(selectedOptionsCopy[dataset] || []),
           option,
-        ];
+        ].sort();
       }
 
       return selectedOptionsCopy;
@@ -130,15 +134,29 @@ export default function DownloadDataset() {
       setLoading(true);
 
       const idToken = await currentUser.getIdToken();
+
+      const selectedOptionsAbbreviated = selectedOptions[dataset.slice(0, 3) + " " + dataset.slice(3)].map(option => option.slice(0, 2));
+      const classesParam = selectedOptionsAbbreviated.length > 0 ? `&classes=${selectedOptionsAbbreviated.join("").toUpperCase()}` : "&classes=NULL";
+
+      console.log("https://api.datasetcolab.com/download/" +
+        dataset +
+        "?idToken=" +
+        idToken +
+        "&datasetType=" +
+        selectedDatasetType[dataset.slice(0, 3) + " " + dataset.slice(3)] +
+        classesParam);
+
       window.location.href =
         "https://api.datasetcolab.com/download/" +
         dataset +
         "?idToken=" +
         idToken +
         "&datasetType=" +
-        selectedDatasetType[dataset.slice(0, 3) + " " + dataset.slice(3)];
+        selectedDatasetType[dataset.slice(0, 3) + " " + dataset.slice(3)] +
+        classesParam;
     } catch (err) {
       setError("Error downloading dataset.");
+      console.log(err);
     } finally {
       setLoading(false);
     }
@@ -179,12 +197,17 @@ export default function DownloadDataset() {
           idToken = await currentUser.getIdToken();
         }
 
-        const config = { headers: { idToken: idToken } };
+        const selectedOptionsAbbreviated = selectedOptions[folderName.slice(0, 3) + " " + folderName.slice(3)].map(option => option.slice(0, 2))
 
+        const config = { headers: { idToken: idToken, noTree: true, datasetType: selectedDatasetType[folderName.slice(0, 3) + " " + folderName.slice(3)], classes: (selectedOptionsAbbreviated?.length > 0 ? selectedOptionsAbbreviated.join("").toUpperCase() : "") } };
+        console.log(config);
         const response = await axios.get(
           `https://api.datasetcolab.com/view/${folderName}`,
           config
         );
+
+        console.log(response.data);
+        console.log(response.data.totalImageCount);
 
         setDatasets((prevDatasets) => {
           const newDatasets = [...prevDatasets];
@@ -200,10 +223,11 @@ export default function DownloadDataset() {
             tfrecordZipSize: response.data.tfrecordZipSize,
           };
           return newDatasets;
-        }); 
+        });
       }
     } catch (err) {
       setError("Error fetching project details.");
+      console.log(err);
     } finally {
       setLoading(false);
     }
@@ -211,10 +235,10 @@ export default function DownloadDataset() {
 
   useEffect(() => {
     fetchApiKey();
-    fetchProjectDetailsForMultipleFolders(["FRC2024", "FRC2023"]);
+    // fetchProjectDetailsForMultipleFolders(["FRC2024"]); // , "FRC2023"
     const alertTimeout = setTimeout(() => setShowCopyAlert(false), 5000);
     return () => clearTimeout(alertTimeout);
-  }, [showCopyAlert]);
+  }, [showCopyAlert, selectedOptions, selectedDatasetType]);
 
   return (
     <div style={styles}>
@@ -233,27 +257,27 @@ export default function DownloadDataset() {
             <Card key={index} style={styles.datasetCard}>
               <Card.Body>
                 <h3>{dataset.name}</h3>
+                {/*
                 <small>
                   <strong>Images:</strong> {dataset.images.toLocaleString()} &nbsp;&nbsp;&nbsp;
                   <strong>Annotations:</strong> {dataset.annotations.toLocaleString()} &nbsp;&nbsp;&nbsp;
-                    <strong>Size:</strong> {((selectedDatasetType[dataset.name] === "COCO" ? dataset.cocoZipSize : selectedDatasetType[dataset.name] === "YOLO" ? dataset.yoloZipSize : dataset.tfrecordZipSize) / (1024 * 1024 * 1024)).toFixed(2)} GB
+                  <strong>Size:</strong> {((selectedDatasetType[dataset.name] === "COCO" ? dataset.cocoZipSize : selectedDatasetType[dataset.name] === "YOLO" ? dataset.yoloZipSize : dataset.tfrecordZipSize) / (1024 * 1024 * 1024)).toFixed(2)} GB
                 </small>
+                */}
                 <h5 style={{ paddingTop: "10px" }}>Dataset Classes</h5>
                 <div style={styles.checkboxGroup}>
                   {classes[dataset.name].map((opt, i) => (
                     <Form.Check
                       key={i}
                       type="checkbox"
+                      id={`checkbox-${dataset.name}-${i}`}
                       label={opt}
+                      defaultChecked={selectedOptions[dataset.name]?.includes(opt)}
                       onChange={() => handleOptionSelect(dataset.name, opt)}
-                      checked={
-                        selectedOptions[dataset.name]?.includes(opt) || false
-                      }
                     />
                   ))}
                 </div>
                 <h5 style={{ paddingTop: "10px" }}>Dataset Type</h5>
-
                 <Form.Group>
                   <ButtonGroup toggle>
                     <ToggleButton
@@ -303,10 +327,11 @@ export default function DownloadDataset() {
                     </ToggleButton>
                   </ButtonGroup>
                 </Form.Group>
+                {console.log(dataset.name.replace(" ", "") + selectedDatasetType[dataset.name] + selectedOptions[dataset.name].map(option => option.slice(0, 2)).join("").toUpperCase())}
                 <Button
                   variant="primary"
                   className="position-absolute top-0 end-0 m-3"
-                  onClick={() => redirectToView(dataset.name.replace(" ", ""))}
+                  onClick={() => redirectToView(dataset.name.replace(" ", "") + selectedDatasetType[dataset.name] + selectedOptions[dataset.name].map(option => option.slice(0, 2)).join("").toUpperCase())}
                 >
                   View
                 </Button>
