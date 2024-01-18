@@ -3,7 +3,7 @@ import { useAuth } from "../contexts/AuthContext";
 import axios from "axios";
 import Alert from "react-bootstrap/Alert";
 import { Button, Form, Pagination } from "react-bootstrap";
-import { useParams, useNavigate, Link } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 
 const styles = {
   padding: "20px",
@@ -150,6 +150,35 @@ export default function View() {
   const [imageSrc, setImageSrc] = useState(null);
   const [annotations, setAnnotations] = useState(null);
   const [currentPage, setCurrentPage] = useState([]);
+
+  const [selectedOptions, setSelectedOptions] = useState(["note"]);
+
+  const [classes, setClasses] = useState(["note", "robot"]);
+
+  const handleOptionSelect = (option) => {
+    const prevousSelectedOptions = selectedOptions || [];
+    console.log(prevousSelectedOptions);
+    setSelectedOptions((prevOptions) => {
+      const index = prevOptions.indexOf(option);
+      if (index !== -1) {
+        // Remove option if already selected
+        prevOptions = prevOptions.filter((item) => item !== option);
+      } else {
+        // Add option if not selected
+        prevOptions = [...(prevOptions || []), option].sort();
+      }
+
+      const previousShortOptions = prevousSelectedOptions.map(option => option.slice(0, 2));
+      const selectedOptionsAbbreviated = prevOptions.map(option => option.slice(0, 2));
+      console.log(previousShortOptions.join("").toUpperCase());
+      console.log(selectedOptionsAbbreviated.join("").toUpperCase());
+      const newFolderName = folderName.replace(previousShortOptions.join("").toUpperCase(), selectedOptionsAbbreviated.join("").toUpperCase());
+      console.log(newFolderName);
+      navigate("/view/" + newFolderName);
+
+      return prevOptions;
+    });
+  };
 
   const fetchProjectDetails = async () => {
     const imageFileTypes = [".jpg", ".png", ".webp"];
@@ -357,6 +386,23 @@ export default function View() {
                   <br />
                 </>
               )}
+
+              {projectDetails.uploadName && projectDetails.uploadName.startsWith("FRC2024") && (
+                <>
+                  <h5 style={{ paddingTop: "10px" }}>Dataset Classes</h5>
+                  <div style={styles.checkboxGroup}>
+                    {classes.map((opt, i) => (
+                      <Form.Check
+                        key={i}
+                        type="checkbox"
+                        id={`checkbox-${i}`}
+                        label={opt}
+                        defaultChecked={selectedOptions?.includes(opt)}
+                        onChange={() => handleOptionSelect(opt)}
+                      />
+                    ))}
+                  </div></>
+              )}
               <Button
                 variant="primary"
                 className="position-absolute top-0 end-0"
@@ -384,7 +430,7 @@ export default function View() {
                     <div key={key}>
                       <h5>{key.charAt(0).toUpperCase() + key.slice(1)}</h5>
                       <Pagination className="pagination">
-                        <div style={{ marginBottom: "10px", width: "100%"  }}>
+                        <div style={{ marginBottom: "10px", width: "100%" }}>
                           {Object.keys(currentFileTree[key])
                             .slice((currentPage[key] - 1) * 20, currentPage[key] * 20)
                             .map((item, index) => (
@@ -442,7 +488,7 @@ export default function View() {
 
                 </>
               )}
-                {!folderName.startsWith("FRC2023") && !folderName.startsWith("FRC2024") && (
+              {!folderName.startsWith("FRC2023") && !folderName.startsWith("FRC2024") && (
                 <div style={{ padding: "10px 0" }}>
                   <Button variant="danger" onClick={handleDeleteProject}>
                     Delete Project

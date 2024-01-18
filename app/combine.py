@@ -166,7 +166,7 @@ def powerset(iterable):
     s = list(iterable)
     return [list(combo) for r in range(len(s)+1) for combo in itertools.combinations(s, r) if combo]
 
-years = ["FRC2024"] # "FRC2023", 
+years = ["FRC2023"] # "FRC2023", 
 classes = {"FRC2023": ["cone", "cube", "robot"], "FRC2024": ["note", "robot"]}
 tempNamesCOCO = {"FRC2023": [], "FRC2024": []}
 tempNamesYOLO = {"FRC2023": [], "FRC2024": []}
