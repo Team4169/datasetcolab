@@ -180,16 +180,17 @@ def dict_to_coco_example(img_data):
 
 
 def main(_):
+    output_path = FLAGS.output_filepath[:FLAGS.output_filepath.rfind('/')]
+    if not tf.io.gfile.isdir(output_path): 
+      tf.io.gfile.makedirs(output_path)
+
     # load total coco data
     coco_data = load_coco_dection_dataset(FLAGS.image_dir,FLAGS.annotation_path,shuffle_img=FLAGS.shuffle_imgs)
     total_imgs = len(coco_data)
     # write coco data to tf record
     num_shards = FLAGS.shards
 
-    output_path = FLAGS.output_filepath[:FLAGS.output_filepath.rfind('/')]
-
-    if not tf.io.gfile.isdir(output_path): 
-      tf.io.gfile.makedirs(output_path)
+    
 
     writers = [
       tf.io.TFRecordWriter(
