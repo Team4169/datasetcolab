@@ -25,7 +25,6 @@ def mergeCocoDatasets(dataset_paths, output_path):
 
     updated_dataset_paths = []
 
-    sectionA = time.time()
     for dataset_path in dataset_paths:
         json_file = findJsonFile(dataset_path)
         if not json_file:
@@ -42,15 +41,16 @@ def mergeCocoDatasets(dataset_paths, output_path):
         for category in data['categories']:
             if category["name"] not in [cat["name"] for cat in merged_data['categories']] and category["supercategory"] != "none":
                 merged_data['categories'].append({ "name": category["name"], "supercategory": "objects", "id": len(merged_data['categories']) })
-    print("Section A: " + str(time.time() - sectionA))
 
-    
     for dataset_path in updated_dataset_paths:
         json_file = findJsonFile(dataset_path)
+        if not json_file:
+            print(f"No JSON file found in {dataset_path}. Skipping this dataset.")
+            continue
+
         with open(json_file) as file:
             data = json.load(file)
 
-        sectionB = time.time()
         # Update IDs in the dataset
         id_mapping = {}
         for image in data['images']:
@@ -59,9 +59,7 @@ def mergeCocoDatasets(dataset_paths, output_path):
             id_mapping[old_id] = new_id
             image['id'] = new_id
             merged_data['images'].append(image)
-        print("Section B: " + str(time.time() - sectionB))
 
-        sectionC = time.time()
         for annotation in data['annotations']:
             category_name = None
             for category in data['categories']:
@@ -82,27 +80,17 @@ def mergeCocoDatasets(dataset_paths, output_path):
             annotation['id'] += max_annotation_id
             annotation['image_id'] = id_mapping[annotation['image_id']]
             merged_data['annotations'].append(annotation)
-        print("Section C: " + str(time.time() - sectionC))
 
-        sectionD = time.time()
         # Remove images without annotations
-        print(len(merged_data['images']))
         merged_data['images'] = [image for image in merged_data['images'] if any(annotation['image_id'] == image['id'] for annotation in merged_data['annotations'])]
-        print(len(merged_data['images']))
-        print("Section D: " + str(time.time() - sectionD))
 
-        sectionE = time.time()
         # Update max ID values for the next dataset
         max_image_id = max([img['id'] for img in merged_data['images']], default=max_image_id)
         max_annotation_id = max([ann['id'] for ann in merged_data['annotations']], default=max_annotation_id)
-        print("Section E: " + str(time.time() - sectionE))
 
-        sectionF = time.time()
         # Copy images to output folder
         os.makedirs(output_path, exist_ok=True)
-        print("Section F: " + str(time.time() - sectionF))
 
-        sectionG = time.time()
         with concurrent.futures.ThreadPoolExecutor() as executor:
             futures = []
             for image_info in merged_data['images']:
@@ -111,7 +99,6 @@ def mergeCocoDatasets(dataset_paths, output_path):
 
             # Wait for all tasks to complete
             concurrent.futures.wait(futures)
-        print("Section G: " + str(time.time() - sectionG))
 
     # Save merged JSON
     with open(os.path.join(output_path, '_annotations.coco.json'), 'w') as file:
@@ -166,7 +153,7 @@ def powerset(iterable):
     s = list(iterable)
     return [list(combo) for r in range(len(s)+1) for combo in itertools.combinations(s, r) if combo]
 
-years = ["FRC2023"] # "FRC2023", 
+years = ["FRC2024"] # "FRC2023", 
 classes = {"FRC2023": ["cone", "cube", "robot"], "FRC2024": ["note", "robot"]}
 tempNamesCOCO = {"FRC2023": [], "FRC2024": []}
 tempNamesYOLO = {"FRC2023": [], "FRC2024": []}
@@ -175,11 +162,13 @@ tempNamesTFRecord = {"FRC2023": [], "FRC2024": []}
 for year in years:
     print(powerset(classes[year]))
     for classcombo in powerset(classes[year]):
+        print(year, classcombo)
         tempNamesCOCO[year].append(''.join(random.choices(string.ascii_lowercase + string.digits, k=4)))
         tempNamesYOLO[year].append(''.join(random.choices(string.ascii_lowercase + string.digits, k=4)))
         tempNamesTFRecord[year].append(''.join(random.choices(string.ascii_lowercase + string.digits, k=4)))
 
         # Combine COCO
+        print("Combining COCO (" + tempNamesCOCO[year][-1] + ")")
         directoryPath = '/home/team4169/datasetcolab/app/upload'
         metadataFolders = findMetadataFolders(directoryPath, year, classcombo)
         testFolders = [s + "/test" for s in metadataFolders]
@@ -227,9 +216,12 @@ for year in years:
             json.dump(metadata, f)
 
         # Convert to YOLO
+        print("Converting to YOLO (" + tempNamesYOLO[year][-1] + ")")
         outputPathYOLO = '/home/team4169/datasetcolab/app/download/' + tempNamesYOLO[year][-1]
         shutil.copytree(outputPathCOCO, outputPathYOLO)
-        subprocess.run(['python3', 'COCOtoYOLO.py', outputPathYOLO, year])
+        command = ['python3', 'COCOtoYOLO.py', outputPathYOLO, year]
+        command.extend(classcombo)
+        subprocess.run(command)
         
         zipDataset(outputPathYOLO, outputPathYOLO + '.zip')
         metadata["zipSize"] = os.path.getsize(outputPathYOLO + '.zip')
@@ -241,6 +233,7 @@ for year in years:
             json.dump(metadata, f)
 
         # Convert to TFRecord
+        print("Converting to TFRecord (" + tempNamesTFRecord[year][-1] + ")")
         outputPathTFRecord = '/home/team4169/datasetcolab/app/download/' + tempNamesTFRecord[year][-1]
         subprocess.run(['python3', 'COCOtoTFRecord.py', "--annotation_info_file=" + outputPathCOCO + "/train/_annotations.coco.json", "--image_dir=" + outputPathCOCO + "/train", "--output_dir=" + outputPathTFRecord + "/train", "--shards=800"])
         subprocess.run(['python3', 'COCOtoTFRecord.py', "--annotation_info_file=" + outputPathCOCO + "/test/_annotations.coco.json", "--image_dir=" + outputPathCOCO + "/test", "--output_dir=" + outputPathTFRecord + "/test", "--shards=800"])

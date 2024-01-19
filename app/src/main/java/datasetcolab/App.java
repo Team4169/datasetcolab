@@ -186,14 +186,12 @@ public class App {
                     try (FileReader fileReader = new FileReader(datasetFile)) {
                         JSONParser parser = new JSONParser();
                         JSONObject currentDataset = (JSONObject) parser.parse(fileReader);
-                        String tempName = "";
 
-                        if (folderName.startsWith("FRC2023")) {
-                            tempName = (String) currentDataset.get(folderName);
-                            requestedFile = "download/" + tempName + folderName.substring(folderName.indexOf(folderName) + folderName.length());
-                        } else if (folderName.startsWith("FRC2024")) {
-                            tempName = (String) currentDataset.get(folderName);
-                            requestedFile = "download/" + tempName + folderName.substring(folderName.indexOf(folderName) + folderName.length());
+                        if (folderName.contains("/")) {
+                            String folderNameSubstring = folderName.substring(0, folderName.indexOf("/"));
+                            requestedFile = "download/" + (String) currentDataset.get(folderNameSubstring) + folderName.substring(folderName.indexOf(folderNameSubstring) + folderNameSubstring.length());
+                        } else {
+                            requestedFile = "download/" + (String) currentDataset.get(folderName);
                         }
                     }
                 }
@@ -312,21 +310,17 @@ public class App {
                 String folderName = "upload/" + uid + "/" + ctx.pathParam("folderName");
                 if (ctx.pathParam("folderName").startsWith("FRC2023") || ctx.pathParam("folderName").startsWith("FRC2024")) {
                     File datasetFile = new File("important.json");
+            
+                    String folderNameSubstring = ctx.pathParam("folderName").substring(0, ctx.pathParam("folderName").indexOf("/"));
+
                     try (FileReader fileReader = new FileReader(datasetFile)) {
                         JSONParser parser = new JSONParser();
                         JSONObject currentDataset = (JSONObject) parser.parse(fileReader);
-                        String tempName = "";
 
-                        if (ctx.pathParam("folderName").startsWith("FRC2023")) {
-                            System.out.println(ctx.pathParam("folderName").substring(ctx.pathParam("folderName").indexOf("FRC2023") + 7));
-                            tempName = (String) currentDataset.get("FRC2023COCO");
-                            folderName = "download/" + tempName + ctx.pathParam("folderName").substring(ctx.pathParam("folderName").indexOf("FRC2023") + ctx.pathParam("folderName").length());
-                        } else if (ctx.pathParam("folderName").startsWith("FRC2024")) {
-                            tempName = (String) currentDataset.get("FRC2024COCO");
-                            folderName = "download/" + tempName + ctx.pathParam("folderName").substring(ctx.pathParam("folderName").indexOf("FRC2024") + ctx.pathParam("folderName").length());
-                        }
+                        folderName = "download/" + (String) currentDataset.get(folderNameSubstring) + ctx.pathParam("folderName").substring(ctx.pathParam("folderName").indexOf(folderNameSubstring) + folderNameSubstring.length());
                     }
                 }
+                System.out.println("annoations");
                 System.out.println(folderName);
 
                 String[] folderNameArray = folderName.split("/");
@@ -564,6 +558,7 @@ public class App {
                             // Close the input stream and output stream
                             is.close();
                             outputStream.close();
+                            System.out.println("File sent successfully.");
                         } catch (IOException e) {
                             // Handle exceptions
                             ctx.status(500).result("Error: Failed to read or stream the file.");

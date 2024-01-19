@@ -130,6 +130,8 @@ def create_data_yaml(dataset_dir, num_classes, class_names):
 
 overall_dir = sys.argv[1]
 dataset = sys.argv[2]
+class_names = sys.argv[3:]
+print(class_names)
 
 valid_dir = os.path.join(overall_dir, 'valid')
 train_dir = os.path.join(overall_dir, 'train')
@@ -140,16 +142,7 @@ convert_coco_json(train_dir, train_dir, train_dir)
 convert_coco_json(test_dir, test_dir, test_dir)
 
 # Create data.yaml
-if dataset == 'FRC2024':
-    num_classes = 2
-    class_names = ['note', 'robot']
-elif dataset == 'FRC2023':
-    num_classes = 3
-    class_names = ['cone', 'cube', 'robot']
-else:
-    num_classes = 1
-    class_names = ['robot']
-create_data_yaml(overall_dir, num_classes, class_names)
+create_data_yaml(overall_dir, len(class_names), class_names)
 
 # Delete JSON file
 for json_file in Path(valid_dir).glob('*.json'):
