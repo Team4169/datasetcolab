@@ -330,7 +330,7 @@ export default function DownloadDataset() {
                 <Button
                   variant="primary"
                   className="position-absolute top-0 end-0 m-3"
-                  onClick={() => redirectToView(dataset.name.replace(" ", "") + "COCO" + selectedOptions[dataset.name].map(option => option.slice(0, 2)).join("").toUpperCase())}
+                  onClick={() => redirectToView(dataset.name.replace(" ", "") + "COCONO")}
                 >
                   View
                 </Button>
