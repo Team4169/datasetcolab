@@ -73,6 +73,22 @@ def convert_to_feature(value, value_type=None):
 
   else:
     raise ValueError('Unknown value_type parameter - {}'.format(value_type))
+  
+def _create_pbtxt_from_label_map(anns):
+  print(anns)
+  pbtext = ""
+  for i in range(len(anns)):
+      if i == 0:
+         continue
+      pbtext += "item {\n"
+      pbtext += "\tname: \"" + anns[i]["name"] + "\",\n"
+      pbtext +="\tid: " + str(anns[i]["id"]) + ",\n"
+      pbtext += "\tdisplay_name: \"" + anns[i]["name"] + "\"\n}\n"
+
+  output_path = FLAGS.output_filepath[:FLAGS.output_filepath.rfind('/', 0, FLAGS.output_filepath.rfind("/"))]
+  pbtextfile = open(output_path + "/labelmap.pbtxt", 'w')
+  pbtextfile.write(pbtext)
+  pbtextfile.close()
 
 
 def load_coco_dection_dataset(imgs_dir, annotations_filepath, shuffle_img = True ):
@@ -88,6 +104,8 @@ def load_coco_dection_dataset(imgs_dir, annotations_filepath, shuffle_img = True
     img_ids = coco.getImgIds() # totally 82783 images
     cat_ids = coco.getCatIds() # totally 90 catagories, however, the number of categories is not continuous, \
                                # [0,12,26,29,30,45,66,68,69,71,83] are missing, this is the problem of coco dataset.
+    
+    _create_pbtxt_from_label_map(anns = coco.cats)
 
     if shuffle_img:
         shuffle(img_ids)
@@ -159,14 +177,19 @@ def dict_to_coco_example(img_data):
     }))
     return example
 
+
+
 def main(_):
     # load total coco data
     coco_data = load_coco_dection_dataset(FLAGS.image_dir,FLAGS.annotation_path,shuffle_img=FLAGS.shuffle_imgs)
     total_imgs = len(coco_data)
     # write coco data to tf record
-    print(FLAGS.output_filepath)
-
     num_shards = FLAGS.shards
+
+    output_path = FLAGS.output_filepath[:FLAGS.output_filepath.rfind('/')]
+
+    if not tf.io.gfile.isdir(output_path): 
+      tf.io.gfile.makedirs(output_path)
 
     writers = [
       tf.io.TFRecordWriter(
