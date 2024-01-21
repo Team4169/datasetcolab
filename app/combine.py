@@ -235,10 +235,10 @@ for year in years:
         # Convert to TFRecord
         print("Converting to TFRecord (" + tempNamesTFRecord[year][-1] + ")")
         outputPathTFRecord = '/home/team4169/datasetcolab/app/download/' + tempNamesTFRecord[year][-1]
-        subprocess.run(['python3', 'COCOtoTFRecord.py', "--annotation_info_file=" + outputPathCOCO + "/train/_annotations.coco.json", "--image_dir=" + outputPathCOCO + "/train", "--output_dir=" + outputPathTFRecord + "/train", "--shards=800"])
-        subprocess.run(['python3', 'COCOtoTFRecord.py', "--annotation_info_file=" + outputPathCOCO + "/test/_annotations.coco.json", "--image_dir=" + outputPathCOCO + "/test", "--output_dir=" + outputPathTFRecord + "/test", "--shards=800"])
-        subprocess.run(['python3', 'COCOtoTFRecord.py', "--annotation_info_file=" + outputPathCOCO + "/valid/_annotations.coco.json", "--image_dir=" + outputPathCOCO + "/valid", "--output_dir=" + outputPathTFRecord + "/valid", "--shards=800"])
-
+        subprocess.run(['python3', 'COCOtoTFRecord.py', "--annotation_path=" + outputPathCOCO + "/train/_annotations.coco.json", "--image_dir=" + outputPathCOCO + "/train", "--output_dir=" + outputPathTFRecord + "/train/train", "--shards=" + str(int(countImages / 800))])
+        subprocess.run(['python3', 'COCOtoTFRecord.py', "--annotation_path=" + outputPathCOCO + "/valid/_annotations.coco.json", "--image_dir=" + outputPathCOCO + "/valid", "--output_dir=" + outputPathTFRecord + "/valid/valid", "--shards=" + str(int(countImages / 800))])
+        shutil.copyfile(outputPathCOCO + "/test", outputPathTFRecord + "/test")
+        
         zipDataset(outputPathTFRecord, outputPathTFRecord + '.zip')
         metadata["zipSize"] = os.path.getsize(outputPathTFRecord + '.zip')
         metadata["datasetType"] = "TFRecord"
