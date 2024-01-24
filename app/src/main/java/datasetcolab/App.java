@@ -599,7 +599,7 @@ public class App {
                     throw new IllegalArgumentException("Invalid request: uid is null or both idToken and api are null.");
                 }
 
-                String model = ctx.pathParam("model");
+                String model = "models/" + ctx.pathParam("model");
 
                 try (FileReader fileReader = new FileReader(model)) {
                     JSONParser parser = new JSONParser();

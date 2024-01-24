@@ -63,8 +63,8 @@ export default function PretrainedModels() {
     const [showCopyAlert, setShowCopyAlert] = useState(false);
 
     const [datasets, setDatasets] = useState([
-        { name: "YOLOv8", dataset: "FRC 2024", model: "YOLOv8s", author: "Team 5990", classes: ["note", "robot"], download: "direct", size: 0 },
-        { name: "YOLOv5", dataset: "FRC 2024", model: "YOLOv5s", author: "Team 5990", classes: ["note", "robot"], download: "direct", size: 0 },
+        { name: "YOLOv8", dataset: "FRC 2024", model: "YOLOv8n", variants: ["YOLOv8n", "YOLOv8s"], classes: ["note", "robot"], download: "direct" },
+        { name: "YOLOv5", dataset: "FRC 2024", model: "YOLOv5n", variants: ["YOLOv5n", "YOLOv5s"], classes: ["note", "robot"], download: "direct" },
     ]);
 
     const [loading, setLoading] = useState(false);
@@ -116,18 +116,46 @@ export default function PretrainedModels() {
                     {datasets.map((dataset, index) => (
                         <Card key={index} style={styles.datasetCard}>
                             <Card.Body>
-                                <h3>{dataset.name} <span style={{ fontSize: "14px", color: "gray" }}>by {dataset.author}</span></h3>
+                                <h3>{dataset.name}</h3>
                                 <small>
                                     <strong>Dataset:</strong> {dataset.dataset} &nbsp;&nbsp;&nbsp;
-                                    <strong>Model:</strong> {dataset.model} &nbsp;&nbsp;&nbsp;
-                                    <strong>Classes:</strong> {dataset.classes.join(", ")} &nbsp;&nbsp;&nbsp;
-                                    <strong>Size:</strong> {(dataset.zipSize / (1024 * 1024 * 1024)).toFixed(2)} GB
+                                    <strong>Classes:</strong> {dataset.classes.join(", ")}
                                 </small>
+
+
+                                <h5 style={{ paddingTop: "10px" }}>Model Variant</h5>
+                                <Form.Group>
+                                    <ButtonGroup toggle>
+                                        {dataset.variants.map((variant, variantIndex) => (
+                                            <ToggleButton
+                                                key={variantIndex}
+                                                type="radio"
+                                                variant="outline-primary"
+                                                name={`modelVariant-${variant}`}
+                                                value={variant}
+                                                checked={dataset.model === variant}
+                                                onClick={() =>
+                                                    setDatasets((prevDatasets) => {
+                                                        const newDatasets = [...prevDatasets];
+                                                        newDatasets[index] = {
+                                                            ...newDatasets[index],
+                                                            model: variant
+                                                        };
+                                                        console.log(newDatasets);
+                                                        return newDatasets;
+                                                    })
+                                                }
+                                            >
+                                                {variant}
+                                            </ToggleButton>
+                                        ))}
+                                    </ButtonGroup>
+                                </Form.Group>
                                 <h5 style={{ paddingTop: "10px" }}>Preformance</h5>
 
                                 {currentUser && currentUser.emailVerified ? (
                                     <>
-                                        <h5 style={{ paddingTop: "10px" }}>Download Method</h5>
+                                        <h5 style={{ paddingTop: "10px" }}>Download Weights</h5>
                                         <Form.Group>
                                             <ButtonGroup toggle>
                                                 <ToggleButton
@@ -139,10 +167,11 @@ export default function PretrainedModels() {
                                                     onClick={() =>
                                                         setDatasets((prevMethods) => {
                                                             const newDatasets = [...prevMethods];
-                                                            newDatasets[dataset.name] = {
-                                                                ...newDatasets[dataset.name],
+                                                            newDatasets[index] = {
+                                                                ...newDatasets[index],
                                                                 download: "direct"
                                                             };
+                                                            console.log(newDatasets);
                                                             return newDatasets;
                                                         })
                                                     }
@@ -156,12 +185,13 @@ export default function PretrainedModels() {
                                                     value="curl"
                                                     checked={dataset.download === "curl"}
                                                     onClick={() =>
-                                                        setDatasets((prevMethods) => {
-                                                            const newDatasets = [...prevMethods];
-                                                            newDatasets[dataset.name] = {
-                                                                ...newDatasets[dataset.name],
+                                                        setDatasets((prevDatasets) => {
+                                                            const newDatasets = [...prevDatasets];
+                                                            newDatasets[index] = {
+                                                                ...newDatasets[index],
                                                                 download: "curl"
                                                             };
+                                                            console.log(newDatasets);
                                                             return newDatasets;
                                                         })
                                                     }

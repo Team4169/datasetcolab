@@ -417,6 +417,7 @@ export default function View() {
                 Back
               </Button>
               <Form onSubmit={handleSubmit}>
+                  <h5 style={{ paddingTop: "10px" }}>Search files</h5>
                 <Form.Control
                   type="text"
                   placeholder="Search files"
