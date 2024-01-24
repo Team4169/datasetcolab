@@ -94,12 +94,8 @@ export default function DownloadDataset() {
     const name = dataset.name.replace(" ", "");
     const selectedOptionsAbbreviated = selectedOptions[dataset.name].map(option => option.slice(0, 2));
     const classesParam = selectedOptionsAbbreviated.length > 0 ? `&classes=${selectedOptionsAbbreviated.join("").toUpperCase()}` : "&classes=NULL";
-    return `curl -o ${name}.zip 'https://api.datasetcolab.com/download/${name}?api=${apiKey}&datasetType=${selectedDatasetType[dataset.name]
+    return `curl -o ${name}.zip 'https://api.datasetcolab.com/dataset/download/${name}?api=${apiKey}&datasetType=${selectedDatasetType[dataset.name]
       }${classesParam}'`;
-  };
-
-  const handleDownloadMethodChange = (dataset, value) => {
-    setDownloadMethod((prevMethods) => ({ ...prevMethods, [dataset]: value }));
   };
 
   const handleOptionSelect = (dataset, option) => {
@@ -138,7 +134,7 @@ export default function DownloadDataset() {
       const selectedOptionsAbbreviated = selectedOptions[dataset.slice(0, 3) + " " + dataset.slice(3)].map(option => option.slice(0, 2));
       const classesParam = selectedOptionsAbbreviated.length > 0 ? `&classes=${selectedOptionsAbbreviated.join("").toUpperCase()}` : "&classes=NULL";
 
-      console.log("https://api.datasetcolab.com/download/" +
+      console.log("https://api.datasetcolab.com/dataset/download/" +
         dataset +
         "?idToken=" +
         idToken +
@@ -147,7 +143,7 @@ export default function DownloadDataset() {
         classesParam);
 
       window.location.href =
-        "https://api.datasetcolab.com/download/" +
+        "https://api.datasetcolab.com/dataset/download/" +
         dataset +
         "?idToken=" +
         idToken +
@@ -160,10 +156,6 @@ export default function DownloadDataset() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const redirectToView = (folderName) => {
-    navigate(`/view/${folderName}`);
   };
 
   const fetchApiKey = async () => {
@@ -204,7 +196,7 @@ export default function DownloadDataset() {
         const config = { headers: { idToken: idToken } };
         console.log(config);
         const response = await axios.get(
-          `https://api.datasetcolab.com/metadata/${folderName}${selectedDatasetType[splitFolderName]
+          `https://api.datasetcolab.com/dataset/metadata/${folderName}${selectedDatasetType[splitFolderName]
           }${classesParam}`,
           config
         );
@@ -330,7 +322,7 @@ export default function DownloadDataset() {
                 <Button
                   variant="primary"
                   className="position-absolute top-0 end-0 m-3"
-                  onClick={() => redirectToView(dataset.name.replace(" ", "") + "COCONO")}
+                  onClick={() => navigate(`/view/${dataset.name.replace(" ", "") + "COCONO"}`)}
                 >
                   View
                 </Button>
@@ -346,7 +338,7 @@ export default function DownloadDataset() {
                           value="direct"
                           checked={downloadMethod[dataset.name] === "direct"}
                           onClick={() =>
-                            handleDownloadMethodChange(dataset.name, "direct")
+                            setDownloadMethod((prevMethods) => ({ ...prevMethods, [dataset.name]: "direct" }))
                           }
                         >
                           Download Directly
@@ -358,7 +350,7 @@ export default function DownloadDataset() {
                           value="curl"
                           checked={downloadMethod[dataset.name] === "curl"}
                           onClick={() =>
-                            handleDownloadMethodChange(dataset.name, "curl")
+                            setDownloadMethod((prevMethods) => ({ ...prevMethods, [dataset.name]: "curl" }))
                           }
                         >
                           Download via Curl
@@ -404,7 +396,7 @@ export default function DownloadDataset() {
                     <div>
                       {" "}
                       <Link to="/login?to=download">Login</Link> or{" "}
-                      <Link to="/signup?to=download">Sign Up</Link> to Dowload{" "}
+                      <Link to="/signup?to=download">Sign Up</Link> to Download{" "}
                     </div>
                   </>
                 )}

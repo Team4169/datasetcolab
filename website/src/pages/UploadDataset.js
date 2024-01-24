@@ -125,7 +125,7 @@ export default function Upload() {
       };
 
       let response = await axios.post(
-        "https://api.datasetcolab.com/upload",
+        "https://api.datasetcolab.com/dataset/upload",
         formData,
         config
       );
@@ -176,7 +176,7 @@ export default function Upload() {
       };
 
       await axios.get(
-        "https://api.datasetcolab.com/classes",
+        "https://api.datasetcolab.com/dataset/classes",
         config
       );
 
@@ -293,7 +293,7 @@ export default function Upload() {
 
   return (
     <div style={{ padding: "20px" }}>
-      <h2>Upload</h2>
+      <h2>Upload Dataset</h2>
       {error && (
         <Alert variant="danger" onClose={() => setError("")} dismissible>
           {error}

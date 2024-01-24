@@ -198,7 +198,7 @@ export default function View() {
         const config = { headers: { idToken: idToken } };
 
         const response = await axios.get(
-          `https://api.datasetcolab.com/annotations/${folderName}`,
+          `https://api.datasetcolab.com/dataset/annotations/${folderName}`,
           config
         );
 
@@ -206,13 +206,13 @@ export default function View() {
         setAnnotations(response.data);
 
         setImageSrc(
-          `https://api.datasetcolab.com/view/${folderName}?idToken=${idToken}`
+          `https://api.datasetcolab.com/dataset/view/${folderName}?idToken=${idToken}`
         );
       } else {
         const config = { headers: { idToken: idToken } };
 
         const response = await axios.get(
-          `https://api.datasetcolab.com/view/${folderName}`,
+          `https://api.datasetcolab.com/dataset/view/${folderName}`,
           config
         );
 
@@ -241,7 +241,7 @@ export default function View() {
       const config = { headers: { idToken: idToken } };
 
       await axios.get(
-        `https://api.datasetcolab.com/delete/${folderName}`,
+        `https://api.datasetcolab.com/dataset/delete/${folderName}`,
         config
       );
       navigate("/");

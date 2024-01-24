@@ -73,7 +73,7 @@ export default function Dashboard() {
       };
 
       const response = await axios.get(
-        "https://api.datasetcolab.com/view",
+        "https://api.datasetcolab.com/dataset/view",
         config
       );
 

@@ -110,8 +110,7 @@ public class App {
             })
             .start();
 
-        app.get(
-            "/view",
+        app.get("/dataset/view",
             ctx -> {
                 try {
                     String uid = "";
@@ -161,7 +160,7 @@ public class App {
             }
         );
 
-        app.get("/view/<folderName>", ctx -> {
+        app.get("/dataset/view/<folderName>", ctx -> {
             try {
                 String uid = "";
                 if (!ctx.pathParam("folderName").startsWith("FRC2023") && !ctx.pathParam("folderName").startsWith("FRC2024")) {
@@ -237,7 +236,7 @@ public class App {
             }
         });
 
-        app.get("/metadata/<folderName>", ctx -> {
+        app.get("/dataset/metadata/<folderName>", ctx -> {
             try {
                 String uid = "";
                 if (!ctx.pathParam("folderName").startsWith("FRC2023") && !ctx.pathParam("folderName").startsWith("FRC2024")) {
@@ -289,7 +288,7 @@ public class App {
             }
         });
 
-        app.get("/annotations/<folderName>", ctx -> {
+        app.get("/dataset/annotations/<folderName>", ctx -> {
             try {
                 String uid = "";
                 if (!ctx.pathParam("folderName").startsWith("FRC2023") && !ctx.pathParam("folderName").startsWith("FRC2024")) {
@@ -386,7 +385,7 @@ public class App {
         });
 
 
-        app.get("/delete/{folderName}", ctx -> {
+        app.get("/dataset/delete/{folderName}", ctx -> {
             try {
                 String uid = "";
                 if (ctx.header("idToken") != null || ctx.queryParam("idToken") != null) {
@@ -411,8 +410,7 @@ public class App {
             }
         });
 
-        app.post(
-            "/upload",
+        app.post("/dataset/upload",
             ctx -> {
                 try {
                     String uid = "";
@@ -507,7 +505,7 @@ public class App {
             }
         );
 
-        app.get("/download/<filePath>", ctx -> {
+        app.get("/dataset/download/<filePath>", ctx -> {
             try {
                 String uid = "";
                 if (ctx.header("idToken") != null || ctx.queryParam("idToken") != null) {
@@ -584,6 +582,69 @@ public class App {
             }
         });
 
+/*
+        app.get("/model/download/<model>", ctx -> {
+            try {
+                String uid = "";
+                if (ctx.header("idToken") != null || ctx.queryParam("idToken") != null) {
+                    String idToken = ctx.header("idToken") != null ? ctx.header("idToken") : ctx.queryParam("idToken");
+                    FirebaseToken decodedToken = FirebaseAuth
+                        .getInstance()
+                        .verifyIdToken(idToken);
+                    uid = decodedToken.getUid();
+                } else if (ctx.header("api") != null || ctx.queryParam("api") != null) {
+                    String api = ctx.header("api") != null ? ctx.header("api") : ctx.queryParam("api");
+                    uid = validAPI(api);
+                } else {
+                    throw new IllegalArgumentException("Invalid request: uid is null or both idToken and api are null.");
+                }
+
+                String model = ctx.pathParam("model");
+
+                try (FileReader fileReader = new FileReader(model)) {
+                    JSONParser parser = new JSONParser();
+                    JSONObject currentDataset = (JSONObject) parser.parse(fileReader);
+                    String zipName = "download/" + (String) currentDataset.get(filePath + ctx.queryParam("datasetType") + ctx.queryParam("classes")) + ".zip";
+
+                    try (InputStream is = Files.newInputStream(Path.of(zipName))) {
+                        System.out.println("Sending file: " + zipName);
+
+                        // Set response headers
+                        ctx.header("Content-Disposition", "attachment; filename=" + filePath + ".zip");
+                        ctx.contentType("application/zip");
+
+                        // Get the OutputStream from the HttpServletResponse
+                        OutputStream outputStream = ctx.res().getOutputStream();
+
+                        // Write the input stream to the response output stream
+                        byte[] buffer = new byte[4096]; // Adjust the buffer size as needed
+                        int bytesRead;
+
+                        while ((bytesRead = is.read(buffer)) != -1) {
+                            outputStream.write(buffer, 0, bytesRead);
+                        }
+
+                        // Close the input stream and output stream
+                        is.close();
+                        outputStream.close();
+                        System.out.println("File sent successfully.");
+                    } catch (IOException e) {
+                        // Handle exceptions
+                        ctx.status(500).result("Error: Failed to read or stream the file.");
+                    }
+
+                } catch (IOException | ParseException e) {
+                    // Handle exceptions
+                    ctx.status(500).result("Error: Failed to read or parse JSON file.");
+                }
+                
+            } catch (FirebaseAuthException e) {
+                e.printStackTrace();
+                ctx.status(401).result("Error: Authentication failed.");
+            }
+        });
+*/
+
         app.get(
             "/api",
             ctx -> {
@@ -646,8 +707,7 @@ public class App {
         );
 
 
-        app.get(
-            "/classes",
+        app.get("/dataset/classes",
             ctx -> {
                 try {
                 String uid = "";

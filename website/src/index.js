@@ -9,7 +9,7 @@ import Navbar from "./components/Navbar";
 
 import Signup from "./pages/Signup";
 import Dashboard from "./pages/Dashboard";
-import Upload from "./pages/Upload";
+import Upload from "./pages/UploadDataset";
 import Login from "./pages/Login";
 import ForgotPassword from "./pages/ForgotPassword";
 import Settings from "./pages/Settings";
@@ -17,7 +17,7 @@ import EmailVerification from "./pages/EmailVerification";
 import Docs from "./pages/Docs";
 import DownloadDataset from "./pages/DownloadDataset";
 import DeleteAccount from "./pages/DeleteAccount";
-import Home from "./pages/Home";
+import PretrainedModels from "./pages/PretrainedModels";
 import View from "./pages/View";
 import AboutUs from "./pages/AboutUs";
 
@@ -38,6 +38,13 @@ root.render(
                     <PrivateRoute noAuth={<Navigate to="/download" />}>
                       <Dashboard />
                     </PrivateRoute>
+                  }
+                />
+                <Route
+                  exact
+                  path="/models"
+                  element={
+                    <PretrainedModels />
                   }
                 />
                 <Route
