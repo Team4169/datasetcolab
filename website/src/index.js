@@ -29,7 +29,7 @@ root.render(
         <div className="container mt-2">
           <Navbar />
           <div className="row">
-            <div className="col-md-6 offset-md-3">
+            <div className="col-md-6 offset-md-0">
               <Routes>
                 <Route
                   exact

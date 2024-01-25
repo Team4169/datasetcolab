@@ -448,6 +448,20 @@ export default function View() {
                                     );
                                   }}
                                 >
+                                  {
+                                    /*
+
+                                  <img
+                                    src={"https://api.datasetcolab.com/dataset/view/" + folderName + "/" + (key !== "" ? key + "/" : "") + item + "?idToken=" + idToken}
+                                    style={{
+                                      width: "100%",
+                                      height: "auto",
+                                      objectFit: "cover",
+                                      borderRadius: "5px",
+                                    }}
+                                  />
+                                    */
+                                  }
                                   {item.length > 58
                                     ? `${item.substring(0, 55)}...`
                                     : item}
