@@ -2,6 +2,8 @@ import json, sys, os, shutil, random, string, datetime, concurrent.futures, zipf
 from PIL import Image
 from glob import glob
 
+classNamesForYolo = []
+
 def findJsonFile(path):
     """ Find the first JSON file in the given directory. """
     jsonFiles = glob(os.path.join(path, '*.json'))
@@ -41,6 +43,7 @@ def mergeCocoDatasets(dataset_paths, output_path):
         for category in data['categories']:
             if category["name"] not in [cat["name"] for cat in merged_data['categories']] and category["supercategory"] != "none":
                 merged_data['categories'].append({ "name": category["name"], "supercategory": "objects", "id": len(merged_data['categories']) })
+                classNamesForYolo.append(category["name"])
 
     for dataset_path in updated_dataset_paths:
         json_file = findJsonFile(dataset_path)
@@ -153,7 +156,7 @@ def powerset(iterable):
     s = list(iterable)
     return [list(combo) for r in range(len(s)+1) for combo in itertools.combinations(s, r) if combo]
 
-years = ["FRC2023"] # "FRC2023", 
+years = ["FRC2024"] # "FRC2023", 
 classes = {"FRC2023": ["cone", "cube", "robot"], "FRC2024": ["note", "robot"]}
 tempNamesCOCO = {"FRC2023": [], "FRC2024": []}
 tempNamesYOLO = {"FRC2023": [], "FRC2024": []}
@@ -220,7 +223,10 @@ for year in years:
         outputPathYOLO = '/home/team4169/datasetcolab/app/download/' + tempNamesYOLO[year][-1]
         shutil.copytree(outputPathCOCO, outputPathYOLO)
         command = ['python3', 'COCOtoYOLO.py', outputPathYOLO, year]
-        command.extend(classcombo)
+        if len(classcombo) > 2:
+            command.extend(classcombo)
+        else:
+            command.extend(classNamesForYolo)
         subprocess.run(command)
         
         zipDataset(outputPathYOLO, outputPathYOLO + '.zip')
