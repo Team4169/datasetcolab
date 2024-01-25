@@ -127,7 +127,7 @@ export default function Dashboard() {
       return status;
     }
   }
-  
+
   const redirectToView = (folderName) => {
     navigate(`/view/${folderName}`);
   };
@@ -194,78 +194,202 @@ export default function Dashboard() {
         ) : (
           <div>
             {folderMetadata.length > 0 ? (
-              folderMetadata.sort((a, b) => {
-                const [datePartA, timePartA] = a.uploadTime.split("_");
-                const [yearA, monthA, dayA, hourA, minuteA] = [
-                  ...datePartA.split("-"),
-                  ...timePartA.split(":")
-                ];
+              folderMetadata
+                .sort((a, b) => {
+                  const [datePartA, timePartA] = a.uploadTime.split("_");
+                  const [yearA, monthA, dayA, hourA, minuteA] = [
+                    ...datePartA.split("-"),
+                    ...timePartA.split(":"),
+                  ];
 
-                const [datePartB, timePartB] = b.uploadTime.split("_");
-                const [yearB, monthB, dayB, hourB, minuteB] = [
-                  ...datePartB.split("-"),
-                  ...timePartB.split(":")
-                ];
+                  const [datePartB, timePartB] = b.uploadTime.split("_");
+                  const [yearB, monthB, dayB, hourB, minuteB] = [
+                    ...datePartB.split("-"),
+                    ...timePartB.split(":"),
+                  ];
 
-                const dateA = new Date(yearA, monthA - 1, dayA, hourA, minuteA);
-                const dateB = new Date(yearB, monthB - 1, dayB, hourB, minuteB);
-
-                return dateB - dateA;
-              }).filter((metadata) => {
-                if (show === "all") {
-                  return metadata.targetDataset === "FRC2023" || metadata.targetDataset === "FRC2024";
-                } else {
-                  return metadata.targetDataset === show;
-                }
-              }).map((metadata, index) => {
-                  const formattedUploadTime = formatUploadTime(
-                    metadata.uploadTime
+                  const dateA = new Date(
+                    yearA,
+                    monthA - 1,
+                    dayA,
+                    hourA,
+                    minuteA
                   );
-                  const formattedTargetDataset = formatTargetDataset(
-                    metadata.targetDataset
+                  const dateB = new Date(
+                    yearB,
+                    monthB - 1,
+                    dayB,
+                    hourB,
+                    minuteB
                   );
-                  const formattedStatus = formatStatus(metadata.status)
 
-                  return (
-                    <div key={index}>
-                      <Card key={index} style={styles.datasetCard}>
-                        <Card.Body>
-                          <h3>{metadata.uploadName.length > 25 ? `${metadata.uploadName.slice(0, 25)}...` : metadata.uploadName}</h3>
-                          <small>
-                            <strong>Upload Time:</strong> {formattedUploadTime}
-                          </small>
-                          <br />
-                          <small>
-                            <strong>Dataset Type:</strong>{" "}
-                            {metadata.datasetType}
-                          </small>
-                          <br />
-                          <small>
-                            <strong>Target Dataset:</strong>{" "}
-                            {formattedTargetDataset}
-                          </small>
-                          <br />
-                          <small>
-                            <strong>Status:</strong>{" "}
-                            {formattedStatus}
-                          </small>
-                          <br />
-                          <Button
-                            variant="primary"
-                            className="position-absolute top-0 end-0 m-3"
-                            onClick={() => redirectToView(metadata.folderName)}
-                          >
-                            View
-                          </Button>
-                        </Card.Body>
-                      </Card>
-                    </div>
+                  return dateB - dateA;
+                })
+                .filter((metadata, index) => {
+                  if (show === "all") {
+                    return (
+                      metadata.targetDataset === "FRC2023" ||
+                      metadata.targetDataset === "FRC2024"
+                    );
+                  } else {
+                    return metadata.targetDataset === show;
+                  }
+                })
+                .map((_, index, array) => {
+                  const formattedUploadTime0 = array[index * 2] && formatUploadTime(
+                    array[index * 2].uploadTime
                   );
+                  const formattedTargetDataset0 = array[index * 2] && formatTargetDataset(
+                    array[index * 2].targetDataset
+                  );
+                  const formattedStatus0 = array[index * 2] && formatStatus(array[index * 2].status);
+                  const formattedUploadTime1 =
+                    array[index * 2 + 1] &&
+                    formatUploadTime(array[index * 2 + 1].uploadTime);
+                  const formattedTargetDataset1 =
+                    array[index * 2 + 1] &&
+                    formatTargetDataset(array[index * 2 + 1].targetDataset);
+                  const formattedStatus1 =
+                    array[index * 2 + 1] && formatStatus(array[index * 2 + 1].status);
+
+                  if (array[index * 2] && array[index * 2 + 1] && window.innerWidth > 995) {
+                    return (
+                      <div className="row">
+                        <div key={index * 2} className="col">
+                          <Card key={index * 2} style={styles.datasetCard}>
+                            <Card.Body>
+                              <h3>
+                                {array[index * 2].uploadName.length > 25
+                                  ? `${array[index * 2].uploadName.slice(0, 25)}...`
+                                  : array[index * 2].uploadName}
+                              </h3>
+                              <small>
+                                <strong>Upload Time:</strong>{" "}
+                                {formattedUploadTime0}
+                              </small>
+                              <br />
+                              <small>
+                                <strong>Dataset Type:</strong>{" "}
+                                {array[index * 2].datasetType}
+                              </small>
+                              <br />
+                              <small>
+                                <strong>Target Dataset:</strong>{" "}
+                                {formattedTargetDataset0}
+                              </small>
+                              <br />
+                              <small>
+                                <strong>Status:</strong> {formattedStatus0}
+                              </small>
+                              <br />
+                              <Button
+                                variant="primary"
+                                className="position-absolute top-0 end-0 m-3"
+                                onClick={() =>
+                                  redirectToView(array[index * 2].folderName)
+                                }
+                              >
+                                View
+                              </Button>
+                            </Card.Body>
+                          </Card>
+                        </div>
+                        <div key={index * 2 + 1} className="col">
+                          <Card key={index * 2 + 1} style={styles.datasetCard}>
+                            <Card.Body>
+                              <h3>
+                                {array[index * 2 + 1].uploadName.length > 25
+                                  ? `${array[index * 2 + 1].uploadName.slice(0, 25)}...`
+                                  : array[index * 2 + 1].uploadName}
+                              </h3>
+                              <small>
+                                <strong>Upload Time:</strong>{" "}
+                                {formattedUploadTime1}
+                              </small>
+                              <br />
+                              <small>
+                                <strong>Dataset Type:</strong>{" "}
+                                {array[index * 2 + 1].datasetType}
+                              </small>
+                              <br />
+                              <small>
+                                <strong>Target Dataset:</strong>{" "}
+                                {formattedTargetDataset1}
+                              </small>
+                              <br />
+                              <small>
+                                <strong>Status:</strong> {formattedStatus1}
+                              </small>
+                              <br />
+                              <Button
+                                variant="primary"
+                                className="position-absolute top-0 end-0 m-3"
+                                onClick={() =>
+                                  redirectToView(array[index * 2 + 1].folderName)
+                                }
+                              >
+                                View
+                              </Button>
+                            </Card.Body>
+                          </Card>
+                        </div>
+                      </div>
+                    );
+                  } else if (array[index * 2]) {
+                    return (
+                      <div className="row">
+                        <div key={index * 2} className="col-md-6 offset-md-0">
+                          <Card key={index * 2} style={styles.datasetCard}>
+                            <Card.Body>
+                              <h3>
+                                {array[index * 2].uploadName.length > 25
+                                  ? `${array[index * 2].uploadName.slice(0, 25)}...`
+                                  : array[index * 2].uploadName}
+                              </h3>
+                              <small>
+                                <strong>Upload Time:</strong>{" "}
+                                {formattedUploadTime0}
+                              </small>
+                              <br />
+                              <small>
+                                <strong>Dataset Type:</strong>{" "}
+                                {array[index * 2].datasetType}
+                              </small>
+                              <br />
+                              <small>
+                                <strong>Target Dataset:</strong>{" "}
+                                {formattedTargetDataset0}
+                              </small>
+                              <br />
+                              <small>
+                                <strong>Status:</strong> {formattedStatus0}
+                              </small>
+                              <br />
+                              <Button
+                                variant="primary"
+                                className="position-absolute top-0 end-0 m-3"
+                                onClick={() =>
+                                  redirectToView(array[index * 2].folderName)
+                                }
+                              >
+                                View
+                              </Button>
+                            </Card.Body>
+                          </Card>
+                        </div>
+                      </div>
+                    );
+                  } else {
+                    return null;
+                  }
                 })
             ) : (
               <div>
-                <p>No projects available. Click the button below to upload a new project.</p>
-                <Button variant="primary" onClick={() =>navigate("/upload")}>
+                <p>
+                  No projects available. Click the button below to upload a new
+                  project.
+                </p>
+                <Button variant="primary" onClick={() => navigate("/upload")}>
                   Upload New Project
                 </Button>
               </div>

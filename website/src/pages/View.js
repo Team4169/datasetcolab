@@ -318,7 +318,7 @@ export default function View() {
   return (
     <div style={{ padding: "20px" }} className="project-details">
       {imageSrc && (
-        <div>
+        <div className="col-md-6 offset-md-0">
           <AnnotationOverlay annotations={annotations} imageUrl={imageSrc} />
         </div>
       )}

@@ -29,80 +29,72 @@ root.render(
         <div className="container mt-2">
           <Navbar />
           <div className="row">
-            <div className="col-md-6 offset-md-0">
-              <Routes>
-                <Route
-                  exact
-                  path="/"
-                  element={
-                    <PrivateRoute noAuth={<Navigate to="/download" />}>
-                      <Dashboard />
-                    </PrivateRoute>
-                  }
-                />
-                <Route
-                  exact
-                  path="/models"
-                  element={
-                    <PretrainedModels />
-                  }
-                />
-                <Route
-                  exact
-                  path="/upload"
-                  element={
-                    <PrivateRoute>
+            <Routes>
+              <Route
+                exact
+                path="/"
+                element={
+                  <PrivateRoute noAuth={<Navigate to="/download" />}>
+                    <Dashboard />
+                  </PrivateRoute>
+                }
+              />
+              <Route exact path="/models" element={<PretrainedModels />} />
+              <Route
+                exact
+                path="/upload"
+                element={
+                  <PrivateRoute>
+                    <div className="col-md-6 offset-md-0">
                       <Upload />
-                    </PrivateRoute>
-                  }
-                />
-                <Route
-                  exact
-                  path="/docs"
-                  element={
-                    <Docs />
-                  }
-                />    
-                <Route
-                  exact
-                  path="/download"
-                  element={
+                    </div>
+                  </PrivateRoute>
+                }
+              />
+              <Route exact path="/docs" element={<Docs />} />
+              <Route
+                exact
+                path="/download"
+                element={
+                  <div className="col-md-6 offset-md-0">
                     <DownloadDataset />
-                  }
-                />
-                <Route
-                  exact
-                  path="/about"
-                  element={
+                  </div>
+                }
+              />
+              <Route
+                exact
+                path="/about"
+                element={
+                  <div className="col-md-6 offset-md-0">
                     <AboutUs />
-                  }
-                />
-                <Route
-                  exact
-                  path="/delete"
-                  element={
-                    <DeleteAccount />
-                  }
-                />
-                <Route
-                  path="/settings"
-                  element={
-                    <PrivateRoute>
+                  </div>
+                }
+              />
+              <Route exact path="/delete" element={<DeleteAccount />} />
+              <Route
+                path="/settings"
+                element={
+                  <PrivateRoute>
+                    <div className="col-md-6 offset-md-0">
                       <Settings />
-                    </PrivateRoute>
-                  }
-                />
-                <Route path="/signup" element={<Signup />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/forgot-password" element={<ForgotPassword />} />
-                <Route
-                  path="/email-verification"
-                  element={<EmailVerification />}
-                />
-                
-                <Route path="/view/*" element={<View />} />
-              </Routes>
-            </div>
+                    </div>
+                  </PrivateRoute>
+                }
+              />
+              <Route path="/signup" element={<Signup />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route
+                path="/email-verification"
+                element={
+                  <div className="col-md-6 offset-md-0">
+                    <EmailVerification />
+                  </div>
+                }
+              />
+
+              <Route path="/view/*" element={<View />} />
+            </Routes>
           </div>
         </div>
       </AuthProvider>
