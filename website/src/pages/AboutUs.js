@@ -24,11 +24,11 @@ const AboutUs = () => {
       <ul>
         <li>
           Arjun Goray -{" "}
-          <a href="mailto:goraya25@lsrhs.net">goraya25@lsrhs.net</a>
+          <a href="mailto:arjun@datasetcolab.com">arjun@datasetcolab.com</a>
         </li>
         <li>
           Sean Mabli -{" "}
-          <a href="mailto:mablis25@lsrhs.net">mablis25@lsrhs.net</a>
+          <a href="mailto:sean@datasetcolab.com">sean@datasetcolab.com</a>
         </li>
       </ul>
     </div>
