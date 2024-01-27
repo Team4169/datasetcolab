@@ -153,11 +153,13 @@ export default function View() {
 
   const [selectedOptions, setSelectedOptions] = useState(["note"]);
 
-  const [classes, setClasses] = useState(["note", "robot"]);
+  const [classes, setClasses] = useState({
+    "FRC 2023": ["cone", "cube"],
+    "FRC 2024": ["note", "robot"],
+  });
 
   const handleOptionSelect = (option) => {
     const prevousSelectedOptions = selectedOptions || [];
-    console.log(prevousSelectedOptions);
     setSelectedOptions((prevOptions) => {
       const index = prevOptions.indexOf(option);
       if (index !== -1) {
@@ -170,10 +172,7 @@ export default function View() {
 
       const previousShortOptions = prevousSelectedOptions.map(option => option.slice(0, 2));
       const selectedOptionsAbbreviated = prevOptions.map(option => option.slice(0, 2));
-      console.log(previousShortOptions.join("").toUpperCase());
-      console.log(selectedOptionsAbbreviated.join("").toUpperCase());
       const newFolderName = folderName.replace(previousShortOptions.join("").toUpperCase(), selectedOptionsAbbreviated.join("").toUpperCase());
-      console.log(newFolderName);
       navigate("/view/" + newFolderName);
 
       return prevOptions;
@@ -202,7 +201,6 @@ export default function View() {
           config
         );
 
-        console.log(response.data);
         setAnnotations(response.data);
 
         setImageSrc(
@@ -387,11 +385,11 @@ export default function View() {
                 </>
               )}
 
-              {projectDetails.uploadName && projectDetails.uploadName.startsWith("FRC2024") && (
+              {projectDetails.uploadName && (projectDetails.uploadName.startsWith("FRC2024") ||  projectDetails.uploadName.startsWith("FRC2023")) && (
                 <>
                   <h5 style={{ paddingTop: "10px" }}>Dataset Classes</h5>
                   <div style={styles.checkboxGroup}>
-                    {classes.map((opt, i) => (
+                    {classes[projectDetails.uploadName.startsWith("FRC2024") ? "FRC 2024" : "FRC 2023"].map((opt, i) => (
                       <Form.Check
                         key={i}
                         type="checkbox"

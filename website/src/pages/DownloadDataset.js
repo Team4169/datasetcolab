@@ -322,7 +322,7 @@ export default function DownloadDataset() {
                 <Button
                   variant="primary"
                   className="position-absolute top-0 end-0 m-3"
-                  onClick={() => navigate(`/view/${dataset.name.replace(" ", "") + "COCONO"}`)}
+                  onClick={() => navigate(`/view/${dataset.name.replace(" ", "") + "COCO" + (dataset.name === "FRC 2024" ? "NO" : "COCU")}`)}
                 >
                   View
                 </Button>
