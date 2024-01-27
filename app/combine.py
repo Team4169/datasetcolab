@@ -149,20 +149,14 @@ def countAnnotations(folder_path):
                     annotation_count += len(data['annotations'])
     return annotation_count
 
-def powerset(iterable):
-    s = list(iterable)
-    return [list(combo) for r in range(len(s)+1) for combo in itertools.combinations(s, r) if combo]
-
-years = ["FRC2023"] # "FRC2023", 
-classes = {"FRC2023": ["cone", "cube"], "FRC2024": ["robot", "note"]}
+years = ["FRC2024"] # "FRC2023", 
+classes = {"FRC2023": [["cone"], ["cube"], ["cone", "cube"]], "FRC2024": [["note"], ["robot"], ["robot", "note"]]}
 tempNamesCOCO = {"FRC2023": [], "FRC2024": []}
 tempNamesYOLO = {"FRC2023": [], "FRC2024": []}
 tempNamesTFRecord = {"FRC2023": [], "FRC2024": []}
 
 for year in years:
-    print(powerset(classes[year]))
-    for classcombo in powerset(classes[year]):
-        print(year, classcombo)
+    for classcombo in classes[year]:
         tempNamesCOCO[year].append(''.join(random.choices(string.ascii_lowercase + string.digits, k=4)))
         tempNamesYOLO[year].append(''.join(random.choices(string.ascii_lowercase + string.digits, k=4)))
         tempNamesTFRecord[year].append(''.join(random.choices(string.ascii_lowercase + string.digits, k=4)))
@@ -254,8 +248,8 @@ with open(currentDatasetPath, 'r') as f:
     currentDataset = json.load(f)
 
 for i, year in enumerate(years):
-    for j, classes in enumerate(powerset(classes[year])):
-        classcombo = ''.join([class_name[:2].upper() for class_name in classes])
+    for j, classprecombo in enumerate(classes[year]):
+        classcombo = ''.join([class_name[:2].upper() for class_name in classprecombo])
         for dataset in ["COCO", "YOLO", "TFRecord"]:
             oldDatasetPath = None
             try:

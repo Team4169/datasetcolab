@@ -236,6 +236,14 @@ export default function Dashboard() {
                   }
                 })
                 .map((_, index, array) => {
+                  const formattedUploadTime = array[index * 2] && formatUploadTime(
+                    array[index].uploadTime
+                  );
+                  const formattedTargetDataset = array[index * 2] && formatTargetDataset(
+                    array[index].targetDataset
+                  );
+                  const formattedStatus = array[index * 2] && formatStatus(array[index].status);
+                  
                   const formattedUploadTime0 = array[index * 2] && formatUploadTime(
                     array[index * 2].uploadTime
                   );
@@ -243,6 +251,7 @@ export default function Dashboard() {
                     array[index * 2].targetDataset
                   );
                   const formattedStatus0 = array[index * 2] && formatStatus(array[index * 2].status);
+                  
                   const formattedUploadTime1 =
                     array[index * 2 + 1] &&
                     formatUploadTime(array[index * 2 + 1].uploadTime);
@@ -335,41 +344,41 @@ export default function Dashboard() {
                         </div>
                       </div>
                     );
-                  } else if (array[index * 2]) {
+                  } else if (window.innerWidth <= 995) {
                     return (
                       <div className="row">
-                        <div key={index * 2} className="col-md-6 offset-md-0">
-                          <Card key={index * 2} style={styles.datasetCard}>
+                        <div key={index} className="col-md-6 offset-md-0">
+                          <Card key={index} style={styles.datasetCard}>
                             <Card.Body>
                               <h3>
-                                {array[index * 2].uploadName.length > 25
-                                  ? `${array[index * 2].uploadName.slice(0, 25)}...`
-                                  : array[index * 2].uploadName}
+                                {array[index].uploadName.length > 25
+                                  ? `${array[index].uploadName.slice(0, 25)}...`
+                                  : array[index].uploadName}
                               </h3>
                               <small>
                                 <strong>Upload Time:</strong>{" "}
-                                {formattedUploadTime0}
+                                {formattedUploadTime}
                               </small>
                               <br />
                               <small>
                                 <strong>Dataset Type:</strong>{" "}
-                                {array[index * 2].datasetType}
+                                {array[index].datasetType}
                               </small>
                               <br />
                               <small>
                                 <strong>Target Dataset:</strong>{" "}
-                                {formattedTargetDataset0}
+                                {formattedTargetDataset}
                               </small>
                               <br />
                               <small>
-                                <strong>Status:</strong> {formattedStatus0}
+                                <strong>Status:</strong> {formattedStatus}
                               </small>
                               <br />
                               <Button
                                 variant="primary"
                                 className="position-absolute top-0 end-0 m-3"
                                 onClick={() =>
-                                  redirectToView(array[index * 2].folderName)
+                                  redirectToView(array[index].folderName)
                                 }
                               >
                                 View

@@ -427,7 +427,10 @@ export default function View() {
                 <>
                   {Object.keys(currentFileTree).map((key) => (
                     <div key={key}>
-                      <h5>{key.charAt(0).toUpperCase() + key.slice(1)}</h5>
+                      <h5>
+                        {key.charAt(0).toUpperCase() + key.slice(1)}{" "}
+                        <span style={{ color: "gray", fontSize: "small" }}>({Object.keys(currentFileTree[key]).length} images)</span>
+                      </h5>
                       <Pagination className="pagination">
                         <div style={{ marginBottom: "10px", width: "100%" }}>
                           {Object.keys(currentFileTree[key])
