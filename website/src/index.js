@@ -39,7 +39,8 @@ root.render(
                   </PrivateRoute>
                 }
               />
-              <Route exact path="/models" element={<PretrainedModels />} />
+              <Route exact path="/models" element={
+                <div className="col-md-6 offset-md-0"><PretrainedModels /></div>} />
               <Route
                 exact
                 path="/upload"
@@ -81,9 +82,14 @@ root.render(
                   </PrivateRoute>
                 }
               />
-              <Route path="/signup" element={<Signup />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/signup" element={
+                <div className="col-md-6 offset-md-0"><Signup />
+                </div>} />
+              <Route path="/login" element={
+                <div className="col-md-6 offset-md-0"><Login />
+                </div>} />
+              <Route path="/forgot-password" element={<div className="col-md-6 offset-md-0"><ForgotPassword />
+              </div>} />
               <Route
                 path="/email-verification"
                 element={

@@ -2,8 +2,6 @@ import json, sys, os, shutil, random, string, datetime, concurrent.futures, zipf
 from PIL import Image
 from glob import glob
 
-classNamesForYolo = []
-
 def findJsonFile(path):
     """ Find the first JSON file in the given directory. """
     jsonFiles = glob(os.path.join(path, '*.json'))
@@ -15,7 +13,7 @@ def copy_image(image_info, dataset_path, output_path):
         shutil.copy(image_path, os.path.join(output_path, image_info['file_name']))
 
 
-def mergeCocoDatasets(dataset_paths, output_path):
+def mergeCocoDatasets(dataset_paths, output_path, classes):
     merged_data = {
         'images': [],
         'annotations': [],
@@ -41,9 +39,10 @@ def mergeCocoDatasets(dataset_paths, output_path):
 
         # Set categories from the first dataset (assuming all datasets have the same categories)
         for category in data['categories']:
-            if category["name"] not in [cat["name"] for cat in merged_data['categories']] and category["supercategory"] != "none":
+            if category["name"] not in [cat["name"] for cat in merged_data['categories']] and category["supercategory"] != "none" and category["name"] in classes:
                 merged_data['categories'].append({ "name": category["name"], "supercategory": "objects", "id": len(merged_data['categories']) })
-                classNamesForYolo.append(category["name"])
+
+    print(merged_data['categories'])
 
     for dataset_path in updated_dataset_paths:
         json_file = findJsonFile(dataset_path)
@@ -75,8 +74,6 @@ def mergeCocoDatasets(dataset_paths, output_path):
                     if category['name'] == category_name:
                         annotation['category_id'] = category['id']
                         break
-                else:
-                    print(f"Category '{category_name}' not found in merged data.")
             else:
                 print("Category name is None.")
 
@@ -156,8 +153,8 @@ def powerset(iterable):
     s = list(iterable)
     return [list(combo) for r in range(len(s)+1) for combo in itertools.combinations(s, r) if combo]
 
-years = ["FRC2024"] # "FRC2023", 
-classes = {"FRC2023": ["cone", "cube", "robot"], "FRC2024": ["note", "robot"]}
+years = ["FRC2023"] # "FRC2023", 
+classes = {"FRC2023": ["cone", "cube", "robot"], "FRC2024": ["robot", "note"]}
 tempNamesCOCO = {"FRC2023": [], "FRC2024": []}
 tempNamesYOLO = {"FRC2023": [], "FRC2024": []}
 tempNamesTFRecord = {"FRC2023": [], "FRC2024": []}
@@ -179,9 +176,9 @@ for year in years:
         validFolders = [s + "/valid" for s in metadataFolders]
 
         outputPathCOCO = '/home/team4169/datasetcolab/app/download/' + tempNamesCOCO[year][-1]
-        mergeCocoDatasets(testFolders, outputPathCOCO + "/test")
-        mergeCocoDatasets(trainFolders, outputPathCOCO + "/train")
-        mergeCocoDatasets(validFolders, outputPathCOCO + "/valid")
+        mergeCocoDatasets(testFolders, outputPathCOCO + "/test", classcombo)
+        mergeCocoDatasets(trainFolders, outputPathCOCO + "/train", classcombo)
+        mergeCocoDatasets(validFolders, outputPathCOCO + "/valid", classcombo)
 
         test_image_count = countImages(outputPathCOCO + "/test")
         train_image_count = countImages(outputPathCOCO + "/train")
@@ -223,10 +220,7 @@ for year in years:
         outputPathYOLO = '/home/team4169/datasetcolab/app/download/' + tempNamesYOLO[year][-1]
         shutil.copytree(outputPathCOCO, outputPathYOLO)
         command = ['python3', 'COCOtoYOLO.py', outputPathYOLO, year]
-        if len(classcombo) > 2:
-            command.extend(classcombo)
-        else:
-            command.extend(classNamesForYolo)
+        command.extend(classcombo)
         subprocess.run(command)
         
         zipDataset(outputPathYOLO, outputPathYOLO + '.zip')
@@ -241,8 +235,8 @@ for year in years:
         # Convert to TFRecord
         print("Converting to TFRecord (" + tempNamesTFRecord[year][-1] + ")")
         outputPathTFRecord = '/home/team4169/datasetcolab/app/download/' + tempNamesTFRecord[year][-1]
-        subprocess.run(['python3', 'COCOtoTFRecord.py', "--annotation_path=" + outputPathCOCO + "/train/_annotations.coco.json", "--image_dir=" + outputPathCOCO + "/train", "--output_dir=" + outputPathTFRecord + "/train/train", "--shards=" + str(int(train_image_count / 800))])
-        subprocess.run(['python3', 'COCOtoTFRecord.py', "--annotation_path=" + outputPathCOCO + "/valid/_annotations.coco.json", "--image_dir=" + outputPathCOCO + "/valid", "--output_dir=" + outputPathTFRecord + "/valid/valid", "--shards=" + str(int(valid_image_count / 800))])
+        subprocess.run(['python3', 'COCOtoTFRecord.py', "--annotation_path=" + outputPathCOCO + "/train/_annotations.coco.json", "--image_dir=" + outputPathCOCO + "/train", "--output_filepath=" + outputPathTFRecord + "/train/train", "--shards=" + str(int(train_image_count / 800))])
+        subprocess.run(['python3', 'COCOtoTFRecord.py', "--annotation_path=" + outputPathCOCO + "/valid/_annotations.coco.json", "--image_dir=" + outputPathCOCO + "/valid", "--output_filepath=" + outputPathTFRecord + "/valid/valid", "--shards=" + str(int(valid_image_count / 800))])
         os.makedirs(outputPathTFRecord, exist_ok=True)
         shutil.copytree(outputPathCOCO + "/test", outputPathTFRecord + "/test")
         
