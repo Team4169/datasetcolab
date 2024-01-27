@@ -80,7 +80,7 @@ export default function DownloadDataset() {
   ]);
 
   const [classes, setClasses] = useState({
-    "FRC 2023": ["cone", "cube", "robot"],
+    "FRC 2023": ["cone", "cube"],
     "FRC 2024": ["note", "robot"],
   });
 
@@ -228,7 +228,7 @@ export default function DownloadDataset() {
 
   useEffect(() => {
     fetchApiKey();
-    fetchProjectDetailsForMultipleFolders(["FRC2024"]); // , "FRC2023"
+    fetchProjectDetailsForMultipleFolders(["FRC2024", "FRC2023"]); // 
     const alertTimeout = setTimeout(() => setShowCopyAlert(false), 5000);
     return () => clearTimeout(alertTimeout);
   }, [showCopyAlert, selectedOptions, selectedDatasetType]);
