@@ -634,87 +634,46 @@ public class App {
         });
 
         app.get("/model/inference/{model}/{image}", ctx -> {
-            try {
-                String uid = "";
-                if (ctx.header("idToken") != null || ctx.queryParam("idToken") != null) {
-                    String idToken = ctx.header("idToken") != null ? ctx.header("idToken") : ctx.queryParam("idToken");
-                    FirebaseToken decodedToken = FirebaseAuth
-                        .getInstance()
-                        .verifyIdToken(idToken);
-                    uid = decodedToken.getUid();
-                } else if (ctx.header("api") != null || ctx.queryParam("api") != null) {
-                    String api = ctx.header("api") != null ? ctx.header("api") : ctx.queryParam("api");
-                    uid = validAPI(api);
-                } else {
-                    throw new IllegalArgumentException("Invalid request: uid is null or both idToken and api are null.");
-                }
-
-                File imageFile = new File("models/" + ctx.pathParam("model") + "NORO/val_batch" + ctx.pathParam("image") + "_pred.jpg");
-                if (imageFile.exists() && imageFile.isFile()) {
-                    ctx.result(Files.readAllBytes(imageFile.toPath()));
-                } else {
-                    ctx.result("Image file not found for the specified path.");
-                }
-            } catch (FirebaseAuthException e) {
-                e.printStackTrace();
-                ctx.status(401).result("Error: Authentication failed.");
+            File imageFile = new File("models/" + ctx.pathParam("model") + "NORO/val_batch" + ctx.pathParam("image") + "_pred.jpg");
+            if (imageFile.exists() && imageFile.isFile()) {
+                ctx.result(Files.readAllBytes(imageFile.toPath()));
+            } else {
+                ctx.result("Image file not found for the specified path.");
             }
         });
 
-
-        // ...
-
         app.get("/model/performance/{model}", ctx -> {
-            try {
-                String uid = "";
-                if (ctx.header("idToken") != null || ctx.queryParam("idToken") != null) {
-                    String idToken = ctx.header("idToken") != null ? ctx.header("idToken") : ctx.queryParam("idToken");
-                    FirebaseToken decodedToken = FirebaseAuth
-                        .getInstance()
-                        .verifyIdToken(idToken);
-                    uid = decodedToken.getUid();
-                } else if (ctx.header("api") != null || ctx.queryParam("api") != null) {
-                    String api = ctx.header("api") != null ? ctx.header("api") : ctx.queryParam("api");
-                    uid = validAPI(api);
-                } else {
-                    throw new IllegalArgumentException("Invalid request: uid is null or both idToken and api are null.");
+            String model = ctx.pathParam("model");
+            String csvFilePath = "models/" + model + "NORO/results.csv";
+
+            // Read the CSV file
+            try (BufferedReader reader = new BufferedReader(new FileReader(csvFilePath))) {
+                String line;
+                String[] headers = null;
+                String[] values = null;
+
+                // Read the first and last rows of the CSV
+                while ((line = reader.readLine()) != null) {
+                    if (headers == null) {
+                        headers = line.split(",");
+                    } else {
+                        values = line.split(",");
+                    }
                 }
 
-                String model = ctx.pathParam("model");
-                String csvFilePath = "models/" + model + "NORO/results.csv";
-
-                // Read the CSV file
-                try (BufferedReader reader = new BufferedReader(new FileReader(csvFilePath))) {
-                    String line;
-                    String[] headers = null;
-                    String[] values = null;
-
-                    // Read the first and last rows of the CSV
-                    while ((line = reader.readLine()) != null) {
-                        if (headers == null) {
-                            headers = line.split(",");
-                        } else {
-                            values = line.split(",");
-                        }
-                    }
-
-                    // Create a JSON object with the keys and values
-                    Map<String, String> jsonMap = new HashMap<>();
-                    for (int i = 0; i < headers.length; i++) {
-                        String key = headers[i].replaceAll("\\s", ""); // Remove spaces from the key
-                        String value = values[i].replaceAll("\\s", ""); // Remove spaces from the value
-                        jsonMap.put(key, value);
-                    }
-
-                    // Return the JSON object
-                    ctx.json(jsonMap);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    ctx.status(500).result("Error: Failed to read the CSV file.");
+                // Create a JSON object with the keys and values
+                Map<String, String> jsonMap = new HashMap<>();
+                for (int i = 0; i < headers.length; i++) {
+                    String key = headers[i].replaceAll("\\s", ""); // Remove spaces from the key
+                    String value = values[i].replaceAll("\\s", ""); // Remove spaces from the value
+                    jsonMap.put(key, value);
                 }
-            } catch (FirebaseAuthException e) {
+
+                // Return the JSON object
+                ctx.json(jsonMap);
+            } catch (IOException e) {
                 e.printStackTrace();
-                ctx.status(401).result("Error: Authentication failed.");
+                ctx.status(500).result("Error: Failed to read the CSV file.");
             }
         });
 

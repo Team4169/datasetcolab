@@ -114,13 +114,12 @@ export default function PretrainedModels() {
 
     const handleInferenceImage = async () => {
         try {
-            const idToken = await currentUser.getIdToken();
             const inferenceImages = {};
 
             for (const variant of ["YOLOv8n", "YOLOv8s", "YOLOv5n", "YOLOv5s"]) {
-                inferenceImages[variant] = ["https://api.datasetcolab.com/model/inference/" + variant + "/0?idToken=" + idToken,
-                "https://api.datasetcolab.com/model/inference/" + variant + "/1?idToken=" + idToken,
-                "https://api.datasetcolab.com/model/inference/" + variant + "/2?idToken=" + idToken];
+                inferenceImages[variant] = ["https://api.datasetcolab.com/model/inference/" + variant + "/0",
+                "https://api.datasetcolab.com/model/inference/" + variant + "/1",
+                "https://api.datasetcolab.com/model/inference/" + variant + "/2"];
             }
 
             setInferenceImage(inferenceImages);
@@ -132,11 +131,10 @@ export default function PretrainedModels() {
 
     const handlePerformance = async () => {
         try {
-            const idToken = await currentUser.getIdToken();
             const newPerformance = {};
 
             for (const variant of ["YOLOv8n", "YOLOv8s", "YOLOv5s"]) {
-                newPerformance[variant] = (await axios.get("https://api.datasetcolab.com/model/performance/" + variant + "?idToken=" + idToken)).data;
+                newPerformance[variant] = (await axios.get("https://api.datasetcolab.com/model/performance/" + variant)).data;
             }
 
             setPerformance(newPerformance);
