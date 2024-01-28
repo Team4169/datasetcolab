@@ -70,13 +70,6 @@ export default function PretrainedModels() {
     const [apiKey, setApiKey] = useState("API_KEY");
     const [data, setData] = useState(null);
 
-    const [inferenceImage, setInferenceImage] = useState({
-        "YOLOv8n": [],
-        "YOLOv8s": [],
-        "YOLOv5n": [],
-        "YOLOv5s": [],
-    });
-
     const [performance, setPerformance] = useState({
         "YOLOv8n": {},
         "YOLOv8s": {},
@@ -132,24 +125,6 @@ export default function PretrainedModels() {
         }
     };
 
-
-    const handleInferenceImage = async () => {
-        try {
-            const inferenceImages = {};
-
-            for (const variant of ["YOLOv8n", "YOLOv8s", "YOLOv5n", "YOLOv5s"]) {
-                inferenceImages[variant] = ["https://api.datasetcolab.com/model/inference/" + variant + "/0",
-                "https://api.datasetcolab.com/model/inference/" + variant + "/1",
-                "https://api.datasetcolab.com/model/inference/" + variant + "/2"];
-            }
-
-            setInferenceImage(inferenceImages);
-        } catch (err) {
-            setError("Error loading sample inference images.");
-            console.log(err);
-        }
-    };
-
     const handlePerformance = async () => {
         try {
             const newPerformance = {};
@@ -169,7 +144,6 @@ export default function PretrainedModels() {
 
     useEffect(() => {
         handlePerformance();
-        handleInferenceImage();
         fetchApiKey();
     }, []);
 
@@ -339,9 +313,24 @@ export default function PretrainedModels() {
                                         </div>
                                     </div>
                                     <div className="col-md-8">
-                                        <h5 style={{ paddingTop: "10px" }}>Sample Inference</h5>
-                                        <img src={inferenceImage[dataset.model][0]} style={{ width: "50%" }} />
-                                        <img src={inferenceImage[dataset.model][1]} style={{ width: "50%" }} />
+                                        <h5 style={{ paddingTop: "10px" }}>Sample Inferences</h5>
+                                        <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)"}}>
+                                            <img src={"https://api.datasetcolab.com/model/inference/" + dataset.model + "/0"} style={{ width: "100%", margin: "0", padding: "0" }} />
+                                            <img src={"https://api.datasetcolab.com/model/inference/" + dataset.model + "/1"} style={{ width: "100%", margin: "0", padding: "0" }} />
+                                            <img src={"https://api.datasetcolab.com/model/inference/" + dataset.model + "/4"} style={{ width: "100%", margin: "0", padding: "0" }} />
+                                            <img src={"https://api.datasetcolab.com/model/inference/" + dataset.model + "/6"} style={{ width: "100%", margin: "0", padding: "0" }} />
+                                            <img src={"https://api.datasetcolab.com/model/inference/" + dataset.model + "/7"} style={{ width: "100%", margin: "0", padding: "0" }} />
+                                            <img src={"https://api.datasetcolab.com/model/inference/" + dataset.model + "/9"} style={{ width: "100%", margin: "0", padding: "0" }} />
+                                            <img src={"https://api.datasetcolab.com/model/inference/" + dataset.model + "/10"} style={{ width: "100%", margin: "0", padding: "0" }} />
+                                            <img src={"https://api.datasetcolab.com/model/inference/" + dataset.model + "/12"} style={{ width: "100%", margin: "0", padding: "0" }} />
+                                            <img src={"https://api.datasetcolab.com/model/inference/" + dataset.model + "/15"} style={{ width: "100%", margin: "0", padding: "0" }} />
+                                            <img src={"https://api.datasetcolab.com/model/inference/" + dataset.model + "/17"} style={{ width: "100%", margin: "0", padding: "0" }} />
+                                            <img src={"https://api.datasetcolab.com/model/inference/" + dataset.model + "/18"} style={{ width: "100%", margin: "0", padding: "0" }} />
+                                            <img src={"https://api.datasetcolab.com/model/inference/" + dataset.model + "/19"} style={{ width: "100%", margin: "0", padding: "0" }} />
+                                            <img src={"https://api.datasetcolab.com/model/inference/" + dataset.model + "/21"} style={{ width: "100%", margin: "0", padding: "0" }} />
+                                            <img src={"https://api.datasetcolab.com/model/inference/" + dataset.model + "/27"} style={{ width: "100%", margin: "0", padding: "0" }} />
+                                            <img src={"https://api.datasetcolab.com/model/inference/" + dataset.model + "/47"} style={{ width: "100%", margin: "0", padding: "0" }} />
+                                        </div>
                                     </div>
                                 </div>
 

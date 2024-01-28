@@ -634,7 +634,7 @@ public class App {
         });
 
         app.get("/model/inference/{model}/{image}", ctx -> {
-            File imageFile = new File("models/" + ctx.pathParam("model") + "NORO/val_batch" + ctx.pathParam("image") + "_pred.jpg");
+            File imageFile = new File("models/" + ctx.pathParam("model") + "NORO/images/processed_" + ctx.pathParam("image") + ".jpg");
             if (imageFile.exists() && imageFile.isFile()) {
                 ctx.result(Files.readAllBytes(imageFile.toPath()));
             } else {
@@ -650,22 +650,34 @@ public class App {
             try (BufferedReader reader = new BufferedReader(new FileReader(csvFilePath))) {
                 String line;
                 String[] headers = null;
-                String[] values = null;
+                String[] maxValues = null;
 
-                // Read the first and last rows of the CSV
+                // Read the headers
+                if ((line = reader.readLine()) != null) {
+                    headers = line.split(",");
+                }
+
+                // Read the remaining rows and find the maximum value in each column
                 while ((line = reader.readLine()) != null) {
-                    if (headers == null) {
-                        headers = line.split(",");
+                    String[] values = line.split(",");
+                    if (maxValues == null) {
+                        maxValues = values;
                     } else {
-                        values = line.split(",");
+                        for (int i = 0; i < values.length; i++) {
+                            double currentValue = Double.parseDouble(values[i].trim());
+                            double maxValue = Double.parseDouble(maxValues[i].trim());
+                            if (currentValue > maxValue) {
+                                maxValues[i] = values[i];
+                            }
+                        }
                     }
                 }
 
-                // Create a JSON object with the keys and values
+                // Create a JSON object with the headers and maximum values
                 Map<String, String> jsonMap = new HashMap<>();
                 for (int i = 0; i < headers.length; i++) {
                     String key = headers[i].replaceAll("\\s", ""); // Remove spaces from the key
-                    String value = values[i].replaceAll("\\s", ""); // Remove spaces from the value
+                    String value = maxValues[i].replaceAll("\\s", ""); // Remove spaces from the value
                     jsonMap.put(key, value);
                 }
 
