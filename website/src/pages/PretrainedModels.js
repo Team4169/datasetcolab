@@ -204,13 +204,13 @@ export default function PretrainedModels() {
                                         {performance[dataset.model] && (
                                             <div>
                                                 <div>
-                                                    <strong>mAP:</strong> {performance[dataset.model]["metrics/mAP50(B)"]}
+                                                    <strong>mAP:</strong> {(performance[dataset.model]["metrics/mAP50(B)"] * 100).toFixed(2)}%
                                                 </div>
                                                 <div>
-                                                    <strong>Precision:</strong> {performance[dataset.model]["metrics/precision(B)"]}
+                                                    <strong>Precision:</strong> {(performance[dataset.model]["metrics/precision(B)"] * 100).toFixed(2)}%
                                                 </div>
                                                 <div>
-                                                    <strong>Recall:</strong> {performance[dataset.model]["metrics/recall(B)"]}
+                                                    <strong>Recall:</strong> {(performance[dataset.model]["metrics/recall(B)"] * 100).toFixed(2)}%
                                                 </div>
                                             </div>
                                         )}
@@ -324,11 +324,11 @@ export default function PretrainedModels() {
                                             <img src={"https://api.datasetcolab.com/model/inference/" + dataset.model + "/10"} style={{ width: "100%", margin: "0", padding: "0" }} />
                                             <img src={"https://api.datasetcolab.com/model/inference/" + dataset.model + "/12"} style={{ width: "100%", margin: "0", padding: "0" }} />
                                             <img src={"https://api.datasetcolab.com/model/inference/" + dataset.model + "/15"} style={{ width: "100%", margin: "0", padding: "0" }} />
-                                            <img src={"https://api.datasetcolab.com/model/inference/" + dataset.model + "/17"} style={{ width: "100%", margin: "0", padding: "0" }} />
                                             <img src={"https://api.datasetcolab.com/model/inference/" + dataset.model + "/18"} style={{ width: "100%", margin: "0", padding: "0" }} />
                                             <img src={"https://api.datasetcolab.com/model/inference/" + dataset.model + "/19"} style={{ width: "100%", margin: "0", padding: "0" }} />
                                             <img src={"https://api.datasetcolab.com/model/inference/" + dataset.model + "/21"} style={{ width: "100%", margin: "0", padding: "0" }} />
                                             <img src={"https://api.datasetcolab.com/model/inference/" + dataset.model + "/27"} style={{ width: "100%", margin: "0", padding: "0" }} />
+                                            <img src={"https://api.datasetcolab.com/model/inference/" + dataset.model + "/42"} style={{ width: "100%", margin: "0", padding: "0" }} />
                                             <img src={"https://api.datasetcolab.com/model/inference/" + dataset.model + "/47"} style={{ width: "100%", margin: "0", padding: "0" }} />
                                         </div>
                                     </div>
