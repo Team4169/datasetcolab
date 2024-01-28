@@ -582,8 +582,7 @@ public class App {
             }
         });
 
-/*
-        app.get("/model/download/<model>", ctx -> {
+        app.get("/model/download/{model}", ctx -> {
             try {
                 String uid = "";
                 if (ctx.header("idToken") != null || ctx.queryParam("idToken") != null) {
@@ -599,51 +598,125 @@ public class App {
                     throw new IllegalArgumentException("Invalid request: uid is null or both idToken and api are null.");
                 }
 
-                String model = "models/" + ctx.pathParam("model");
+                String model = ctx.pathParam("model");
+                String fileName = "models/" + model + "NORO/weights/best.pt";
 
-                try (FileReader fileReader = new FileReader(model)) {
-                    JSONParser parser = new JSONParser();
-                    JSONObject currentDataset = (JSONObject) parser.parse(fileReader);
-                    String zipName = "download/" + (String) currentDataset.get(filePath + ctx.queryParam("datasetType") + ctx.queryParam("classes")) + ".zip";
+                try (InputStream is = Files.newInputStream(Path.of(fileName))) {
+                    System.out.println("Sending file: " + fileName);
 
-                    try (InputStream is = Files.newInputStream(Path.of(zipName))) {
-                        System.out.println("Sending file: " + zipName);
+                    // Set response headers
+                    ctx.header("Content-Disposition", "attachment; filename=" + model + ".pt");
+                    ctx.contentType("application/zip");
 
-                        // Set response headers
-                        ctx.header("Content-Disposition", "attachment; filename=" + filePath + ".zip");
-                        ctx.contentType("application/zip");
+                    // Get the OutputStream from the HttpServletResponse
+                    OutputStream outputStream = ctx.res().getOutputStream();
 
-                        // Get the OutputStream from the HttpServletResponse
-                        OutputStream outputStream = ctx.res().getOutputStream();
+                    // Write the input stream to the response output stream
+                    byte[] buffer = new byte[4096]; // Adjust the buffer size as needed
+                    int bytesRead;
 
-                        // Write the input stream to the response output stream
-                        byte[] buffer = new byte[4096]; // Adjust the buffer size as needed
-                        int bytesRead;
-
-                        while ((bytesRead = is.read(buffer)) != -1) {
-                            outputStream.write(buffer, 0, bytesRead);
-                        }
-
-                        // Close the input stream and output stream
-                        is.close();
-                        outputStream.close();
-                        System.out.println("File sent successfully.");
-                    } catch (IOException e) {
-                        // Handle exceptions
-                        ctx.status(500).result("Error: Failed to read or stream the file.");
+                    while ((bytesRead = is.read(buffer)) != -1) {
+                        outputStream.write(buffer, 0, bytesRead);
                     }
 
-                } catch (IOException | ParseException e) {
+                    // Close the input stream and output stream
+                    is.close();
+                    outputStream.close();
+                    System.out.println("File sent successfully.");
+                } catch (IOException e) {
                     // Handle exceptions
-                    ctx.status(500).result("Error: Failed to read or parse JSON file.");
+                    ctx.status(500).result("Error: Failed to read or stream the file.");
                 }
-                
             } catch (FirebaseAuthException e) {
                 e.printStackTrace();
                 ctx.status(401).result("Error: Authentication failed.");
             }
         });
-*/
+
+        app.get("/model/inference/{model}/{image}", ctx -> {
+            try {
+                String uid = "";
+                if (ctx.header("idToken") != null || ctx.queryParam("idToken") != null) {
+                    String idToken = ctx.header("idToken") != null ? ctx.header("idToken") : ctx.queryParam("idToken");
+                    FirebaseToken decodedToken = FirebaseAuth
+                        .getInstance()
+                        .verifyIdToken(idToken);
+                    uid = decodedToken.getUid();
+                } else if (ctx.header("api") != null || ctx.queryParam("api") != null) {
+                    String api = ctx.header("api") != null ? ctx.header("api") : ctx.queryParam("api");
+                    uid = validAPI(api);
+                } else {
+                    throw new IllegalArgumentException("Invalid request: uid is null or both idToken and api are null.");
+                }
+
+                File imageFile = new File("models/" + ctx.pathParam("model") + "NORO/val_batch" + ctx.pathParam("image") + "_pred.jpg");
+                if (imageFile.exists() && imageFile.isFile()) {
+                    ctx.result(Files.readAllBytes(imageFile.toPath()));
+                } else {
+                    ctx.result("Image file not found for the specified path.");
+                }
+            } catch (FirebaseAuthException e) {
+                e.printStackTrace();
+                ctx.status(401).result("Error: Authentication failed.");
+            }
+        });
+
+
+        // ...
+
+        app.get("/model/performance/{model}", ctx -> {
+            try {
+                String uid = "";
+                if (ctx.header("idToken") != null || ctx.queryParam("idToken") != null) {
+                    String idToken = ctx.header("idToken") != null ? ctx.header("idToken") : ctx.queryParam("idToken");
+                    FirebaseToken decodedToken = FirebaseAuth
+                        .getInstance()
+                        .verifyIdToken(idToken);
+                    uid = decodedToken.getUid();
+                } else if (ctx.header("api") != null || ctx.queryParam("api") != null) {
+                    String api = ctx.header("api") != null ? ctx.header("api") : ctx.queryParam("api");
+                    uid = validAPI(api);
+                } else {
+                    throw new IllegalArgumentException("Invalid request: uid is null or both idToken and api are null.");
+                }
+
+                String model = ctx.pathParam("model");
+                String csvFilePath = "models/" + model + "NORO/results.csv";
+
+                // Read the CSV file
+                try (BufferedReader reader = new BufferedReader(new FileReader(csvFilePath))) {
+                    String line;
+                    String[] headers = null;
+                    String[] values = null;
+
+                    // Read the first and last rows of the CSV
+                    while ((line = reader.readLine()) != null) {
+                        if (headers == null) {
+                            headers = line.split(",");
+                        } else {
+                            values = line.split(",");
+                        }
+                    }
+
+                    // Create a JSON object with the keys and values
+                    Map<String, String> jsonMap = new HashMap<>();
+                    for (int i = 0; i < headers.length; i++) {
+                        String key = headers[i].replaceAll("\\s", ""); // Remove spaces from the key
+                        String value = values[i].replaceAll("\\s", ""); // Remove spaces from the value
+                        jsonMap.put(key, value);
+                    }
+
+                    // Return the JSON object
+                    ctx.json(jsonMap);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    ctx.status(500).result("Error: Failed to read the CSV file.");
+                }
+            } catch (FirebaseAuthException e) {
+                e.printStackTrace();
+                ctx.status(401).result("Error: Authentication failed.");
+            }
+        });
 
         app.get(
             "/api",

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Alert from "react-bootstrap/Alert";
 import {
     Card,
@@ -55,6 +55,45 @@ const styles = {
     checkboxGroup: { display: "flex", gap: "10px", flexWrap: "wrap" },
 };
 
+/*
+const CropImage = ({ src, startX, endX, startY, endY }) => {
+    const canvasRef = useRef(null);
+
+    useEffect(() => {
+        const canvas = canvasRef.current;
+        const ctx = canvas.getContext("2d");
+
+        const image = new Image();
+        image.src = src;
+        image.onload = () => {
+            const width = image.width * (endX - startX) / 100;
+            const height = image.height * (endY - startY) / 100;
+            const startXPixel = image.width * startX / 100;
+            const startYPixel = image.height * startY / 100;
+
+            canvas.width = width;
+            canvas.height = height;
+
+            ctx.drawImage(
+                image,
+                startXPixel,
+                startYPixel,
+                width,
+                height,
+                0,
+                0,
+                width,
+                height
+            );
+        };
+    }, [src, startX, endX, startY, endY]);
+
+    return (
+        <canvas ref={canvasRef} />
+    );
+};
+*/
+
 export default function PretrainedModels() {
     const { currentUser } = useAuth();
 
@@ -71,17 +110,10 @@ export default function PretrainedModels() {
     const [data, setData] = useState(null);
 
     const [inferenceImage, setInferenceImage] = useState({
-        "YOLOv8n": [],
-        "YOLOv8s": [],
-        "YOLOv5n": [],
-        "YOLOv5s": [],
-    });
-
-    const [performance, setPerformance] = useState({
-        "YOLOv8n": {},
-        "YOLOv8s": {},
-        "YOLOv5n": {},
-        "YOLOv5s": {},
+        "YOLOv8n": "",
+        "YOLOv8s": "",
+        "YOLOv5n": "",
+        "YOLOv5s": "",
     });
 
     const navigate = useNavigate();
@@ -104,7 +136,7 @@ export default function PretrainedModels() {
 
             window.location.href = "https://api.datasetcolab.com/model/download/" + model + "?idToken=" + idToken;
         } catch (err) {
-            setError("Error downloading model.");
+            setError("Error downloading dataset.");
             console.log(err);
         } finally {
             setLoading(false);
@@ -125,35 +157,15 @@ export default function PretrainedModels() {
 
             setInferenceImage(inferenceImages);
         } catch (err) {
-            setError("Error loading sample inference images.");
+            setError("Error downloading dataset.");
             console.log(err);
         }
     };
 
-    const handlePerformance = async () => {
-        try {
-            const idToken = await currentUser.getIdToken();
-            const newPerformance = {};
-
-            for (const variant of ["YOLOv8n", "YOLOv8s", "YOLOv5s"]) {
-                newPerformance[variant] = (await axios.get("https://api.datasetcolab.com/model/performance/" + variant + "?idToken=" + idToken)).data;
-            }
-
-            setPerformance(newPerformance);
-
-        } catch (err) {
-            setError("Error loading performance data.");
-            console.log(err);
-        }
-    }
-
 
     useEffect(() => {
         handleInferenceImage();
-        handlePerformance();
     }, []);
-
-    console.log(performance);
 
     return (
         <div style={styles}>
@@ -208,20 +220,7 @@ export default function PretrainedModels() {
                                                 ))}
                                             </ButtonGroup>
                                         </Form.Group>
-                                        <h5 style={{ paddingTop: "10px" }}>Performance</h5>
-                                        {performance[dataset.model] && (
-                                            <div>
-                                                <div>
-                                                    <strong>mAP:</strong> {performance[dataset.model]["metrics/mAP50(B)"]}
-                                                </div>
-                                                <div>
-                                                    <strong>Precision:</strong> {performance[dataset.model]["metrics/precision(B)"]}
-                                                </div>
-                                                <div>
-                                                    <strong>Recall:</strong> {performance[dataset.model]["metrics/recall(B)"]}
-                                                </div>
-                                            </div>
-                                        )}
+                                        <h5 style={{ paddingTop: "10px" }}>Preformance</h5>
 
                                         {currentUser && currentUser.emailVerified ? (
                                             <>
@@ -320,10 +319,31 @@ export default function PretrainedModels() {
                                             model!
                                         </div>
                                     </div>
-                                    <div className="col-md-8">
+                                    <div croppedImagesName="col-md-8">
                                         <h5 style={{ paddingTop: "10px" }}>Sample Inference</h5>
-                                        <img src={inferenceImage[dataset.model][0]} style={{ width: "50%" }} />
-                                        <img src={inferenceImage[dataset.model][1]} style={{ width: "50%" }} />
+                                        <img src={inferenceImage[dataset.model][0]} width="50%" />
+                                        <img src={inferenceImage[dataset.model][1]} width="50%" />
+                                       {/* <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gridGap: "10px", width: "100%" }}>
+                                            {Array.from({ length: 15 }).map((_, index) => {
+                                                const startX = Math.floor(Math.random() * 4) * 25;
+                                                const endX = startX + 25;
+                                                const startY = Math.floor(Math.random() * 4) * 25;
+                                                const endY = startY + 25;
+
+                                                return (
+                                                    <div width="20%">
+                                                        <CropImage
+                                                            key={index}
+                                                            src={inferenceImage[dataset.model][0]}
+                                                            startX={startX}
+                                                            endX={endX}
+                                                            startY={startY}
+                                                            endY={endY}
+                                                        />
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>*/}
                                     </div>
                                 </div>
 

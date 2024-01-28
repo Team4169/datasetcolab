@@ -39,8 +39,7 @@ root.render(
                   </PrivateRoute>
                 }
               />
-              <Route exact path="/models" element={
-                <div className="col-md-6 offset-md-0"><PretrainedModels /></div>} />
+              <Route exact path="/models" element={<PretrainedModels />} />
               <Route
                 exact
                 path="/upload"

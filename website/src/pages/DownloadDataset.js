@@ -384,7 +384,7 @@ export default function DownloadDataset() {
                             style={{ width: "100%" }}
                             disabled={loading}
                           >
-                            {loading ? "Downloading..." : "Download Directly"}
+                            {loading ? "Downloading..." : "Download " + dataset.name.replace(" ", "") + ".zip"}
                           </Button>
                         </div>
                       )}
