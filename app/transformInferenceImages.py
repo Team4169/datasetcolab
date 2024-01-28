@@ -2,7 +2,7 @@ import os
 from PIL import Image
 
 # Define the list of model names
-model_names = ["YOLOv8n", "YOLOv8s", "YOLOv5s"]
+model_names = ["YOLOv8n", "YOLOv8s", "YOLOv5s", "YOLOv5n"]
 
 # Iterate through the model names
 for model_name in model_names:

@@ -129,7 +129,7 @@ export default function PretrainedModels() {
         try {
             const newPerformance = {};
 
-            for (const variant of ["YOLOv8n", "YOLOv8s", "YOLOv5s"]) {
+            for (const variant of ["YOLOv8n", "YOLOv5n", "YOLOv8s", "YOLOv5s"]) {
                 newPerformance[variant] = (await axios.get("https://api.datasetcolab.com/model/performance/" + variant)).data;
             }
 
