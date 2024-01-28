@@ -8,7 +8,7 @@ import {
     ToggleButton,
 } from "react-bootstrap";
 import { useAuth } from "../contexts/AuthContext";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import axios from "axios";
 
 const styles = {
@@ -84,12 +84,33 @@ export default function PretrainedModels() {
         "YOLOv5s": {},
     });
 
-    const navigate = useNavigate();
 
     const handleDownloadCurl = (dataset) => {
-        return "(placeholder)";
+        return `curl -o ${dataset.model}.pt 'https://api.datasetcolab.com/model/download/${dataset.model}?api=${apiKey}'`;
     };
 
+    const fetchApiKey = async () => {
+        try {
+          if (currentUser) {
+            const idToken = await currentUser.getIdToken();
+    
+            let config = {
+              headers: {
+                idToken: idToken,
+              },
+            };
+    
+            const response = await axios.get(
+              "https://api.datasetcolab.com/api",
+              config
+            );
+            setApiKey(response.data);
+          }
+        } catch (err) {
+          setError("Error fetching API key.");
+        }
+      };
+        
     const handleCopyToClipboard = (dataset) => {
         const curlCommand = handleDownloadCurl(dataset);
         navigator.clipboard.writeText(curlCommand);
@@ -147,11 +168,10 @@ export default function PretrainedModels() {
 
 
     useEffect(() => {
-        handleInferenceImage();
         handlePerformance();
+        handleInferenceImage();
+        fetchApiKey();
     }, []);
-
-    console.log(performance);
 
     return (
         <div style={styles}>
