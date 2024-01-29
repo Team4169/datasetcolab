@@ -1,17 +1,9 @@
-import React, { Component } from 'react';
+import React, { useState, useEffect, Component } from 'react';
+import Markdown from 'react-markdown';
 import YOLOv5n from '../docs/YOLOv5n.md';
 import YOLOv5s from '../docs/YOLOv5s.md';
-import ReactMarkdown from 'react-markdown';
-import rehypeHighlight from 'rehype-highlight';
-import remarkToc from 'remark-toc';
-import remarkGfm from 'remark-gfm';
-import rehypeRaw from 'rehype-raw';
-import rehypeSanitize from 'rehype-sanitize';
-import rehypeSlug from 'rehype-slug';
-import rehypeAutolinkHeadings from 'rehype-autolink-headings';
-import rehypeCodeTitles from 'rehype-code-titles';
-import rehypeStringify from 'rehype-stringify';
-
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import rehypeRaw from 'rehype-raw'
 
 class DocsMarkdownViewer extends Component {
   constructor(props) {
@@ -29,27 +21,43 @@ class DocsMarkdownViewer extends Component {
     }
   }
 
-    render() {
-      const { markdown } = this.state;
-      return (
-        <ReactMarkdown
-          components={{ h1: 'h3', h2: 'h3', h3: 'h3' }}
-          rehypePlugins={[
-            rehypeHighlight,
-            remarkToc,
-            remarkGfm,
-            rehypeRaw,
-            rehypeSanitize,
-            rehypeSlug,
-            rehypeAutolinkHeadings,
-            rehypeCodeTitles,
-            rehypeStringify
-          ]}
-        >
-          {markdown}
-        </ReactMarkdown>
-      );
-    }
+  render() {
+    const { markdown } = this.state;
+
+    return (
+      <Markdown
+        children={markdown}
+        components={{
+          code(props) {
+            const { children, className, node, ...rest } = props;
+            const match = /language-(\w+)/.exec(className || '');
+            return match ? (
+              <SyntaxHighlighter
+                {...rest}
+                PreTag="div"
+                children={String(children).replace(/\n$/, '')}
+                language={match[1]}
+              />
+            ) : (
+              <code {...rest} className={className}>
+                {children}
+              </code>
+            );
+          },
+          h1(props) {
+            return <h3 {...props} />;
+          },
+          h2(props) {
+            return <h4 {...props} />;
+          },
+          h3(props) {
+            return <h5 {...props} />;
+          },
+        }}
+        rehypePlugins={[rehypeRaw]}
+      />
+    );
   }
+};
 
 export default DocsMarkdownViewer;

@@ -4,69 +4,84 @@ import DocsMarkdownViewer from "../components/DocsMarkdownViewer";
 import Nav from "react-bootstrap/Nav";
 import Col from "react-bootstrap/Col";
 import Row from "react-bootstrap/Row";
-import Button from "react-bootstrap/Button";
-import ButtonGroup from "react-bootstrap/ButtonGroup";
+import { useParams, useNavigate } from "react-router-dom";
 
 export default function Docs() {
-    const [error, setError] = useState("");
-    const [activePage, setActivePage] = useState("YOLOv5n");
+  const [error, setError] = useState("");
+  const { "*": activePage } = useParams();
+  const navigate = useNavigate();
 
-    useEffect(() => {
-        // Get the docs parameter from the URL
-        const urlParams = new URLSearchParams(window.location.search);
-        const docsParam = urlParams.get("docs");
-
-        // Set the activePage to the docs parameter
-        setActivePage(docsParam);
-    }, []);
-
-    useEffect(() => {
-        // Update the markdown whenever the active page changes
-        // You can replace this with your own logic to fetch the markdown content
-        // based on the active page
-        console.log("Fetching markdown for page:", activePage);
-    }, [activePage]);
-
-    return (
-        <div style={{ padding: "20px" }}>
-            <Alert
-                variant="danger"
-                show={error}
-                onClose={() => setError("")}
-                dismissible
-            >
-                {error}
-            </Alert>
-            <h2>Documentation</h2>
-            <Row>
-                <Col md={3}>
-                    <div className="files-preview">
-                        <Nav className="flex-column">
-                            <ButtonGroup vertical>
-                                <Nav.Link
-                                    onClick={() => setActivePage("YOLOv5n")}
-                                    active={activePage === "YOLOv5n"}
-                                >
-                                    <Button variant={activePage === "YOLOv5n" ? "primary" : "outline-primary"}>
-                                        YOLOv5n
-                                    </Button>
-                                </Nav.Link>
-                                <Nav.Link
-                                    onClick={() => setActivePage("YOLOv5s")}
-                                    active={activePage === "YOLOv5s"}
-                                >
-                                    <Button variant={activePage === "YOLOv5s" ? "primary" : "outline-primary"}>
-                                        YOLOv5s
-                                    </Button>
-                                </Nav.Link>
-                            </ButtonGroup>
-                        </Nav>
-                    </div>
-                </Col>
-                <Col md={9}>
-                    <DocsMarkdownViewer page={activePage} />
-                </Col>
-            </Row>
-        </div>
-    );
+  return (
+    <div style={{ padding: "20px" }}>
+      <Alert
+        variant="danger"
+        show={error}
+        onClose={() => setError("")}
+        dismissible
+      >
+        {error}
+      </Alert>
+      <h2 style={{ paddingBottom: "10px" }}>Documentation</h2>
+      <Row>
+        <Col md={2}>
+          <Nav
+            className="col-md-12 d-none d-md-block bg-white sidebar"
+            activeKey="/home"
+            onSelect={(selectedKey) => alert(`selected ${selectedKey}`)}
+          >
+            <div className="sidebar-section">
+              <h5>Inference</h5>
+              <Nav.Item>
+                <Nav.Link
+                  onClick={() => {
+                    navigate("/docs/YOLOv5n");
+                    window.location.reload();
+                  }}
+                  className="black-text text-dark"
+                >
+                  YOLOv5n
+                </Nav.Link>
+              </Nav.Item>
+              <Nav.Item>
+                <Nav.Link
+                  onClick={() => {
+                    navigate("/docs/YOLOv5s");
+                    window.location.reload();
+                  }}
+                  className="black-text text-dark"
+                >
+                  YOLOv5s
+                </Nav.Link>
+              </Nav.Item>
+              <Nav.Item>
+                <Nav.Link
+                  onClick={() => {
+                    navigate("/docs/YOLOv8n");
+                    window.location.reload();
+                  }}
+                  className="black-text text-dark"
+                >
+                  YOLOv8n
+                </Nav.Link>
+              </Nav.Item>
+              <Nav.Item>
+                <Nav.Link
+                  onClick={() => {
+                    navigate("/docs/YOLOv8s");
+                    window.location.reload();
+                  }}
+                  className="black-text text-dark"
+                >
+                  YOLOv8s
+                </Nav.Link>
+              </Nav.Item>
+            </div>
+          </Nav>
+        </Col>
+        <Col md={10}>
+          <DocsMarkdownViewer page={activePage} />
+        </Col>
+      </Row>
+    </div>
+  );
 }

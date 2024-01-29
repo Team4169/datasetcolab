@@ -34,7 +34,7 @@ root.render(
                 exact
                 path="/"
                 element={
-                  <PrivateRoute noAuth={<Navigate to="/download" />}>
+                  <PrivateRoute noAuth={<Navigate to="/models" />}>
                     <Dashboard />
                   </PrivateRoute>
                 }
@@ -51,7 +51,8 @@ root.render(
                   </PrivateRoute>
                 }
               />
-              <Route exact path="/docs" element={<Docs />} />
+              <Route exact path="/docs" element={<Navigate to="/docs/YOLOv5s" />} />
+              <Route exact path="/docs/*" element={<Docs />} />
               <Route
                 exact
                 path="/download"

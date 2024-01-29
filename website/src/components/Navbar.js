@@ -29,16 +29,9 @@ export default function NavbarComponent() {
           <Navbar.Toggle aria-controls="basic-navbar-nav" />
           <Navbar.Collapse id="basic-navbar-nav" className="justify-content-end">
             <Nav>
-            {
-              /*
             <Nav.Link onClick={() => navigate("/docs")} style={{ cursor: "pointer" }}>Docs</Nav.Link>
-              */
-            }
             <Nav.Link onClick={() => navigate("/download")} style={{ cursor: "pointer" }}>Download Dataset</Nav.Link>
-            {
-              /*
             <Nav.Link onClick={() => navigate("/models")} style={{ cursor: "pointer" }}>Pretrained Models</Nav.Link>
-            */}
               <Nav.Link onClick={() => navigate("/about")} style={{ cursor: "pointer" }}>About Us</Nav.Link>
               <Nav.Link onClick={() => navigate("/signup")} style={{ cursor: "pointer" }}>Signup/Login</Nav.Link>
             </Nav>
@@ -57,18 +50,10 @@ export default function NavbarComponent() {
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
         <Navbar.Collapse id="basic-navbar-nav" className="justify-content-end">
           <Nav>
-            {
-              /*
             <Nav.Link onClick={() => navigate("/docs")} style={{ cursor: "pointer" }}>Docs</Nav.Link>
-              */
-            }
             <Nav.Link onClick={() => navigate("/upload")} style={{ cursor: "pointer" }}>Upload Dataset</Nav.Link>
             <Nav.Link onClick={() => navigate("/download")} style={{ cursor: "pointer" }}>Download Dataset</Nav.Link>
-            {
-              /*
             <Nav.Link onClick={() => navigate("/models")} style={{ cursor: "pointer" }}>Pretrained Models</Nav.Link>
-              */
-            }
             <NavDropdown title="Account" id="basic-nav-dropdown">
               <NavDropdown.Item onClick={() => navigate("/settings")} style={{ cursor: "pointer" }}>Settings</NavDropdown.Item>
               <NavDropdown.Item onClick={handleLogout} style={{ cursor: "pointer" }}>Logout</NavDropdown.Item>
