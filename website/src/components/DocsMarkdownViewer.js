@@ -2,6 +2,8 @@ import React, { useState, useEffect, Component } from 'react';
 import Markdown from 'react-markdown';
 import YOLOv5n from '../docs/YOLOv5n.md';
 import YOLOv5s from '../docs/YOLOv5s.md';
+import YOLOv8n from '../docs/YOLOv8n.md';
+import YOLOv8s from '../docs/YOLOv8s.md';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import rehypeRaw from 'rehype-raw'
 
@@ -18,6 +20,10 @@ class DocsMarkdownViewer extends Component {
       fetch(YOLOv5n).then(res => res.text()).then(text => this.setState({ markdown: text }));
     } else if (page === 'YOLOv5s') {
       fetch(YOLOv5s).then(res => res.text()).then(text => this.setState({ markdown: text }));
+    } else if (page === 'YOLOv8n') {
+      fetch(YOLOv8n).then(res => res.text()).then(text => this.setState({ markdown: text }));
+    } else if (page === 'YOLOv8s') {
+      fetch(YOLOv8s).then(res => res.text()).then(text => this.setState({ markdown: text }));
     }
   }
 
