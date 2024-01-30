@@ -204,7 +204,10 @@ export default function PretrainedModels() {
                                         {performance[dataset.model] && (
                                             <div>
                                                 <div>
-                                                    <strong>mAP:</strong> {(performance[dataset.model]["metrics/mAP50(B)"] * 100).toFixed(2)}%
+                                                    <strong>mAP50:</strong> {(performance[dataset.model]["metrics/mAP50(B)"] * 100).toFixed(2)}%
+                                                </div>
+                                                <div>
+                                                    <strong>mAP50-95:</strong> {(performance[dataset.model]["metrics/mAP50-95(B)"] * 100).toFixed(2)}%
                                                 </div>
                                                 <div>
                                                     <strong>Precision:</strong> {(performance[dataset.model]["metrics/precision(B)"] * 100).toFixed(2)}%
