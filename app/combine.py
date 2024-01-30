@@ -63,23 +63,23 @@ def mergeCocoDatasets(dataset_paths, output_path, classes):
             merged_data['images'].append(image)
 
         for annotation in data['annotations']:
+            approved = False
             category_name = None
             for category in data['categories']:
                 if category['id'] == annotation['category_id']:
                     category_name = category['name']
                     break
 
-            if category_name is not None:
-                for category in merged_data['categories']:
-                    if category['name'] == category_name:
-                        annotation['category_id'] = category['id']
-                        break
-            else:
-                print("Category name is None.")
+            for category in merged_data['categories']:
+                if category['name'] == category_name:
+                    annotation['category_id'] = category['id']
+                    approved = True
+                    break
 
             annotation['id'] += max_annotation_id
             annotation['image_id'] = id_mapping[annotation['image_id']]
-            merged_data['annotations'].append(annotation)
+            if approved:
+                merged_data['annotations'].append(annotation)
 
         # Remove images without annotations
         merged_data['images'] = [image for image in merged_data['images'] if any(annotation['image_id'] == image['id'] for annotation in merged_data['annotations'])]

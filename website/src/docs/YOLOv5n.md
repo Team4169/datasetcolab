@@ -1,4 +1,4 @@
-# Getting Start with YOLOv5n
+# Getting Started with YOLOv5n
 
 **Clone the YOLOv5 Reposition**
 

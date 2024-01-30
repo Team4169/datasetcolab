@@ -1,4 +1,4 @@
-# Getting Start with YOLOv8s
+# Getting Started with YOLOv8s
 
 **Install Ultralytics**
 
