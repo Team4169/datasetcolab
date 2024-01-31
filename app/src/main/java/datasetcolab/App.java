@@ -194,7 +194,6 @@ public class App {
                         }
                     }
                 }
-                System.out.println(requestedFile);
 
                 if (requestedFile.matches(".*\\.(jpg|jpeg|png|webp)$")) {
                     File imageFile = new File(requestedFile);
@@ -260,8 +259,6 @@ public class App {
                     try (FileReader readFileReader = new FileReader(datasetFile)) {
                         JSONParser parser = new JSONParser();
                         JSONObject currentDataset = (JSONObject) parser.parse(readFileReader);
-                        System.out.println(folderName);
-                        System.out.println(currentDataset.get(folderName));
                         if (currentDataset.get(folderName) != null) {
                             String metadataFilePath = "download/" + (String) currentDataset.get(folderName) + "/metadata.json";
                             File metadataFile = new File(metadataFilePath);
@@ -319,8 +316,6 @@ public class App {
                         folderName = "download/" + (String) currentDataset.get(folderNameSubstring) + ctx.pathParam("folderName").substring(ctx.pathParam("folderName").indexOf(folderNameSubstring) + folderNameSubstring.length());
                     }
                 }
-                System.out.println("annoations");
-                System.out.println(folderName);
 
                 String[] folderNameArray = folderName.split("/");
                 List<String> folderNameList = new ArrayList<>(Arrays.asList(folderNameArray));
@@ -329,7 +324,6 @@ public class App {
                 folderNameList.remove(folderNameList.size() - 1);
 
                 String filePath = String.join("/", folderNameList);
-                System.out.println(filePath);
 
                 File folder = new File(filePath);
                 File[] files = folder.listFiles((dir, name) -> name.toLowerCase().endsWith(".json"));
@@ -374,8 +368,6 @@ public class App {
                             }
                         }
                     }
-                } else {
-                    System.out.println("No json files found in the directory.");
                 }
                 ctx.json(outAnnotations);
             } catch (FirebaseAuthException | ParseException e) {
@@ -444,7 +436,6 @@ public class App {
                         COCO uploader = new COCO();
                         uploader.upload(folderName, ctx.uploadedFiles("files"), uid);
                         Set<String> parsedNames = uploader.parsedNames;
-                        System.out.println(parsedNames);
                         parsedNamesUpload.addAll(parsedNames);
                     } else if ("ROBOFLOW".equals(datasetType)) {
                         Roboflow uploader = new Roboflow();
@@ -536,8 +527,6 @@ public class App {
                         String zipName = "download/" + (String) currentDataset.get(filePath + ctx.queryParam("datasetType") + ctx.queryParam("classes")) + ".zip";
 
                         try (InputStream is = Files.newInputStream(Path.of(zipName))) {
-                            System.out.println("Sending file: " + zipName);
-
                             // Set response headers
                             ctx.header("Content-Disposition", "attachment; filename=" + filePath + ".zip");
                             ctx.contentType("application/zip");
@@ -556,7 +545,6 @@ public class App {
                             // Close the input stream and output stream
                             is.close();
                             outputStream.close();
-                            System.out.println("File sent successfully.");
                         } catch (IOException e) {
                             // Handle exceptions
                             ctx.status(500).result("Error: Failed to read or stream the file.");
@@ -602,8 +590,6 @@ public class App {
                 String fileName = "models/" + model + "NORO/weights/best.pt";
 
                 try (InputStream is = Files.newInputStream(Path.of(fileName))) {
-                    System.out.println("Sending file: " + fileName);
-
                     // Set response headers
                     ctx.header("Content-Disposition", "attachment; filename=" + model + ".pt");
                     ctx.contentType("application/zip");
@@ -622,7 +608,6 @@ public class App {
                     // Close the input stream and output stream
                     is.close();
                     outputStream.close();
-                    System.out.println("File sent successfully.");
                 } catch (IOException e) {
                     // Handle exceptions
                     ctx.status(500).result("Error: Failed to read or stream the file.");

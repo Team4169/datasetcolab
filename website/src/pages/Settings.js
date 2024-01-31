@@ -5,6 +5,8 @@ import Form from "react-bootstrap/Form";
 import Button from "react-bootstrap/Button";
 import Alert from "react-bootstrap/Alert";
 import axios from "axios";
+import { analytics } from "../firebase";
+import { logEvent } from "firebase/analytics";
 
 const styles = {
   padding: "20px",
@@ -152,6 +154,8 @@ export default function Settings() {
       );
       setApiKey(response.data);
       setShowCopyAlert(false);
+
+      logEvent(analytics, 'api');
     } catch (err) {
       setApiKeyError(
         isNew ? "Error generating a new API key." : "Error fetching API key."

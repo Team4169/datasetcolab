@@ -5,7 +5,8 @@ import Form from "react-bootstrap/Form";
 import Button from "react-bootstrap/Button";
 import Alert from "react-bootstrap/Alert";
 import axios from "axios";
-import { updateProfile } from "firebase/auth";
+import { analytics } from "../firebase";
+import { logEvent } from "firebase/analytics";
 
 export default function Signup() {
   const emailRef = useRef();
@@ -47,6 +48,8 @@ export default function Signup() {
       await updateUsername(usernameRef.current.value);
       await sendEmailVerification_();
       navigate("/email-verification?to=" + destination);
+
+      logEvent(analytics, 'api');
     } catch {
       setError("Failed to create an account");
     }

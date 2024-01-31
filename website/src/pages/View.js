@@ -4,6 +4,8 @@ import axios from "axios";
 import Alert from "react-bootstrap/Alert";
 import { Button, Form, Pagination } from "react-bootstrap";
 import { useParams, useNavigate } from "react-router-dom";
+import { analytics } from "../firebase";
+import { logEvent } from "firebase/analytics";
 
 const styles = {
   padding: "20px",
@@ -206,6 +208,9 @@ export default function View() {
         setImageSrc(
           `https://api.datasetcolab.com/dataset/view/${folderName}?idToken=${idToken}`
         );
+
+        logEvent(analytics, 'dataset/annotations');
+        logEvent(analytics, 'dataset/view');
       } else {
         const config = { headers: { idToken: idToken } };
 
@@ -224,6 +229,8 @@ export default function View() {
         };
         setCurrentFileTree(reorderedFileTree);
         setImageSrc(null);
+
+        logEvent(analytics, 'dataset/view');
       }
     } catch (err) {
       setError("Error fetching project details.");
@@ -243,6 +250,8 @@ export default function View() {
         config
       );
       navigate("/");
+
+      logEvent(analytics, 'dataset/delete');
     } catch (err) {
       setError("Error deleting project.");
     }

@@ -11,6 +11,8 @@ import {
   Pagination,
   Card,
 } from "react-bootstrap";
+import { analytics } from "../firebase";
+import { logEvent } from "firebase/analytics";
 
 const styles = {
   customFileUpload: {
@@ -150,6 +152,8 @@ export default function Upload() {
 
       setMapClasses(preprocessMapClasses);
       setShowClassMatch(true);
+
+      logEvent(analytics, 'dataset/upload');
     } catch (error) {
       setError("Error: " + error.message);
       setUploadLoading(false);
@@ -181,6 +185,8 @@ export default function Upload() {
       );
 
       navigate("/");
+
+      logEvent(analytics, 'dataset/classes');
     } catch (error) {
       setError("Error: " + error.message);
     }

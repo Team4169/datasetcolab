@@ -4,6 +4,8 @@ import axios from "axios";
 import Alert from "react-bootstrap/Alert";
 import { Card, Button, ToggleButton, ButtonGroup, Form } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
+import { analytics } from "../firebase";
+import { logEvent } from "firebase/analytics";
 
 const styles = {
   padding: "20px",
@@ -82,6 +84,8 @@ export default function Dashboard() {
       } else {
         setFolderMetadata([]); // Set to an empty array if response.data is not an array
       }
+
+      logEvent(analytics, 'dataset/view');
     } catch (err) {
       setError("Error fetching projects.");
     } finally {

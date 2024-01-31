@@ -10,6 +10,8 @@ import {
 import { useAuth } from "../contexts/AuthContext";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
+import { analytics } from "../firebase";
+import { logEvent } from "firebase/analytics";
 
 const styles = {
   padding: "20px",
@@ -134,14 +136,6 @@ export default function DownloadDataset() {
       const selectedOptionsAbbreviated = selectedOptions[dataset.slice(0, 3) + " " + dataset.slice(3)].map(option => option.slice(0, 2));
       const classesParam = selectedOptionsAbbreviated.length > 0 ? `&classes=${selectedOptionsAbbreviated.join("").toUpperCase()}` : "&classes=NULL";
 
-      console.log("https://api.datasetcolab.com/dataset/download/" +
-        dataset +
-        "?idToken=" +
-        idToken +
-        "&datasetType=" +
-        selectedDatasetType[dataset.slice(0, 3) + " " + dataset.slice(3)] +
-        classesParam);
-
       window.location.href =
         "https://api.datasetcolab.com/dataset/download/" +
         dataset +
@@ -150,6 +144,8 @@ export default function DownloadDataset() {
         "&datasetType=" +
         selectedDatasetType[dataset.slice(0, 3) + " " + dataset.slice(3)] +
         classesParam;
+
+      logEvent(analytics, 'dataset/download');
     } catch (err) {
       setError("Error downloading dataset.");
       console.log(err);
@@ -174,6 +170,8 @@ export default function DownloadDataset() {
           config
         );
         setApiKey(response.data);
+
+        logEvent(analytics, 'api');
       }
     } catch (err) {
       setError("Error fetching API key.");
@@ -217,6 +215,8 @@ export default function DownloadDataset() {
           };
           return newDatasets;
         });
+
+        logEvent(analytics, 'dataset/metadata');
       }
     } catch (err) {
       setError("Error fetching project details.");

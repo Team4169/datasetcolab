@@ -10,6 +10,8 @@ import {
 import { useAuth } from "../contexts/AuthContext";
 import { Link } from "react-router-dom";
 import axios from "axios";
+import { analytics } from "../firebase";
+import { logEvent } from "firebase/analytics";
 
 const styles = {
     padding: "20px",
@@ -98,6 +100,8 @@ export default function PretrainedModels() {
               config
             );
             setApiKey(response.data);
+
+            logEvent(analytics, 'api');
           }
         } catch (err) {
           setError("Error fetching API key.");
@@ -117,6 +121,8 @@ export default function PretrainedModels() {
             const idToken = await currentUser.getIdToken();
 
             window.location.href = "https://api.datasetcolab.com/model/download/" + model + "?idToken=" + idToken;
+
+            logEvent(analytics, 'model/download');
         } catch (err) {
             setError("Error downloading model.");
             console.log(err);
@@ -135,6 +141,7 @@ export default function PretrainedModels() {
 
             setPerformance(newPerformance);
 
+            logEvent(analytics, 'model/performance');
         } catch (err) {
             setError("Error loading performance data.");
             console.log(err);
