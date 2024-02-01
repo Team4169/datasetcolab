@@ -472,9 +472,7 @@ export default function View() {
                                   />
                                     */
                                   }
-                                  {item.length > 58
-                                    ? `${item.substring(0, 55)}...`
-                                    : item}
+                                  {item}
                                 </Pagination.Item>
                               </div>
                             ))}

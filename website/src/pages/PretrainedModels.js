@@ -125,7 +125,6 @@ export default function PretrainedModels() {
             logEvent(analytics, 'model/download');
         } catch (err) {
             setError("Error downloading model.");
-            console.log(err);
         } finally {
             setLoading(false);
         }
@@ -144,7 +143,6 @@ export default function PretrainedModels() {
             logEvent(analytics, 'model/performance');
         } catch (err) {
             setError("Error loading performance data.");
-            console.log(err);
         }
     }
 
@@ -197,7 +195,6 @@ export default function PretrainedModels() {
                                                                     ...newDatasets[index],
                                                                     model: variant
                                                                 };
-                                                                console.log(newDatasets);
                                                                 return newDatasets;
                                                             })
                                                         }
@@ -243,7 +240,6 @@ export default function PretrainedModels() {
                                                                         ...newDatasets[index],
                                                                         download: "direct"
                                                                     };
-                                                                    console.log(newDatasets);
                                                                     return newDatasets;
                                                                 })
                                                             }
@@ -263,7 +259,6 @@ export default function PretrainedModels() {
                                                                         ...newDatasets[index],
                                                                         download: "curl"
                                                                     };
-                                                                    console.log(newDatasets);
                                                                     return newDatasets;
                                                                 })
                                                             }

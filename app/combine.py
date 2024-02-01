@@ -1,4 +1,4 @@
-import json, sys, os, shutil, random, string, datetime, concurrent.futures, zipfile, subprocess, itertools, time
+import json, sys, os, shutil, random, string, datetime, concurrent.futures, zipfile, subprocess, itertools, time, math
 from PIL import Image
 from glob import glob
 
@@ -229,8 +229,8 @@ for year in years:
         # Convert to TFRecord
         print("Converting to TFRecord (" + tempNamesTFRecord[year][-1] + ")")
         outputPathTFRecord = '/home/team4169/datasetcolab/app/download/' + tempNamesTFRecord[year][-1]
-        subprocess.run(['python3', 'COCOtoTFRecord.py', "--annotation_path=" + outputPathCOCO + "/train/_annotations.coco.json", "--image_dir=" + outputPathCOCO + "/train", "--output_filepath=" + outputPathTFRecord + "/train/train", "--shards=" + str(round(train_image_count / 800))])
-        subprocess.run(['python3', 'COCOtoTFRecord.py', "--annotation_path=" + outputPathCOCO + "/valid/_annotations.coco.json", "--image_dir=" + outputPathCOCO + "/valid", "--output_filepath=" + outputPathTFRecord + "/valid/valid", "--shards=" + str(round(valid_image_count / 800))])
+        subprocess.run(['python3', 'COCOtoTFRecord.py', "--annotation_path=" + outputPathCOCO + "/train/_annotations.coco.json", "--image_dir=" + outputPathCOCO + "/train", "--output_filepath=" + outputPathTFRecord + "/train/train", "--shards=" + str(math.ceil(train_image_count / 400))])
+        subprocess.run(['python3', 'COCOtoTFRecord.py', "--annotation_path=" + outputPathCOCO + "/valid/_annotations.coco.json", "--image_dir=" + outputPathCOCO + "/valid", "--output_filepath=" + outputPathTFRecord + "/valid/valid", "--shards=" + str(math.ceil(valid_image_count / 400))])
         os.makedirs(outputPathTFRecord, exist_ok=True)
         shutil.copytree(outputPathCOCO + "/test", outputPathTFRecord + "/test")
         os.remove(outputPathTFRecord + "/test/_annotations.coco.json")

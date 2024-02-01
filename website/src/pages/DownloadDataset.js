@@ -148,7 +148,6 @@ export default function DownloadDataset() {
       logEvent(analytics, 'dataset/download');
     } catch (err) {
       setError("Error downloading dataset.");
-      console.log(err);
     } finally {
       setLoading(false);
     }
@@ -192,15 +191,11 @@ export default function DownloadDataset() {
         const classesParam = selectedOptionsAbbreviated.length > 0 ? selectedOptionsAbbreviated.join("").toUpperCase() : "NULL";
 
         const config = { headers: { idToken: idToken } };
-        console.log(config);
         const response = await axios.get(
           `https://api.datasetcolab.com/dataset/metadata/${folderName}${selectedDatasetType[splitFolderName]
           }${classesParam}`,
           config
         );
-
-        console.log(response.data);
-        console.log(response.data.totalImageCount);
 
         setDatasets((prevDatasets) => {
           const newDatasets = [...prevDatasets];
@@ -220,7 +215,6 @@ export default function DownloadDataset() {
       }
     } catch (err) {
       setError("Error fetching project details.");
-      console.log(err);
     } finally {
       setLoading(false);
     }
@@ -318,7 +312,6 @@ export default function DownloadDataset() {
                     </ToggleButton>
                   </ButtonGroup>
                 </Form.Group>
-                {console.log(dataset.name.replace(" ", "") + selectedDatasetType[dataset.name] + selectedOptions[dataset.name].map(option => option.slice(0, 2)).join("").toUpperCase())}
                 <Button
                   variant="primary"
                   className="position-absolute top-0 end-0 m-3"
