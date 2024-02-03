@@ -42,4 +42,8 @@ app/*.json
 
 # Ignore Gradle build output directory
 build
+<<<<<<< HEAD
 possible.txt
+=======
+*.pem
+>>>>>>> c4c629676d8acc42ab015044ee7d8037317bd795
