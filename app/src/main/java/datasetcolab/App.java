@@ -629,7 +629,7 @@ public class App {
 
         app.get("/model/performance/{model}", ctx -> {
             String model = ctx.pathParam("model");
-            String csvFilePath = "models/" + model + "NORO/results.csv";
+            String csvFilePath = "models/" + model + "/results.csv";
 
             // Read the CSV file
             try (BufferedReader reader = new BufferedReader(new FileReader(csvFilePath))) {

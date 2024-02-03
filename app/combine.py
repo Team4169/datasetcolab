@@ -250,6 +250,7 @@ with open(currentDatasetPath, 'r') as f:
 
 for i, year in enumerate(years):
     for j, classprecombo in enumerate(classes[year]):
+        classprecombo.sort()
         classcombo = ''.join([class_name[:2].upper() for class_name in classprecombo])
         for dataset in ["COCO", "YOLO", "TFRecord"]:
             oldDatasetPath = None

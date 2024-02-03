@@ -86,28 +86,28 @@ export default function PretrainedModels() {
 
     const fetchApiKey = async () => {
         try {
-          if (currentUser) {
-            const idToken = await currentUser.getIdToken();
-    
-            let config = {
-              headers: {
-                idToken: idToken,
-              },
-            };
-    
-            const response = await axios.get(
-              "https://api.datasetcolab.com/api",
-              config
-            );
-            setApiKey(response.data);
+            if (currentUser) {
+                const idToken = await currentUser.getIdToken();
 
-            logEvent(analytics, 'api');
-          }
+                let config = {
+                    headers: {
+                        idToken: idToken,
+                    },
+                };
+
+                const response = await axios.get(
+                    "https://api.datasetcolab.com/api",
+                    config
+                );
+                setApiKey(response.data);
+
+                logEvent(analytics, 'api');
+            }
         } catch (err) {
-          setError("Error fetching API key.");
+            setError("Error fetching API key.");
         }
-      };
-        
+    };
+
     const handleCopyToClipboard = (dataset) => {
         const curlCommand = handleDownloadCurl(dataset);
         navigator.clipboard.writeText(curlCommand);
@@ -135,7 +135,9 @@ export default function PretrainedModels() {
             const newPerformance = {};
 
             for (const variant of ["YOLOv8n", "YOLOv5n", "YOLOv8s", "YOLOv5s"]) {
-                newPerformance[variant] = (await axios.get("https://api.datasetcolab.com/model/performance/" + variant)).data;
+                for (const classes of ["NO", "RO", "NORO"]) {
+                    newPerformance[variant + classes] = (await axios.get("https://api.datasetcolab.com/model/performance/" + variant + classes)).data;
+                }
             }
 
             setPerformance(newPerformance);
@@ -169,14 +171,31 @@ export default function PretrainedModels() {
                         <Card key={index} style={styles.datasetCard}>
                             <Card.Body>
                                 <h3>{dataset.name}</h3>
-
                                 <div className="row">
                                     <div className="col-md-4">
-
-                                        <small>
-                                            <strong>Dataset:</strong> {dataset.dataset} &nbsp;&nbsp;&nbsp;
-                                            <strong>Classes:</strong> {dataset.classes.join(", ")}
-                                        </small>
+                                        <h5 style={{ paddingTop: "10px" }}>Dataset Classes</h5>
+                                        <div style={styles.checkboxGroup}>
+                                            {dataset.classes.map((opt, i) => (
+                                                <Form.Check
+                                                    key={i}
+                                                    type="checkbox"
+                                                    id={`checkbox-${dataset.classes}-${i}`}
+                                                    label={opt}
+                                                    defaultChecked={dataset.classes.includes(opt)}
+                                                    onChange={() =>
+                                                        setDatasets((prevDatasets) => {
+                                                            const newDatasets = [...prevDatasets];
+                                                            if (newDatasets[index].classes.includes(opt)) {
+                                                                newDatasets[index].classes = newDatasets[index].classes.filter((c) => c !== opt);
+                                                            } else {
+                                                                newDatasets[index].classes.push(opt);
+                                                                newDatasets[index].classes.sort();
+                                                            }
+                                                            return newDatasets;
+                                                        })}
+                                                />
+                                            ))}
+                                        </div>
                                         <h5 style={{ paddingTop: "10px" }}>Model Variant</h5>
                                         <Form.Group>
                                             <ButtonGroup toggle>
@@ -221,7 +240,6 @@ export default function PretrainedModels() {
                                                 </div>
                                             </div>
                                         )}
-
                                         {currentUser && currentUser.emailVerified ? (
                                             <>
                                                 <h5 style={{ paddingTop: "10px" }}>Download Weights</h5>
@@ -319,7 +337,7 @@ export default function PretrainedModels() {
                                     </div>
                                     <div className="col-md-8">
                                         <h5 style={{ paddingTop: "10px" }}>Sample Inferences</h5>
-                                        <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)"}}>
+                                        <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)" }}>
                                             <img src={"https://api.datasetcolab.com/model/inference/" + dataset.model + "/0"} style={{ width: "100%", margin: "0", padding: "0" }} />
                                             <img src={"https://api.datasetcolab.com/model/inference/" + dataset.model + "/1"} style={{ width: "100%", margin: "0", padding: "0" }} />
                                             <img src={"https://api.datasetcolab.com/model/inference/" + dataset.model + "/4"} style={{ width: "100%", margin: "0", padding: "0" }} />
@@ -338,7 +356,6 @@ export default function PretrainedModels() {
                                         </div>
                                     </div>
                                 </div>
-
                             </Card.Body>
                         </Card>
                     ))}
