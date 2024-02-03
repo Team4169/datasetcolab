@@ -72,7 +72,6 @@ export default function PretrainedModels() {
 
     const [loading, setLoading] = useState(false);
     const [apiKey, setApiKey] = useState("API_KEY");
-    const [data, setData] = useState(null);
 
     const [performance, setPerformance] = useState({
         "YOLOv8n": {},
@@ -122,7 +121,7 @@ export default function PretrainedModels() {
 
             const idToken = await currentUser.getIdToken();
 
-            window.location.href = "https://api.datasetcolab.com/model/download/" + model + classes.map(item => item.slice(0, 2).toUpperCase()).join('')+ "?idToken=" + idToken;
+            window.location.href = "https://api.datasetcolab.com/model/download/" + model + classes.map(item => item.slice(0, 2).toUpperCase()).join('') + "?idToken=" + idToken;
 
             logEvent(analytics, 'model/download');
         } catch (err) {
@@ -238,20 +237,23 @@ export default function PretrainedModels() {
                                                 </Form.Group>
                                                 <h5 style={{ paddingTop: "10px" }}>Performance</h5>
                                                 {performance[dataset.model + dataset.classes.map(item => item.slice(0, 2).toUpperCase()).join('')] && (
-                                                    <div>
-                                                        <div>
+                                                    <>  <div className="row">
+                                                        <div className="col">
                                                             <strong>mAP50:</strong> {(performance[dataset.model + dataset.classes.map(item => item.slice(0, 2).toUpperCase()).join('')]["metrics/mAP50(B)"] * 100).toFixed(2)}%
                                                         </div>
-                                                        <div>
+                                                        <div className="col">
                                                             <strong>mAP50-95:</strong> {(performance[dataset.model + dataset.classes.map(item => item.slice(0, 2).toUpperCase()).join('')]["metrics/mAP50-95(B)"] * 100).toFixed(2)}%
                                                         </div>
-                                                        <div>
-                                                            <strong>Precision:</strong> {(performance[dataset.model + dataset.classes.map(item => item.slice(0, 2).toUpperCase()).join('')]["metrics/precision(B)"] * 100).toFixed(2)}%
-                                                        </div>
-                                                        <div>
-                                                            <strong>Recall:</strong> {(performance[dataset.model + dataset.classes.map(item => item.slice(0, 2).toUpperCase()).join('')]["metrics/recall(B)"] * 100).toFixed(2)}%
-                                                        </div>
                                                     </div>
+                                                        <div className="row">
+                                                            <div className="col">
+                                                                <strong>Precision:</strong> {(performance[dataset.model + dataset.classes.map(item => item.slice(0, 2).toUpperCase()).join('')]["metrics/precision(B)"] * 100).toFixed(2)}%
+                                                            </div>
+                                                            <div className="col">
+                                                                <strong>Recall:</strong> {(performance[dataset.model + dataset.classes.map(item => item.slice(0, 2).toUpperCase()).join('')]["metrics/recall(B)"] * 100).toFixed(2)}%
+                                                            </div>
+                                                        </div>
+                                                    </>
                                                 )}
                                                 {currentUser && currentUser.emailVerified ? (
                                                     <>

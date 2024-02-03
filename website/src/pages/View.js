@@ -178,11 +178,16 @@ export default function View() {
       const selectedOptionsAbbreviated = prevOptions.map((option) =>
         option.slice(0, 2)
       );
-      const newFolderName = folderName.replace(
-        previousShortOptions.join("").toUpperCase(),
-        selectedOptionsAbbreviated.join("").toUpperCase()
-      );
-      navigate("/view/" + newFolderName);
+      if (previousShortOptions.join("").toUpperCase() !== "") {
+        const newFolderName = folderName.replace(
+          previousShortOptions.join("").toUpperCase(),
+          selectedOptionsAbbreviated.join("").toUpperCase()
+        );
+        navigate("/view/" + newFolderName);
+      } else {
+        const newFolderName = folderName + selectedOptionsAbbreviated.join("").toUpperCase();
+        navigate("/view/" + newFolderName);
+      }
 
       return prevOptions;
     });
@@ -330,7 +335,9 @@ export default function View() {
   };
 
   useEffect(() => {
-    fetchProjectDetails();
+    if (selectedOptions.length > 0) {
+      fetchProjectDetails();
+    }
   }, [folderName]);
 
   const [idToken, setIdToken] = useState("");
@@ -383,8 +390,8 @@ export default function View() {
                   (projectDetails.uploadName.startsWith("FRC2023")
                     ? "FRC 2023"
                     : projectDetails.uploadName.startsWith("FRC2024")
-                    ? "FRC 2024"
-                    : projectDetails.uploadName)}
+                      ? "FRC 2024"
+                      : projectDetails.uploadName)}
               </h2>
               {error && (
                 <Alert
@@ -454,153 +461,162 @@ export default function View() {
                     </div>
                   </>
                 )}
-              <Button
-                variant="primary"
-                className="position-absolute top-0 end-0"
-                onClick={() => {
-                  if (
-                    folderName.startsWith("FRC2023") ||
-                    folderName.startsWith("FRC2024")
-                  ) {
-                    navigate("/download");
-                  } else {
-                    navigate("/");
-                  }
-                }}
-              >
-                Back
-              </Button>
-              <Form onSubmit={handleSubmit}>
-                <h5 style={{ paddingTop: "10px" }}>Search files</h5>
-                <Form.Control
-                  type="text"
-                  placeholder="Search files"
-                  onChange={handleSearch}
-                  style={{ margin: "20px 0px" }}
-                />
-              </Form>
-              {currentFileTree && (
+              {selectedOptions.length == 0 && (
+                <Alert variant="danger" style={{ marginTop: "10px" }}>
+                  Please select at least one class
+                </Alert>
+              )}
+              {selectedOptions.length > 0 && (
                 <>
-                  {Object.keys(currentFileTree).map((key) => (
-                    <div key={key}>
-                      <h5>
-                        {key.charAt(0).toUpperCase() + key.slice(1)}{" "}
-                        <span style={{ color: "gray", fontSize: "small" }}>
-                          ({Object.keys(currentFileTree[key]).length} images)
-                        </span>
-                      </h5>
-                      <div>
-                        {[0, 1, 2].map((row) => (
-                          <div key={row} className="row">
-                            {[0, 1, 2, 3, 4].map((i) => (
-                              <div key={i} className="col">
-                                <Link
-                                  to={
-                                    "/view/" +
-                                    folderName +
-                                    "/" +
-                                    (key !== "" ? key + "/" : "") +
-                                    Object.keys(currentFileTree[key]).slice(
-                                      (currentPage[key] - 1) * 15,
-                                      currentPage[key] * 15
-                                    )[row * 5 + i]
-                                  }
-                                >
-                                  <img
-                                    src={
-                                      "https://api.datasetcolab.com/dataset/view/" +
-                                      folderName +
-                                      "/" +
-                                      (key !== "" ? key + "/" : "") +
-                                      Object.keys(currentFileTree[key]).slice(
-                                        (currentPage[key] - 1) * 15,
-                                        currentPage[key] * 15
-                                      )[row * 5 + i] +
-                                      "?idToken=" +
-                                      idToken
-                                    }
-                                    style={{
-                                      width: "100%",
-                                      height: "auto",
-                                    }}
-                                    alt={`Item ${row * 5 + i + 1}`}
-                                  />
-                                </Link>
+                  <Button
+                    variant="primary"
+                    className="position-absolute top-0 end-0"
+                    onClick={() => {
+                      if (
+                        folderName.startsWith("FRC2023") ||
+                        folderName.startsWith("FRC2024")
+                      ) {
+                        navigate("/download");
+                      } else {
+                        navigate("/");
+                      }
+                    }}
+                  >
+                    Back
+                  </Button>
+                  <Form onSubmit={handleSubmit}>
+                    <h5 style={{ paddingTop: "10px" }}>Search files</h5>
+                    <Form.Control
+                      type="text"
+                      placeholder="Search files"
+                      onChange={handleSearch}
+                      style={{ margin: "20px 0px" }}
+                    />
+                  </Form>
+                  {currentFileTree && (
+                    <>
+                      {Object.keys(currentFileTree).map((key) => (
+                        <div key={key}>
+                          <h5>
+                            {key.charAt(0).toUpperCase() + key.slice(1)}{" "}
+                            <span style={{ color: "gray", fontSize: "small" }}>
+                              ({Object.keys(currentFileTree[key]).length} images)
+                            </span>
+                          </h5>
+                          <div style={{ marginBottom: "10px" }}>
+                            {[0, 1, 2].map((row) => (
+                              <div key={row} className="row">
+                                {[0, 1, 2, 3, 4].map((i) => (
+                                  <div key={i} className="col" style={{ padding: "5px" }}>
+                                    <Link
+                                      to={
+                                        "/view/" +
+                                        folderName +
+                                        "/" +
+                                        (key !== "" ? key + "/" : "") +
+                                        Object.keys(currentFileTree[key]).slice(
+                                          (currentPage[key] - 1) * 15,
+                                          currentPage[key] * 15
+                                        )[row * 5 + i]
+                                      }
+                                    >
+                                      <img
+                                        src={
+                                          "https://api.datasetcolab.com/dataset/view/" +
+                                          folderName +
+                                          "/" +
+                                          (key !== "" ? key + "/" : "") +
+                                          Object.keys(currentFileTree[key]).slice(
+                                            (currentPage[key] - 1) * 15,
+                                            currentPage[key] * 15
+                                          )[row * 5 + i] +
+                                          "?idToken=" +
+                                          idToken
+                                        }
+                                        style={{
+                                          width: "100%",
+                                          height: "100%",
+                                        }}
+                                        alt={`Item ${row * 5 + i + 1}`}
+                                        className="hover-highlight"
+                                      />
+                                    </Link>
+                                  </div>
+                                ))}
                               </div>
                             ))}
                           </div>
-                        ))}
+                          {!(
+                            currentPage[key] === 1 &&
+                            currentPage[key] ===
+                            Math.ceil(
+                              Object.keys(currentFileTree).reduce(
+                                (total, key) =>
+                                  total +
+                                  Object.keys(currentFileTree[key]).length,
+                                0
+                              ) / 15
+                            )
+                          ) &&
+                            Object.keys(currentFileTree[key]).length >= 15 && (
+                              <div
+                                style={{
+                                  display: "flex",
+                                  justifyContent: "center",
+                                }}
+                              >
+                                <Button
+                                  variant="primary"
+                                  disabled={currentPage[key] === 1}
+                                  onClick={() =>
+                                    setCurrentPage({
+                                      ...currentPage,
+                                      [key]: currentPage[key] - 1,
+                                    })
+                                  }
+                                  style={{ marginRight: "10px" }}
+                                >
+                                  Back
+                                </Button>
+                                <Button
+                                  variant="primary"
+                                  disabled={
+                                    currentPage[key] ===
+                                    Math.ceil(
+                                      Object.keys(currentFileTree).reduce(
+                                        (total, key) =>
+                                          total +
+                                          Object.keys(currentFileTree[key])
+                                            .length,
+                                        0
+                                      ) / 15
+                                    ) ||
+                                    Object.keys(currentFileTree[key]).length < 15
+                                  }
+                                  onClick={() =>
+                                    setCurrentPage({
+                                      ...currentPage,
+                                      [key]: currentPage[key] + 1,
+                                    })
+                                  }
+                                >
+                                  Forward
+                                </Button>
+                              </div>
+                            )}
+                        </div>
+                      ))}
+                    </>
+                  )}
+                  {!folderName.startsWith("FRC2023") &&
+                    !folderName.startsWith("FRC2024") && (
+                      <div style={{ padding: "10px 0" }}>
+                        <Button variant="danger" onClick={handleDeleteProject}>
+                          Delete Project
+                        </Button>
                       </div>
-                      {!(
-                        currentPage[key] === 1 &&
-                        currentPage[key] ===
-                          Math.ceil(
-                            Object.keys(currentFileTree).reduce(
-                              (total, key) =>
-                                total +
-                                Object.keys(currentFileTree[key]).length,
-                              0
-                            ) / 15
-                          )
-                      ) &&
-                        Object.keys(currentFileTree[key]).length >= 15 && (
-                          <div
-                            style={{
-                              display: "flex",
-                              justifyContent: "center",
-                            }}
-                          >
-                            <Button
-                              variant="primary"
-                              disabled={currentPage[key] === 1}
-                              onClick={() =>
-                                setCurrentPage({
-                                  ...currentPage,
-                                  [key]: currentPage[key] - 1,
-                                })
-                              }
-                              style={{ marginRight: "10px" }}
-                            >
-                              Back
-                            </Button>
-                            <Button
-                              variant="primary"
-                              disabled={
-                                currentPage[key] ===
-                                  Math.ceil(
-                                    Object.keys(currentFileTree).reduce(
-                                      (total, key) =>
-                                        total +
-                                        Object.keys(currentFileTree[key])
-                                          .length,
-                                      0
-                                    ) / 15
-                                  ) ||
-                                Object.keys(currentFileTree[key]).length < 15
-                              }
-                              onClick={() =>
-                                setCurrentPage({
-                                  ...currentPage,
-                                  [key]: currentPage[key] + 1,
-                                })
-                              }
-                            >
-                              Forward
-                            </Button>
-                          </div>
-                        )}
-                    </div>
-                  ))}
-                </>
+                    )}</>
               )}
-              {!folderName.startsWith("FRC2023") &&
-                !folderName.startsWith("FRC2024") && (
-                  <div style={{ padding: "10px 0" }}>
-                    <Button variant="danger" onClick={handleDeleteProject}>
-                      Delete Project
-                    </Button>
-                  </div>
-                )}
             </div>
           )}
         </div>
