@@ -3,7 +3,7 @@ import { useAuth } from "../contexts/AuthContext";
 import axios from "axios";
 import Alert from "react-bootstrap/Alert";
 import { Button, Form, Pagination } from "react-bootstrap";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import { analytics } from "../firebase";
 import { logEvent } from "firebase/analytics";
 
@@ -172,9 +172,16 @@ export default function View() {
         prevOptions = [...(prevOptions || []), option].sort();
       }
 
-      const previousShortOptions = prevousSelectedOptions.map(option => option.slice(0, 2));
-      const selectedOptionsAbbreviated = prevOptions.map(option => option.slice(0, 2));
-      const newFolderName = folderName.replace(previousShortOptions.join("").toUpperCase(), selectedOptionsAbbreviated.join("").toUpperCase());
+      const previousShortOptions = prevousSelectedOptions.map((option) =>
+        option.slice(0, 2)
+      );
+      const selectedOptionsAbbreviated = prevOptions.map((option) =>
+        option.slice(0, 2)
+      );
+      const newFolderName = folderName.replace(
+        previousShortOptions.join("").toUpperCase(),
+        selectedOptionsAbbreviated.join("").toUpperCase()
+      );
       navigate("/view/" + newFolderName);
 
       return prevOptions;
@@ -209,8 +216,8 @@ export default function View() {
           `https://api.datasetcolab.com/dataset/view/${folderName}?idToken=${idToken}`
         );
 
-        logEvent(analytics, 'dataset/annotations');
-        logEvent(analytics, 'dataset/view');
+        logEvent(analytics, "dataset/annotations");
+        logEvent(analytics, "dataset/view");
       } else {
         const config = { headers: { idToken: idToken } };
 
@@ -220,7 +227,11 @@ export default function View() {
         );
 
         setProjectDetails(response.data);
-        setCurrentPage(Object.fromEntries(Object.keys(response.data.tree).map(key => [key, 1])));
+        setCurrentPage(
+          Object.fromEntries(
+            Object.keys(response.data.tree).map((key) => [key, 1])
+          )
+        );
         const reorderedFileTree = {
           ...(response.data.tree.train && { train: response.data.tree.train }),
           ...(response.data.tree.test && { test: response.data.tree.test }),
@@ -230,7 +241,7 @@ export default function View() {
         setCurrentFileTree(reorderedFileTree);
         setImageSrc(null);
 
-        logEvent(analytics, 'dataset/view');
+        logEvent(analytics, "dataset/view");
       }
     } catch (err) {
       setError("Error fetching project details.");
@@ -251,7 +262,7 @@ export default function View() {
       );
       navigate("/");
 
-      logEvent(analytics, 'dataset/delete');
+      logEvent(analytics, "dataset/delete");
     } catch (err) {
       setError("Error deleting project.");
     }
@@ -322,6 +333,27 @@ export default function View() {
     fetchProjectDetails();
   }, [folderName]);
 
+  const [idToken, setIdToken] = useState("");
+
+  useEffect(() => {
+    const fetchData = async () => {
+      if (currentUser) {
+        try {
+          const token = await currentUser.getIdToken();
+          setIdToken(token);
+        } catch (error) {
+          // Handle the error, e.g., log it or set a default value for idToken
+          console.error("Error fetching idToken:", error);
+          setIdToken("");
+        }
+      } else {
+        setIdToken("");
+      }
+    };
+
+    fetchData();
+  }, [currentUser]);
+
   return (
     <div style={{ padding: "20px" }} className="project-details">
       {imageSrc && (
@@ -347,7 +379,12 @@ export default function View() {
           ) : (
             <div style={{ position: "relative" }}>
               <h2>
-                {projectDetails.uploadName && (projectDetails.uploadName.startsWith("FRC2023") ? "FRC 2023" : projectDetails.uploadName.startsWith("FRC2024") ? "FRC 2024" : projectDetails.uploadName)}
+                {projectDetails.uploadName &&
+                  (projectDetails.uploadName.startsWith("FRC2023")
+                    ? "FRC 2023"
+                    : projectDetails.uploadName.startsWith("FRC2024")
+                    ? "FRC 2024"
+                    : projectDetails.uploadName)}
               </h2>
               {error && (
                 <Alert
@@ -394,27 +431,37 @@ export default function View() {
                 </>
               )}
 
-              {projectDetails.uploadName && (projectDetails.uploadName.startsWith("FRC2024") ||  projectDetails.uploadName.startsWith("FRC2023")) && (
-                <>
-                  <h5 style={{ paddingTop: "10px" }}>Dataset Classes</h5>
-                  <div style={styles.checkboxGroup}>
-                    {classes[projectDetails.uploadName.startsWith("FRC2024") ? "FRC 2024" : "FRC 2023"].map((opt, i) => (
-                      <Form.Check
-                        key={i}
-                        type="checkbox"
-                        id={`checkbox-${i}`}
-                        label={opt}
-                        defaultChecked={selectedOptions?.includes(opt)}
-                        onChange={() => handleOptionSelect(opt)}
-                      />
-                    ))}
-                  </div></>
-              )}
+              {projectDetails.uploadName &&
+                (projectDetails.uploadName.startsWith("FRC2024") ||
+                  projectDetails.uploadName.startsWith("FRC2023")) && (
+                  <>
+                    <h5 style={{ paddingTop: "10px" }}>Dataset Classes</h5>
+                    <div style={styles.checkboxGroup}>
+                      {classes[
+                        projectDetails.uploadName.startsWith("FRC2024")
+                          ? "FRC 2024"
+                          : "FRC 2023"
+                      ].map((opt, i) => (
+                        <Form.Check
+                          key={i}
+                          type="checkbox"
+                          id={`checkbox-${i}`}
+                          label={opt}
+                          defaultChecked={selectedOptions?.includes(opt)}
+                          onChange={() => handleOptionSelect(opt)}
+                        />
+                      ))}
+                    </div>
+                  </>
+                )}
               <Button
                 variant="primary"
                 className="position-absolute top-0 end-0"
                 onClick={() => {
-                  if (folderName.startsWith("FRC2023") || folderName.startsWith("FRC2024")) {
+                  if (
+                    folderName.startsWith("FRC2023") ||
+                    folderName.startsWith("FRC2024")
+                  ) {
                     navigate("/download");
                   } else {
                     navigate("/");
@@ -424,7 +471,7 @@ export default function View() {
                 Back
               </Button>
               <Form onSubmit={handleSubmit}>
-                  <h5 style={{ paddingTop: "10px" }}>Search files</h5>
+                <h5 style={{ paddingTop: "10px" }}>Search files</h5>
                 <Form.Control
                   type="text"
                   placeholder="Search files"
@@ -438,86 +485,122 @@ export default function View() {
                     <div key={key}>
                       <h5>
                         {key.charAt(0).toUpperCase() + key.slice(1)}{" "}
-                        <span style={{ color: "gray", fontSize: "small" }}>({Object.keys(currentFileTree[key]).length} images)</span>
+                        <span style={{ color: "gray", fontSize: "small" }}>
+                          ({Object.keys(currentFileTree[key]).length} images)
+                        </span>
                       </h5>
-                      <Pagination className="pagination">
-                        <div style={{ marginBottom: "10px", width: "100%" }}>
-                          {Object.keys(currentFileTree[key])
-                            .slice((currentPage[key] - 1) * 20, currentPage[key] * 20)
-                            .map((item, index) => (
-                              <div key={index} style={{ marginBottom: "10px", width: "100%" }}>
-                                <Pagination.Item
-                                  active={item === currentPage[key]}
-                                  onClick={() => {
-                                    navigate(
-                                      "/view/" +
+                      <div>
+                        {[0, 1, 2].map((row) => (
+                          <div key={row} className="row">
+                            {[0, 1, 2, 3, 4].map((i) => (
+                              <div key={i} className="col">
+                                <Link
+                                  to={
+                                    "/view/" +
+                                    folderName +
+                                    "/" +
+                                    (key !== "" ? key + "/" : "") +
+                                    Object.keys(currentFileTree[key]).slice(
+                                      (currentPage[key] - 1) * 15,
+                                      currentPage[key] * 15
+                                    )[row * 5 + i]
+                                  }
+                                >
+                                  <img
+                                    src={
+                                      "https://api.datasetcolab.com/dataset/view/" +
                                       folderName +
                                       "/" +
                                       (key !== "" ? key + "/" : "") +
-                                      item
-                                    );
-                                  }}
-                                >
-                                  {
-                                    /*
-
-                                  <img
-                                    src={"https://api.datasetcolab.com/dataset/view/" + folderName + "/" + (key !== "" ? key + "/" : "") + item + "?idToken=" + idToken}
+                                      Object.keys(currentFileTree[key]).slice(
+                                        (currentPage[key] - 1) * 15,
+                                        currentPage[key] * 15
+                                      )[row * 5 + i] +
+                                      "?idToken=" +
+                                      idToken
+                                    }
                                     style={{
                                       width: "100%",
                                       height: "auto",
-                                      objectFit: "cover",
-                                      borderRadius: "5px",
                                     }}
+                                    alt={`Item ${row * 5 + i + 1}`}
                                   />
-                                    */
-                                  }
-                                  {item}
-                                </Pagination.Item>
+                                </Link>
                               </div>
                             ))}
-                        </div>
-                      </Pagination>
-                      {(!(currentPage[key] === 1 && currentPage[key] === Math.ceil(Object.keys(currentFileTree).reduce((total, key) => total + Object.keys(currentFileTree[key]).length, 0) / 20)) && Object.keys(currentFileTree[key]).length >= 20) && (
-                        <div style={{ display: "flex", justifyContent: "center" }}>
-                          <Button
-                            variant="primary"
-                            disabled={currentPage[key] === 1}
-                            onClick={() => setCurrentPage({ ...currentPage, [key]: currentPage[key] - 1 })}
-                            style={{ marginRight: "10px" }}
+                          </div>
+                        ))}
+                      </div>
+                      {!(
+                        currentPage[key] === 1 &&
+                        currentPage[key] ===
+                          Math.ceil(
+                            Object.keys(currentFileTree).reduce(
+                              (total, key) =>
+                                total +
+                                Object.keys(currentFileTree[key]).length,
+                              0
+                            ) / 15
+                          )
+                      ) &&
+                        Object.keys(currentFileTree[key]).length >= 15 && (
+                          <div
+                            style={{
+                              display: "flex",
+                              justifyContent: "center",
+                            }}
                           >
-                            Back
-                          </Button>
-                          <Button
-                            variant="primary"
-                            disabled={
-                              currentPage[key] ===
-                              Math.ceil(
-                                Object.keys(currentFileTree).reduce(
-                                  (total, key) =>
-                                    total + Object.keys(currentFileTree[key]).length,
-                                  0
-                                ) / 20
-                              ) || Object.keys(currentFileTree[key]).length < 20
-                            }
-                            onClick={() => setCurrentPage({ ...currentPage, [key]: currentPage[key] + 1 })}
-                          >
-                            Forward
-                          </Button>
-                        </div>
-                      )}
+                            <Button
+                              variant="primary"
+                              disabled={currentPage[key] === 1}
+                              onClick={() =>
+                                setCurrentPage({
+                                  ...currentPage,
+                                  [key]: currentPage[key] - 1,
+                                })
+                              }
+                              style={{ marginRight: "10px" }}
+                            >
+                              Back
+                            </Button>
+                            <Button
+                              variant="primary"
+                              disabled={
+                                currentPage[key] ===
+                                  Math.ceil(
+                                    Object.keys(currentFileTree).reduce(
+                                      (total, key) =>
+                                        total +
+                                        Object.keys(currentFileTree[key])
+                                          .length,
+                                      0
+                                    ) / 15
+                                  ) ||
+                                Object.keys(currentFileTree[key]).length < 15
+                              }
+                              onClick={() =>
+                                setCurrentPage({
+                                  ...currentPage,
+                                  [key]: currentPage[key] + 1,
+                                })
+                              }
+                            >
+                              Forward
+                            </Button>
+                          </div>
+                        )}
                     </div>
                   ))}
-
                 </>
               )}
-              {!folderName.startsWith("FRC2023") && !folderName.startsWith("FRC2024") && (
-                <div style={{ padding: "10px 0" }}>
-                  <Button variant="danger" onClick={handleDeleteProject}>
-                    Delete Project
-                  </Button>
-                </div>
-              )}
+              {!folderName.startsWith("FRC2023") &&
+                !folderName.startsWith("FRC2024") && (
+                  <div style={{ padding: "10px 0" }}>
+                    <Button variant="danger" onClick={handleDeleteProject}>
+                      Delete Project
+                    </Button>
+                  </div>
+                )}
             </div>
           )}
         </div>
