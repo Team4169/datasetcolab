@@ -587,7 +587,7 @@ public class App {
                 }
 
                 String model = ctx.pathParam("model");
-                String fileName = "models/" + model + "NORO/weights/best.pt";
+                String fileName = "models/" + model + "/weights/best.pt";
 
                 try (InputStream is = Files.newInputStream(Path.of(fileName))) {
                     // Set response headers
@@ -619,7 +619,7 @@ public class App {
         });
 
         app.get("/model/inference/{model}/{image}", ctx -> {
-            File imageFile = new File("models/" + ctx.pathParam("model") + "NORO/images/processed_" + ctx.pathParam("image") + ".jpg");
+            File imageFile = new File("models/" + ctx.pathParam("model") + "/images/processed_" + ctx.pathParam("image") + ".jpg");
             if (imageFile.exists() && imageFile.isFile()) {
                 ctx.result(Files.readAllBytes(imageFile.toPath()));
             } else {

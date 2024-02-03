@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from "react";
-import Alert from "react-bootstrap/Alert";
 import {
     Card,
     Form,
     Button,
     ButtonGroup,
     ToggleButton,
+    Alert,
 } from "react-bootstrap";
 import { useAuth } from "../contexts/AuthContext";
 import { Link } from "react-router-dom";
@@ -83,7 +83,7 @@ export default function PretrainedModels() {
 
 
     const handleDownloadCurl = (dataset) => {
-        return `curl -o ${dataset.model}.pt 'https://api.datasetcolab.com/model/download/${dataset.model}?api=${apiKey}'`;
+        return `curl -o ${dataset.model}.pt 'https://api.datasetcolab.com/model/download/${dataset.model + dataset.classes.map(item => item.slice(0, 2).toUpperCase()).join('')}?api=${apiKey}'`;
     };
 
     const fetchApiKey = async () => {
@@ -116,13 +116,13 @@ export default function PretrainedModels() {
         setShowCopyAlert(true);
     };
 
-    const handleDirectDownload = async (model) => {
+    const handleDirectDownload = async (model, classes) => {
         try {
             setLoading(true);
 
             const idToken = await currentUser.getIdToken();
 
-            window.location.href = "https://api.datasetcolab.com/model/download/" + model + "?idToken=" + idToken;
+            window.location.href = "https://api.datasetcolab.com/model/download/" + model + classes.map(item => item.slice(0, 2).toUpperCase()).join('')+ "?idToken=" + idToken;
 
             logEvent(analytics, 'model/download');
         } catch (err) {
@@ -141,6 +141,8 @@ export default function PretrainedModels() {
                     newPerformance[variant + class_] = (await axios.get("https://api.datasetcolab.com/model/performance/" + variant + class_)).data;
                 }
             }
+
+            console.log(newPerformance);
 
             setPerformance(newPerformance);
 
@@ -200,164 +202,178 @@ export default function PretrainedModels() {
                                                 />
                                             ))}
                                         </div>
-                                        <h5 style={{ paddingTop: "10px" }}>Model Variant</h5>
-                                        <Form.Group>
-                                            <ButtonGroup toggle>
-                                                {dataset.variants.map((variant, variantIndex) => (
-                                                    <ToggleButton
-                                                        key={variantIndex}
-                                                        type="radio"
-                                                        variant="outline-primary"
-                                                        name={`modelVariant-${variant}`}
-                                                        value={variant}
-                                                        checked={dataset.model === variant}
-                                                        onClick={() =>
-                                                            setDatasets((prevDatasets) => {
-                                                                const newDatasets = [...prevDatasets];
-                                                                newDatasets[index] = {
-                                                                    ...newDatasets[index],
-                                                                    model: variant
-                                                                };
-                                                                return newDatasets;
-                                                            })
-                                                        }
-                                                    >
-                                                        {variant}
-                                                    </ToggleButton>
-                                                ))}
-                                            </ButtonGroup>
-                                        </Form.Group>
-                                        <h5 style={{ paddingTop: "10px" }}>Performance</h5>
-                                        {performance[dataset.model + dataset.classes.map(item => item.slice(0, 2).toUpperCase()).join('')] && (
-                                            <div>
-                                                <div>
-                                                    <strong>mAP50:</strong> {(performance[dataset.model + dataset.classes.map(item => item.slice(0, 2).toUpperCase()).join('')]["metrics/mAP50(B)"] * 100).toFixed(2)}%
-                                                </div>
-                                                <div>
-                                                    <strong>mAP50-95:</strong> {(performance[dataset.model + dataset.classes.map(item => item.slice(0, 2).toUpperCase()).join('')]["metrics/mAP50-95(B)"] * 100).toFixed(2)}%
-                                                </div>
-                                                <div>
-                                                    <strong>Precision:</strong> {(performance[dataset.model + dataset.classes.map(item => item.slice(0, 2).toUpperCase()).join('')]["metrics/precision(B)"] * 100).toFixed(2)}%
-                                                </div>
-                                                <div>
-                                                    <strong>Recall:</strong> {(performance[dataset.model + dataset.classes.map(item => item.slice(0, 2).toUpperCase()).join('')]["metrics/recall(B)"] * 100).toFixed(2)}%
-                                                </div>
-                                            </div>
+                                        {dataset.classes.length == 0 && (
+                                            <Alert variant="danger" style={{ marginTop: "10px" }}>
+                                                Please select at least one class
+                                            </Alert>
                                         )}
-                                        {currentUser && currentUser.emailVerified ? (
+                                        {dataset.classes.length > 0 && (
                                             <>
-                                                <h5 style={{ paddingTop: "10px" }}>Download Weights</h5>
+                                                <h5 style={{ paddingTop: "10px" }}>Model Variant</h5>
                                                 <Form.Group>
                                                     <ButtonGroup toggle>
-                                                        <ToggleButton
-                                                            type="radio"
-                                                            variant="outline-primary"
-                                                            name={`downloadMethod-${dataset.name}`}
-                                                            value="direct"
-                                                            checked={dataset.download === "direct"}
-                                                            onClick={() =>
-                                                                setDatasets((prevMethods) => {
-                                                                    const newDatasets = [...prevMethods];
-                                                                    newDatasets[index] = {
-                                                                        ...newDatasets[index],
-                                                                        download: "direct"
-                                                                    };
-                                                                    return newDatasets;
-                                                                })
-                                                            }
-                                                        >
-                                                            Download Directly
-                                                        </ToggleButton>
-                                                        <ToggleButton
-                                                            type="radio"
-                                                            variant="outline-primary"
-                                                            name={`downloadMethod-${dataset.name}`}
-                                                            value="curl"
-                                                            checked={dataset.download === "curl"}
-                                                            onClick={() =>
-                                                                setDatasets((prevDatasets) => {
-                                                                    const newDatasets = [...prevDatasets];
-                                                                    newDatasets[index] = {
-                                                                        ...newDatasets[index],
-                                                                        download: "curl"
-                                                                    };
-                                                                    return newDatasets;
-                                                                })
-                                                            }
-                                                        >
-                                                            Download via Curl
-                                                        </ToggleButton>
+                                                        {dataset.variants.map((variant, variantIndex) => (
+                                                            <ToggleButton
+                                                                key={variantIndex}
+                                                                type="radio"
+                                                                variant="outline-primary"
+                                                                name={`modelVariant-${variant}`}
+                                                                value={variant}
+                                                                checked={dataset.model === variant}
+                                                                onClick={() =>
+                                                                    setDatasets((prevDatasets) => {
+                                                                        const newDatasets = [...prevDatasets];
+                                                                        newDatasets[index] = {
+                                                                            ...newDatasets[index],
+                                                                            model: variant
+                                                                        };
+                                                                        return newDatasets;
+                                                                    })
+                                                                }
+                                                            >
+                                                                {variant}
+                                                            </ToggleButton>
+                                                        ))}
                                                     </ButtonGroup>
                                                 </Form.Group>
-                                                <div style={{ paddingTop: "10px" }}>
-                                                    {dataset.download === "curl" ? (
+                                                <h5 style={{ paddingTop: "10px" }}>Performance</h5>
+                                                {performance[dataset.model + dataset.classes.map(item => item.slice(0, 2).toUpperCase()).join('')] && (
+                                                    <div>
                                                         <div>
-                                                            <div style={styles.codeBlock}>
-                                                                <code>{handleDownloadCurl(dataset)}</code>
-                                                                <div
-                                                                    style={styles.copyButton}
-                                                                    onClick={() => handleCopyToClipboard(dataset)}
+                                                            <strong>mAP50:</strong> {(performance[dataset.model + dataset.classes.map(item => item.slice(0, 2).toUpperCase()).join('')]["metrics/mAP50(B)"] * 100).toFixed(2)}%
+                                                        </div>
+                                                        <div>
+                                                            <strong>mAP50-95:</strong> {(performance[dataset.model + dataset.classes.map(item => item.slice(0, 2).toUpperCase()).join('')]["metrics/mAP50-95(B)"] * 100).toFixed(2)}%
+                                                        </div>
+                                                        <div>
+                                                            <strong>Precision:</strong> {(performance[dataset.model + dataset.classes.map(item => item.slice(0, 2).toUpperCase()).join('')]["metrics/precision(B)"] * 100).toFixed(2)}%
+                                                        </div>
+                                                        <div>
+                                                            <strong>Recall:</strong> {(performance[dataset.model + dataset.classes.map(item => item.slice(0, 2).toUpperCase()).join('')]["metrics/recall(B)"] * 100).toFixed(2)}%
+                                                        </div>
+                                                    </div>
+                                                )}
+                                                {currentUser && currentUser.emailVerified ? (
+                                                    <>
+                                                        <h5 style={{ paddingTop: "10px" }}>Download Weights</h5>
+                                                        <Form.Group>
+                                                            <ButtonGroup toggle>
+                                                                <ToggleButton
+                                                                    type="radio"
+                                                                    variant="outline-primary"
+                                                                    name={`downloadMethod-${dataset.name}`}
+                                                                    value="direct"
+                                                                    checked={dataset.download === "direct"}
+                                                                    onClick={() =>
+                                                                        setDatasets((prevMethods) => {
+                                                                            const newDatasets = [...prevMethods];
+                                                                            newDatasets[index] = {
+                                                                                ...newDatasets[index],
+                                                                                download: "direct"
+                                                                            };
+                                                                            return newDatasets;
+                                                                        })
+                                                                    }
                                                                 >
-                                                                    <span role="img" aria-label="Copy">
-                                                                        📋
-                                                                    </span>
+                                                                    Download Directly
+                                                                </ToggleButton>
+                                                                <ToggleButton
+                                                                    type="radio"
+                                                                    variant="outline-primary"
+                                                                    name={`downloadMethod-${dataset.name}`}
+                                                                    value="curl"
+                                                                    checked={dataset.download === "curl"}
+                                                                    onClick={() =>
+                                                                        setDatasets((prevDatasets) => {
+                                                                            const newDatasets = [...prevDatasets];
+                                                                            newDatasets[index] = {
+                                                                                ...newDatasets[index],
+                                                                                download: "curl"
+                                                                            };
+                                                                            return newDatasets;
+                                                                        })
+                                                                    }
+                                                                >
+                                                                    Download via Curl
+                                                                </ToggleButton>
+                                                            </ButtonGroup>
+                                                        </Form.Group>
+                                                        <div style={{ paddingTop: "10px" }}>
+                                                            {dataset.download === "curl" ? (
+                                                                <div>
+                                                                    <div style={styles.codeBlock}>
+                                                                        <code>{handleDownloadCurl(dataset)}</code>
+                                                                        <div
+                                                                            style={styles.copyButton}
+                                                                            onClick={() => handleCopyToClipboard(dataset)}
+                                                                        >
+                                                                            <span role="img" aria-label="Copy">
+                                                                                📋
+                                                                            </span>
+                                                                        </div>
+                                                                    </div>
                                                                 </div>
-                                                            </div>
+                                                            ) : (
+                                                                <div style={{ width: "100%" }}>
+                                                                    <Button
+                                                                        variant="primary"
+                                                                        onClick={() =>
+                                                                            handleDirectDownload(
+                                                                                dataset.model,
+                                                                                dataset.classes
+                                                                            )
+                                                                        }
+                                                                        style={{ width: "100%" }}
+                                                                        disabled={loading}
+                                                                    >
+                                                                        {loading ? "Downloading..." : "Download " + dataset.model + ".pt"}
+                                                                    </Button>
+                                                                </div>
+                                                            )}
                                                         </div>
-                                                    ) : (
-                                                        <div style={{ width: "100%" }}>
-                                                            <Button
-                                                                variant="primary"
-                                                                onClick={() =>
-                                                                    handleDirectDownload(
-                                                                        dataset.model
-                                                                    )
-                                                                }
-                                                                style={{ width: "100%" }}
-                                                                disabled={loading}
-                                                            >
-                                                                {loading ? "Downloading..." : "Download " + dataset.model + ".pt"}
-                                                            </Button>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <h5 style={{ paddingTop: "10px" }}>Download</h5>
+                                                        <div>
+                                                            {" "}
+                                                            <Link to="/login?to=models">Login</Link> or{" "}
+                                                            <Link to="/signup?to=models">Sign Up</Link> to Download{" "}
                                                         </div>
-                                                    )}
-                                                </div>
-                                            </>
-                                        ) : (
-                                            <>
-                                                <h5 style={{ paddingTop: "10px" }}>Download</h5>
+                                                    </>
+                                                )}
+                                                <h5 style={{ paddingTop: "10px" }}>Getting Started</h5>
                                                 <div>
                                                     {" "}
-                                                    <Link to="/login?to=models">Login</Link> or{" "}
-                                                    <Link to="/signup?to=models">Sign Up</Link> to Download{" "}
+                                                    <Link to={`/docs/${dataset.model}`}>Read the Docs</Link> to learn how to use this
+                                                    model!
                                                 </div>
                                             </>
                                         )}
-                                        <h5 style={{ paddingTop: "10px" }}>Getting Started</h5>
-                                        <div>
-                                            {" "}
-                                            <Link to={`/docs/${dataset.model}`}>Read the Docs</Link> to learn how to use this
-                                            model!
-                                        </div>
                                     </div>
                                     <div className="col-md-8">
-                                        <h5 style={{ paddingTop: "10px" }}>Sample Inferences</h5>
-                                        <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)" }}>
-                                            <img src={"https://api.datasetcolab.com/model/inference/" + dataset.model + "/0"} style={{ width: "100%", margin: "0", padding: "0" }} />
-                                            <img src={"https://api.datasetcolab.com/model/inference/" + dataset.model + "/1"} style={{ width: "100%", margin: "0", padding: "0" }} />
-                                            <img src={"https://api.datasetcolab.com/model/inference/" + dataset.model + "/4"} style={{ width: "100%", margin: "0", padding: "0" }} />
-                                            <img src={"https://api.datasetcolab.com/model/inference/" + dataset.model + "/6"} style={{ width: "100%", margin: "0", padding: "0" }} />
-                                            <img src={"https://api.datasetcolab.com/model/inference/" + dataset.model + "/7"} style={{ width: "100%", margin: "0", padding: "0" }} />
-                                            <img src={"https://api.datasetcolab.com/model/inference/" + dataset.model + "/9"} style={{ width: "100%", margin: "0", padding: "0" }} />
-                                            <img src={"https://api.datasetcolab.com/model/inference/" + dataset.model + "/10"} style={{ width: "100%", margin: "0", padding: "0" }} />
-                                            <img src={"https://api.datasetcolab.com/model/inference/" + dataset.model + "/12"} style={{ width: "100%", margin: "0", padding: "0" }} />
-                                            <img src={"https://api.datasetcolab.com/model/inference/" + dataset.model + "/15"} style={{ width: "100%", margin: "0", padding: "0" }} />
-                                            <img src={"https://api.datasetcolab.com/model/inference/" + dataset.model + "/18"} style={{ width: "100%", margin: "0", padding: "0" }} />
-                                            <img src={"https://api.datasetcolab.com/model/inference/" + dataset.model + "/19"} style={{ width: "100%", margin: "0", padding: "0" }} />
-                                            <img src={"https://api.datasetcolab.com/model/inference/" + dataset.model + "/21"} style={{ width: "100%", margin: "0", padding: "0" }} />
-                                            <img src={"https://api.datasetcolab.com/model/inference/" + dataset.model + "/27"} style={{ width: "100%", margin: "0", padding: "0" }} />
-                                            <img src={"https://api.datasetcolab.com/model/inference/" + dataset.model + "/42"} style={{ width: "100%", margin: "0", padding: "0" }} />
-                                            <img src={"https://api.datasetcolab.com/model/inference/" + dataset.model + "/47"} style={{ width: "100%", margin: "0", padding: "0" }} />
-                                        </div>
+                                        {dataset.classes.length > 0 && (
+                                            <>
+                                                <h5 style={{ paddingTop: "10px" }}>Sample Inferences</h5>
+                                                <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)" }}>
+                                                    <img src={"https://api.datasetcolab.com/model/inference/" + dataset.model + dataset.classes.map(item => item.slice(0, 2).toUpperCase()).join('') + "/0"} style={{ width: "100%", margin: "0", padding: "0" }} />
+                                                    <img src={"https://api.datasetcolab.com/model/inference/" + dataset.model + dataset.classes.map(item => item.slice(0, 2).toUpperCase()).join('') + "/1"} style={{ width: "100%", margin: "0", padding: "0" }} />
+                                                    <img src={"https://api.datasetcolab.com/model/inference/" + dataset.model + dataset.classes.map(item => item.slice(0, 2).toUpperCase()).join('') + "/4"} style={{ width: "100%", margin: "0", padding: "0" }} />
+                                                    <img src={"https://api.datasetcolab.com/model/inference/" + dataset.model + dataset.classes.map(item => item.slice(0, 2).toUpperCase()).join('') + "/6"} style={{ width: "100%", margin: "0", padding: "0" }} />
+                                                    <img src={"https://api.datasetcolab.com/model/inference/" + dataset.model + dataset.classes.map(item => item.slice(0, 2).toUpperCase()).join('') + "/7"} style={{ width: "100%", margin: "0", padding: "0" }} />
+                                                    <img src={"https://api.datasetcolab.com/model/inference/" + dataset.model + dataset.classes.map(item => item.slice(0, 2).toUpperCase()).join('') + "/9"} style={{ width: "100%", margin: "0", padding: "0" }} />
+                                                    <img src={"https://api.datasetcolab.com/model/inference/" + dataset.model + dataset.classes.map(item => item.slice(0, 2).toUpperCase()).join('') + "/10"} style={{ width: "100%", margin: "0", padding: "0" }} />
+                                                    <img src={"https://api.datasetcolab.com/model/inference/" + dataset.model + dataset.classes.map(item => item.slice(0, 2).toUpperCase()).join('') + "/12"} style={{ width: "100%", margin: "0", padding: "0" }} />
+                                                    <img src={"https://api.datasetcolab.com/model/inference/" + dataset.model + dataset.classes.map(item => item.slice(0, 2).toUpperCase()).join('') + "/15"} style={{ width: "100%", margin: "0", padding: "0" }} />
+                                                    <img src={"https://api.datasetcolab.com/model/inference/" + dataset.model + dataset.classes.map(item => item.slice(0, 2).toUpperCase()).join('') + "/18"} style={{ width: "100%", margin: "0", padding: "0" }} />
+                                                    <img src={"https://api.datasetcolab.com/model/inference/" + dataset.model + dataset.classes.map(item => item.slice(0, 2).toUpperCase()).join('') + "/19"} style={{ width: "100%", margin: "0", padding: "0" }} />
+                                                    <img src={"https://api.datasetcolab.com/model/inference/" + dataset.model + dataset.classes.map(item => item.slice(0, 2).toUpperCase()).join('') + "/21"} style={{ width: "100%", margin: "0", padding: "0" }} />
+                                                    <img src={"https://api.datasetcolab.com/model/inference/" + dataset.model + dataset.classes.map(item => item.slice(0, 2).toUpperCase()).join('') + "/27"} style={{ width: "100%", margin: "0", padding: "0" }} />
+                                                    <img src={"https://api.datasetcolab.com/model/inference/" + dataset.model + dataset.classes.map(item => item.slice(0, 2).toUpperCase()).join('') + "/42"} style={{ width: "100%", margin: "0", padding: "0" }} />
+                                                    <img src={"https://api.datasetcolab.com/model/inference/" + dataset.model + dataset.classes.map(item => item.slice(0, 2).toUpperCase()).join('') + "/47"} style={{ width: "100%", margin: "0", padding: "0" }} />
+                                                </div>
+                                            </>
+                                        )}
                                     </div>
                                 </div>
                             </Card.Body>
