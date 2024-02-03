@@ -68,6 +68,8 @@ export default function PretrainedModels() {
         { name: "YOLOv5", dataset: "FRC 2024", model: "YOLOv5n", variants: ["YOLOv5n", "YOLOv5s"], classes: ["note", "robot"], download: "direct" },
     ]);
 
+    const [classes, setClasses] = useState(["note", "robot"]);
+
     const [loading, setLoading] = useState(false);
     const [apiKey, setApiKey] = useState("API_KEY");
     const [data, setData] = useState(null);
@@ -135,8 +137,8 @@ export default function PretrainedModels() {
             const newPerformance = {};
 
             for (const variant of ["YOLOv8n", "YOLOv5n", "YOLOv8s", "YOLOv5s"]) {
-                for (const classes of ["NO", "RO", "NORO"]) {
-                    newPerformance[variant + classes] = (await axios.get("https://api.datasetcolab.com/model/performance/" + variant + classes)).data;
+                for (const class_ of ["NO", "RO", "NORO"]) {
+                    newPerformance[variant + class_] = (await axios.get("https://api.datasetcolab.com/model/performance/" + variant + class_)).data;
                 }
             }
 
@@ -148,11 +150,23 @@ export default function PretrainedModels() {
         }
     }
 
+    const handleClasses = (opt, index) => {
+        setDatasets((prevDatasets) => {
+            const newDatasets = [...prevDatasets];
+            const newClasses = newDatasets[index].classes.includes(opt)
+                ? newDatasets[index].classes.filter((item) => item !== opt)
+                : [...newDatasets[index].classes, opt];
+            newDatasets[index] = { ...newDatasets[index], classes: newClasses.sort() };
+            return newDatasets;
+        });
+    }
 
     useEffect(() => {
         handlePerformance();
         fetchApiKey();
     }, []);
+
+    console.log(datasets[0].classes.map(item => item.slice(0, 2).toUpperCase()).join(''));
 
     return (
         <div style={styles}>
@@ -175,24 +189,14 @@ export default function PretrainedModels() {
                                     <div className="col-md-4">
                                         <h5 style={{ paddingTop: "10px" }}>Dataset Classes</h5>
                                         <div style={styles.checkboxGroup}>
-                                            {dataset.classes.map((opt, i) => (
+                                            {classes.map((opt, i) => (
                                                 <Form.Check
                                                     key={i}
                                                     type="checkbox"
-                                                    id={`checkbox-${dataset.classes}-${i}`}
+                                                    id={`checkbox-${opt}-${i}`}
                                                     label={opt}
-                                                    defaultChecked={dataset.classes.includes(opt)}
-                                                    onChange={() =>
-                                                        setDatasets((prevDatasets) => {
-                                                            const newDatasets = [...prevDatasets];
-                                                            if (newDatasets[index].classes.includes(opt)) {
-                                                                newDatasets[index].classes = newDatasets[index].classes.filter((c) => c !== opt);
-                                                            } else {
-                                                                newDatasets[index].classes.push(opt);
-                                                                newDatasets[index].classes.sort();
-                                                            }
-                                                            return newDatasets;
-                                                        })}
+                                                    defaultChecked={dataset.classes?.includes(opt)}
+                                                    onChange={() => handleClasses(opt, index)}
                                                 />
                                             ))}
                                         </div>
@@ -224,19 +228,19 @@ export default function PretrainedModels() {
                                             </ButtonGroup>
                                         </Form.Group>
                                         <h5 style={{ paddingTop: "10px" }}>Performance</h5>
-                                        {performance[dataset.model] && (
+                                        {performance[dataset.model + dataset.classes.map(item => item.slice(0, 2).toUpperCase()).join('')] && (
                                             <div>
                                                 <div>
-                                                    <strong>mAP50:</strong> {(performance[dataset.model]["metrics/mAP50(B)"] * 100).toFixed(2)}%
+                                                    <strong>mAP50:</strong> {(performance[dataset.model + dataset.classes.map(item => item.slice(0, 2).toUpperCase()).join('')]["metrics/mAP50(B)"] * 100).toFixed(2)}%
                                                 </div>
                                                 <div>
-                                                    <strong>mAP50-95:</strong> {(performance[dataset.model]["metrics/mAP50-95(B)"] * 100).toFixed(2)}%
+                                                    <strong>mAP50-95:</strong> {(performance[dataset.model + dataset.classes.map(item => item.slice(0, 2).toUpperCase()).join('')]["metrics/mAP50-95(B)"] * 100).toFixed(2)}%
                                                 </div>
                                                 <div>
-                                                    <strong>Precision:</strong> {(performance[dataset.model]["metrics/precision(B)"] * 100).toFixed(2)}%
+                                                    <strong>Precision:</strong> {(performance[dataset.model + dataset.classes.map(item => item.slice(0, 2).toUpperCase()).join('')]["metrics/precision(B)"] * 100).toFixed(2)}%
                                                 </div>
                                                 <div>
-                                                    <strong>Recall:</strong> {(performance[dataset.model]["metrics/recall(B)"] * 100).toFixed(2)}%
+                                                    <strong>Recall:</strong> {(performance[dataset.model + dataset.classes.map(item => item.slice(0, 2).toUpperCase()).join('')]["metrics/recall(B)"] * 100).toFixed(2)}%
                                                 </div>
                                             </div>
                                         )}
