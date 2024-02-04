@@ -46,8 +46,23 @@ const styles = {
   checkboxGroup: { display: "flex", gap: "10px", flexWrap: "wrap" },
 };
 
-const AnnotationOverlay = ({ annotations, imageUrl }) => {
+const AnnotationOverlay = ({ annotationUrl, imageUrl, label }) => {
   const canvasRef = useRef();
+
+  const [annotations, setAnnotations] = useState([]);
+
+  const fetchAnnotations = async () => {
+    try {
+      const response = await axios.get(annotationUrl);
+      setAnnotations(response.data);
+    } catch (err) {
+      console.error("Error fetching annotations:", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchAnnotations();
+  }, [annotationUrl]);
 
   const drawAnnotations = () => {
     const context = canvasRef.current.getContext("2d");
@@ -117,25 +132,26 @@ const AnnotationOverlay = ({ annotations, imageUrl }) => {
           height: "auto",
         }}
       />
-      <div style={styles.colorKey}>
-        {uniqueCategories.map((categoryId) => {
-          const annotation = annotations.find(
-            (annotation) => annotation.category_id === categoryId
-          );
-          return (
-            <div style={styles.colorKeyItem} key={annotation.category_id}>
-              <div
-                style={{
-                  backgroundColor: getColorByCategoryId(annotation.category_id),
-                  width: "20px",
-                  height: "20px",
-                }}
-              ></div>
-              <span>{annotation.category_name}</span>
-            </div>
-          );
-        })}
-      </div>
+      {label && (
+        <div style={styles.colorKey}>
+          {uniqueCategories.map((categoryId) => {
+            const annotation = annotations.find(
+              (annotation) => annotation.category_id === categoryId
+            );
+            return (
+              <div style={styles.colorKeyItem} key={annotation.category_id}>
+                <div
+                  style={{
+                    backgroundColor: getColorByCategoryId(annotation.category_id),
+                    width: "20px",
+                    height: "20px",
+                  }}
+                ></div>
+                <span>{annotation.category_name}</span>
+              </div>
+            );
+          })}
+        </div>)}
     </div>
   );
 };
@@ -149,8 +165,8 @@ export default function View() {
   const [currentFileTree, setCurrentFileTree] = useState({});
   const [isLoading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [annotationSrc, setAnnotationSrc] = useState(null);
   const [imageSrc, setImageSrc] = useState(null);
-  const [annotations, setAnnotations] = useState(null);
   const [currentPage, setCurrentPage] = useState([]);
 
   const [selectedOptions, setSelectedOptions] = useState(["note"]);
@@ -159,6 +175,10 @@ export default function View() {
     "FRC 2023": ["cone", "cube"],
     "FRC 2024": ["note", "robot"],
   });
+
+  const [x, setX] = useState(7);
+  const [y, setY] = useState(3);
+  const [imagesPerPage, setImagesPerPage] = useState(x * y);
 
   const handleOptionSelect = (option) => {
     const prevousSelectedOptions = selectedOptions || [];
@@ -208,15 +228,7 @@ export default function View() {
       }
 
       if (isImageFile) {
-        const config = { headers: { idToken: idToken } };
-
-        const response = await axios.get(
-          `https://api.datasetcolab.com/dataset/annotations/${folderName}`,
-          config
-        );
-
-        setAnnotations(response.data);
-
+        setAnnotationSrc(`https://api.datasetcolab.com/dataset/annotations/${folderName}?idToken=${idToken}`);
         setImageSrc(
           `https://api.datasetcolab.com/dataset/view/${folderName}?idToken=${idToken}`
         );
@@ -365,7 +377,7 @@ export default function View() {
     <div style={{ padding: "20px" }} className="project-details">
       {imageSrc && (
         <div className="col-md-6 offset-md-0">
-          <AnnotationOverlay annotations={annotations} imageUrl={imageSrc} />
+          <AnnotationOverlay annotationUrl={annotationSrc} imageUrl={imageSrc} label={true} />
         </div>
       )}
       {!imageSrc && (
@@ -504,9 +516,9 @@ export default function View() {
                             </span>
                           </h5>
                           <div style={{ marginBottom: "10px" }}>
-                            {[0, 1, 2].map((row) => (
+                            {Array.from({ length: y }, (_, index) => index).map((row) => (
                               <div key={row} className="row">
-                                {[0, 1, 2, 3, 4].map((i) => (
+                                {Array.from({ length: x }, (_, index) => index).map((i) => (
                                   <div key={i} className="col" style={{ padding: "5px" }}>
                                     <Link
                                       to={
@@ -515,11 +527,33 @@ export default function View() {
                                         "/" +
                                         (key !== "" ? key + "/" : "") +
                                         Object.keys(currentFileTree[key]).slice(
-                                          (currentPage[key] - 1) * 15,
-                                          currentPage[key] * 15
+                                          (currentPage[key] - 1) * imagesPerPage,
+                                          currentPage[key] * imagesPerPage
                                         )[row * 5 + i]
                                       }
                                     >
+                                      {/* 
+                                      <AnnotationOverlay annotationUrl={"https://api.datasetcolab.com/dataset/annotations/" +
+                                        folderName +
+                                        "/" +
+                                        (key !== "" ? key + "/" : "") +
+                                        Object.keys(currentFileTree[key]).slice(
+                                          (currentPage[key] - 1) * imagesPerPage,
+                                          currentPage[key] * imagesPerPage
+                                        )[row * 5 + i] +
+                                        "?idToken=" +
+                                        idToken} imageUrl={"https://api.datasetcolab.com/dataset/view/" +
+                                          folderName +
+                                          "/" +
+                                          (key !== "" ? key + "/" : "") +
+                                          Object.keys(currentFileTree[key]).slice(
+                                            (currentPage[key] - 1) * imagesPerPage,
+                                            currentPage[key] * imagesPerPage
+                                          )[row * 5 + i] +
+                                          "?idToken=" +
+                                          idToken}
+                                          label={false} />
+                                        */}
                                       <img
                                         src={
                                           "https://api.datasetcolab.com/dataset/view/" +
@@ -527,8 +561,8 @@ export default function View() {
                                           "/" +
                                           (key !== "" ? key + "/" : "") +
                                           Object.keys(currentFileTree[key]).slice(
-                                            (currentPage[key] - 1) * 15,
-                                            currentPage[key] * 15
+                                            (currentPage[key] - 1) * imagesPerPage,
+                                            currentPage[key] * imagesPerPage
                                           )[row * 5 + i] +
                                           "?idToken=" +
                                           idToken
@@ -555,10 +589,10 @@ export default function View() {
                                   total +
                                   Object.keys(currentFileTree[key]).length,
                                 0
-                              ) / 15
+                              ) / imagesPerPage
                             )
                           ) &&
-                            Object.keys(currentFileTree[key]).length >= 15 && (
+                            Object.keys(currentFileTree[key]).length >= imagesPerPage && (
                               <div
                                 style={{
                                   display: "flex",
@@ -589,9 +623,9 @@ export default function View() {
                                           Object.keys(currentFileTree[key])
                                             .length,
                                         0
-                                      ) / 15
+                                      ) / imagesPerPage
                                     ) ||
-                                    Object.keys(currentFileTree[key]).length < 15
+                                    Object.keys(currentFileTree[key]).length < imagesPerPage
                                   }
                                   onClick={() =>
                                     setCurrentPage({
