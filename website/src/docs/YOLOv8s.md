@@ -6,9 +6,12 @@
 pip install ultralytics
 ```
 
-**Download the Dataset Colab YOLOv5n.pt model**
+**Download the Dataset Colab YOLOv8s.pt model**
 
-Download the <a href="https://datasetcolab.com/models" target="_blank">YOLOv8s.pt</a> directly or via curl.
+<iframe
+  src="https://datasetcolab.com/embed?dataset=YOLOv8&model=YOLOv8s"
+  style="width: 100%; height: 250px;"
+></iframe>
 
 **Start using the model**
 

@@ -10,17 +10,17 @@ pip install -r requirements.txt  # install
 
 **Download the Dataset Colab YOLOv5n.pt model**
 
-Download the <a href="https://datasetcolab.com/models" target="_blank">YOLOv5n.pt</a> directly or via curl. Place this file within the yolov5 folder.
-
 <iframe
-  src="localhost:3000/embed"
-  style="width:100%; height:300px;"
+  src="https://datasetcolab.com/embed?dataset=YOLOv5&model=YOLOv5n"
+  style="width: 100%; height: 250px;"
 ></iframe>
+
+Place this file within the yolov5 folder.
 
 **Start using the model**
 
 ```bash
-python3 detect.py --weights YOLOv5n.pt --source 0                               # webcam
+python3 detect.py --weights YOLOv5n.pt --source 0                              # webcam
                                                img.jpg                         # image
                                                vid.mp4                         # video
                                                screen                          # screenshot
