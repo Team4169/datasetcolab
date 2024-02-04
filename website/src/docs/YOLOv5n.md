@@ -12,6 +12,11 @@ pip install -r requirements.txt  # install
 
 Download the <a href="https://datasetcolab.com/models" target="_blank">YOLOv5n.pt</a> directly or via curl. Place this file within the yolov5 folder.
 
+<iframe
+  src="localhost:3000/embed"
+  style="width:100%; height:300px;"
+></iframe>
+
 **Start using the model**
 
 ```bash

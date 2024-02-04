@@ -20,6 +20,7 @@ import DeleteAccount from "./pages/DeleteAccount";
 import PretrainedModels from "./pages/PretrainedModels";
 import View from "./pages/View";
 import AboutUs from "./pages/AboutUs";
+import EmbeddedDownload from "./pages/EmbeddedDownload";
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
@@ -27,7 +28,9 @@ root.render(
     <BrowserRouter>
       <AuthProvider>
         <div className="container mt-2">
-          <Navbar />
+          {(window.location.pathname !== "/embed") && (
+            <Navbar />
+          )}
           <div className="row">
             <Routes>
               <Route
@@ -98,8 +101,9 @@ root.render(
                   </div>
                 }
               />
-
               <Route path="/view/*" element={<View />} />
+              <Route path="/embed" element={<EmbeddedDownload />} />
+              <Route path="*" element={<Navigate to="/" />} />
             </Routes>
           </div>
         </div>

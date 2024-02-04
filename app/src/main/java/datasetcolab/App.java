@@ -286,6 +286,7 @@ public class App {
         });
 
         app.get("/dataset/annotations/<folderName>", ctx -> {
+            long startTime = System.currentTimeMillis();
             try {
                 String uid = "";
                 if (!ctx.pathParam("folderName").startsWith("FRC2023") && !ctx.pathParam("folderName").startsWith("FRC2024")) {
@@ -306,7 +307,7 @@ public class App {
                 String folderName = "upload/" + uid + "/" + ctx.pathParam("folderName");
                 if (ctx.pathParam("folderName").startsWith("FRC2023") || ctx.pathParam("folderName").startsWith("FRC2024")) {
                     File datasetFile = new File("important.json");
-            
+
                     String folderNameSubstring = ctx.pathParam("folderName").substring(0, ctx.pathParam("folderName").indexOf("/"));
 
                     try (FileReader fileReader = new FileReader(datasetFile)) {
@@ -331,38 +332,39 @@ public class App {
                 JSONArray outAnnotations = new JSONArray();
 
                 if (files != null) {
+                    Map<Long, String> categoryMap = new HashMap<>();
+
                     for (File file : files) {
                         if (file.getName().endsWith(".json")) {
                             try (FileReader fileReader = new FileReader(file)) {
                                 JSONParser parser = new JSONParser();
                                 JSONObject json = (JSONObject) parser.parse(fileReader);
 
-                                Long imageID = null;
+                                JSONArray categories = (JSONArray) json.get("categories");
+                                for (Object category : categories) {
+                                    JSONObject categoryObj = (JSONObject) category;
+                                    Long categoryId = (Long) categoryObj.get("id");
+                                    String categoryName = (String) categoryObj.get("name");
+                                    categoryMap.put(categoryId, categoryName);
+                                }
+
                                 JSONArray images = (JSONArray) json.get("images");
                                 for (Object image : images) {
                                     JSONObject imageObj = (JSONObject) image;
                                     if (imageObj.get("file_name").equals(imageName)) {
-                                        imageID = (Long) imageObj.get("id");
-                                        break;
-                                    }
-                                }
+                                        Long imageID = (Long) imageObj.get("id");
 
-                                JSONArray annotations = (JSONArray) json.get("annotations");
-                                for (Object annotation : annotations) {
-                                    JSONObject annotationObj = (JSONObject) annotation;
-                                    if (annotationObj.get("image_id").equals(imageID)) {
-                                
-                                        String categoryName = "";
-                                        JSONArray categories = (JSONArray) json.get("categories");
-                                        for (Object category : categories) {
-                                            JSONObject categoryObj = (JSONObject) category;
-                                            if (categoryObj.get("id").equals(annotationObj.get("category_id"))) {
-                                                categoryName = (String) categoryObj.get("name");
+                                        JSONArray annotations = (JSONArray) json.get("annotations");
+                                        for (Object annotation : annotations) {
+                                            JSONObject annotationObj = (JSONObject) annotation;
+                                            if (annotationObj.get("image_id").equals(imageID)) {
+                                                Long categoryId = (Long) annotationObj.get("category_id");
+                                                String categoryName = categoryMap.get(categoryId);
+                                                annotationObj.put("category_name", categoryName);
+                                                outAnnotations.add(annotationObj);
                                             }
                                         }
-
-                                        annotationObj.put("category_name", categoryName);
-                                        outAnnotations.add(annotationObj);
+                                        break;
                                     }
                                 }
                             }
@@ -374,6 +376,9 @@ public class App {
                 e.printStackTrace();
                 ctx.status(401).result("Error: Authentication failed.");
             }
+            long endTime = System.currentTimeMillis();
+            long totalTime = endTime - startTime;
+            System.out.println("/dataset/annotations/ time: " + totalTime + " ms");
         });
 
 

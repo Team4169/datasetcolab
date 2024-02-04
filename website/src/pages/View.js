@@ -243,6 +243,10 @@ export default function View() {
           config
         );
 
+        if (folderName.startsWith("FRC2023") || folderName.startsWith("FRC2024")) {
+          delete response.data.datasetType;
+        }
+
         setProjectDetails(response.data);
         setCurrentPage(
           Object.fromEntries(
