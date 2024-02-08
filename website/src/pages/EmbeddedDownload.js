@@ -242,31 +242,6 @@ export default function EmbeddedDownload() {
                       </ToggleButton>
                     </ButtonGroup>
                   </Form.Group>
-                  {dataset.downloadTypes && (
-                    <Form.Group style={{ paddingTop: "10px" }}>
-                      <ButtonGroup toggle>
-                        {dataset.downloadTypes.map((download, downloadIndex) => (
-                          <ToggleButton
-                            key={downloadIndex}
-                            type="radio"
-                            variant="outline-primary"
-                            name={`modelVariant-${dataset.model + download}`}
-                            value={download}
-                            checked={dataset.downloadType === download}
-                            onClick={() =>
-                              setDataset((prevDataset) => {
-                                const newDataset = { ...prevDataset };
-                                newDataset.downloadType = download;
-                                return newDataset;
-                              })
-                            }
-                          >
-                            {download}
-                          </ToggleButton>
-                        ))}
-                      </ButtonGroup>
-                    </Form.Group>
-                  )}
                   <div style={{ paddingTop: "10px" }}>
                     {dataset.download === "curl" ? (
                       <div>

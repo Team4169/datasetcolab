@@ -12,7 +12,7 @@ pip install -r requirements.txt
 
 <iframe
   src="https://datasetcolab.com/embed?dataset=ssdmobilenet&model=ssdmobilenet"
-  style="width: 100%; height: 300px;"
+  style="width: 100%; height: 250px;"
 ></iframe>
 
 **Start using the model**
