@@ -75,6 +75,28 @@ export default function Docs() {
                   YOLOv8s
                 </Nav.Link>
               </Nav.Item>
+              <Nav.Item>
+                <Nav.Link
+                  onClick={() => {
+                    navigate("/docs/ssdmobilenet");
+                    window.location.reload();
+                  }}
+                  className="black-text text-dark"
+                >
+                  SSD Mobilenet v2
+                </Nav.Link>
+              </Nav.Item>
+              <Nav.Item>
+                <Nav.Link
+                  onClick={() => {
+                    navigate("/docs/efficientdet");
+                    window.location.reload();
+                  }}
+                  className="black-text text-dark"
+                >
+                  EfficientDet
+                </Nav.Link>
+              </Nav.Item>
             </div>
           </Nav>
         </Col>

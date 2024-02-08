@@ -63,6 +63,8 @@ export default function EmbeddedDownload() {
   const [datasets, setDatasets] = useState([
     { name: "YOLOv8", dataset: "FRC 2024", model: "YOLOv8n", classes: ["note", "robot"], download: "direct" },
     { name: "YOLOv5", dataset: "FRC 2024", model: "YOLOv5n", classes: ["note", "robot"], download: "direct" },
+    { name: "ssdmobilenet", dataset: "FRC 2024", model: "ssdmobilenet", downloadType: "TFLite", downloadTypes: ["TFLite", "Tensorflow"], classes: ["note", "robot"], download: "direct" },
+    { name: "efficientdet", dataset: "FRC 2024", model: "efficientdet", downloadType: "TFLite", downloadTypes: ["TFLite", "Tensorflow"], classes: ["note", "robot"], download: "direct" },
   ]);
 
   const [dataset, setDataset] = useState(null);
@@ -85,7 +87,11 @@ export default function EmbeddedDownload() {
   const [apiKey, setApiKey] = useState("API_KEY");
 
   const handleDownloadCurl = (dataset) => {
-    return `curl -o ${dataset.model}.pt 'https://api.datasetcolab.com/model/download/${dataset.model + dataset.classes.map(item => item.slice(0, 2).toUpperCase()).join('')}?api=${apiKey}'`;
+    if (dataset.downloadType === "") {
+      return `curl -o ${dataset.model + dataset.classes.map(item => item.slice(0, 2).toUpperCase()).join('')}.pt 'https://api.datasetcolab.com/model/download/${dataset.model + dataset.classes.map(item => item.slice(0, 2).toUpperCase()).join('')}?api=${apiKey}'`;
+    } else {
+      return `curl -o ${dataset.model + dataset.classes.map(item => item.slice(0, 2).toUpperCase()).join('')}.zip 'https://api.datasetcolab.com/model/download/${dataset.model + dataset.classes.map(item => item.slice(0, 2).toUpperCase()).join('')}?api=${apiKey}&downloadType=${dataset.downloadType === "Tensorflow" ? "TF" : "TFLite"}'`;
+    }
   };
 
   const fetchApiKey = async () => {
@@ -113,15 +119,24 @@ export default function EmbeddedDownload() {
     navigator.clipboard.writeText(curlCommand);
   };
 
-  const handleDirectDownload = async (model, classes) => {
-    setLoading(true);
+  const handleDirectDownload = async (model, downloadType) => {
+    try {
+      setLoading(true);
 
-    const idToken = await currentUser.getIdToken();
+      const idToken = await currentUser.getIdToken();
 
-    window.location.href = "https://api.datasetcolab.com/model/download/" + model + classes.map(item => item.slice(0, 2).toUpperCase()).join('') + "?idToken=" + idToken;
+      if (downloadType === "") {
+        window.location.href = "https://api.datasetcolab.com/model/download/" + model + "?idToken=" + idToken;
+      } else {
+        window.location.href = "https://api.datasetcolab.com/model/download/" + model + "?idToken=" + idToken + "&downloadType=" + downloadType;
+      }
 
-    logEvent(analytics, 'model/download');
-    setLoading(false);
+      logEvent(analytics, 'model/download');
+    } catch (err) {
+      console.log(err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleClasses = (opt) => {
@@ -138,6 +153,31 @@ export default function EmbeddedDownload() {
   useEffect(() => {
     fetchApiKey();
   }, []);
+
+  function DownloadButton(props) {
+    const dataset = props.dataset;
+    let text = dataset.model + dataset.classes.map(item => item.slice(0, 2).toUpperCase()).join('');
+    let downloadType = "";
+    let fileType = "";
+    if (dataset.model === "efficientdet" || dataset.model === "ssdmobilenet") {
+      downloadType = dataset.downloadType === "Tensorflow" ? "TF" : "TFLite";
+      fileType = ".zip";
+    } else {
+      fileType = ".pt";
+    }
+
+
+    return (
+      <Button
+        variant="primary"
+        onClick={() => handleDirectDownload(text, downloadType)}
+        style={{ width: "100%" }}
+        disabled={loading}
+      >
+        {loading ? "Downloading..." : "Download " + text + downloadType + fileType}
+      </Button>
+    );
+  }
 
   return (
     <Form.Group style={{ maxWidth: "500px" }}>
@@ -202,6 +242,31 @@ export default function EmbeddedDownload() {
                       </ToggleButton>
                     </ButtonGroup>
                   </Form.Group>
+                  {dataset.downloadTypes && (
+                    <Form.Group style={{ paddingTop: "10px" }}>
+                      <ButtonGroup toggle>
+                        {dataset.downloadTypes.map((download, downloadIndex) => (
+                          <ToggleButton
+                            key={downloadIndex}
+                            type="radio"
+                            variant="outline-primary"
+                            name={`modelVariant-${dataset.model + download}`}
+                            value={download}
+                            checked={dataset.downloadType === download}
+                            onClick={() =>
+                              setDataset((prevDataset) => {
+                                const newDataset = { ...prevDataset };
+                                newDataset.downloadType = download;
+                                return newDataset;
+                              })
+                            }
+                          >
+                            {download}
+                          </ToggleButton>
+                        ))}
+                      </ButtonGroup>
+                    </Form.Group>
+                  )}
                   <div style={{ paddingTop: "10px" }}>
                     {dataset.download === "curl" ? (
                       <div>
@@ -219,19 +284,7 @@ export default function EmbeddedDownload() {
                       </div>
                     ) : (
                       <div style={{ width: "317px" }}>
-                        <Button
-                          variant="primary"
-                          onClick={() =>
-                            handleDirectDownload(
-                              dataset.model,
-                              dataset.classes
-                            )
-                          }
-                          style={{ width: "100%" }}
-                          disabled={loading}
-                        >
-                          {loading ? "Downloading..." : "Download " + dataset.model + ".pt"}
-                        </Button>
+                       <DownloadButton dataset={dataset} />
                       </div>
                     )}
                   </div>

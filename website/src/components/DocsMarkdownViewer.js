@@ -4,6 +4,8 @@ import YOLOv5n from '../docs/YOLOv5n.md';
 import YOLOv5s from '../docs/YOLOv5s.md';
 import YOLOv8n from '../docs/YOLOv8n.md';
 import YOLOv8s from '../docs/YOLOv8s.md';
+import SSDMobileNet from '../docs/ssdmobilenet.md';
+import EfficientDet from '../docs/efficientdet.md';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import rehypeRaw from 'rehype-raw'
 
@@ -24,6 +26,10 @@ class DocsMarkdownViewer extends Component {
       fetch(YOLOv8n).then(res => res.text()).then(text => this.setState({ markdown: text }));
     } else if (page === 'YOLOv8s') {
       fetch(YOLOv8s).then(res => res.text()).then(text => this.setState({ markdown: text }));
+    } else if (page === 'ssdmobilenet') {
+      fetch(SSDMobileNet).then(res => res.text()).then(text => this.setState({ markdown: text }));
+    } else if (page === 'efficientdet') {
+      fetch(EfficientDet).then(res => res.text()).then(text => this.setState({ markdown: text }));
     }
   }
 
