@@ -592,11 +592,21 @@ public class App {
                 }
 
                 String model = ctx.pathParam("model");
-                String fileName = "models/" + model + "/weights/best.pt";
+                String fileName = "";
+                if (model.startsWith("YOLO")) {
+                    fileName = "models/" + model + "/weights/best.pt";
+                } else {
+                    fileName = "models/" + model + "/" + model + ctx.queryParam("downloadType") + ".zip";
+                    System.out.println(fileName);
+                }
 
                 try (InputStream is = Files.newInputStream(Path.of(fileName))) {
                     // Set response headers
-                    ctx.header("Content-Disposition", "attachment; filename=" + model + ".pt");
+                    if (model.startsWith("YOLO")) {
+                        ctx.header("Content-Disposition", "attachment; filename=" + model + ".pt");
+                    } else {
+                        ctx.header("Content-Disposition", "attachment; filename=" + model + ctx.queryParam("downloadType") + ".zip");
+                    }
                     ctx.contentType("application/zip");
 
                     // Get the OutputStream from the HttpServletResponse

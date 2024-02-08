@@ -66,6 +66,8 @@ export default function PretrainedModels() {
     const [datasets, setDatasets] = useState([
         { name: "YOLOv8", dataset: "FRC 2024", model: "YOLOv8n", variants: ["YOLOv8n", "YOLOv8s"], classes: ["note", "robot"], download: "direct" },
         { name: "YOLOv5", dataset: "FRC 2024", model: "YOLOv5n", variants: ["YOLOv5n", "YOLOv5s"], classes: ["note", "robot"], download: "direct" },
+        { name: "SSD Mobilenet v2", dataset: "FRC 2024", model: "ssdmobilenet", downloadType: "TFLite", downloadTypes: ["TFLite", "Tensorflow"], classes: ["note", "robot"], download: "direct" },
+        { name: "EfficientDet", dataset: "FRC 2024", model: "efficientdet", downloadType: "TFLite", downloadTypes: ["TFLite", "Tensorflow"], classes: ["note", "robot"], download: "direct" },
     ]);
 
     const [classes, setClasses] = useState(["note", "robot"]);
@@ -80,9 +82,12 @@ export default function PretrainedModels() {
         "YOLOv5s": {},
     });
 
-
     const handleDownloadCurl = (dataset) => {
-        return `curl -o ${dataset.model}.pt 'https://api.datasetcolab.com/model/download/${dataset.model + dataset.classes.map(item => item.slice(0, 2).toUpperCase()).join('')}?api=${apiKey}'`;
+        if (dataset.downloadType === "") {
+            return `curl -o ${dataset.model + dataset.classes.map(item => item.slice(0, 2).toUpperCase()).join('')}.pt 'https://api.datasetcolab.com/model/download/${dataset.model + dataset.classes.map(item => item.slice(0, 2).toUpperCase()).join('')}?api=${apiKey}'`;
+        } else {
+            return `curl -o ${dataset.model + dataset.classes.map(item => item.slice(0, 2).toUpperCase()).join('')}.zip 'https://api.datasetcolab.com/model/download/${dataset.model + dataset.classes.map(item => item.slice(0, 2).toUpperCase()).join('')}?api=${apiKey}&downloadType=${dataset.downloadType === "Tensorflow" ? "TF" : "TFLite"}'`;
+        }
     };
 
     const fetchApiKey = async () => {
@@ -115,13 +120,17 @@ export default function PretrainedModels() {
         setShowCopyAlert(true);
     };
 
-    const handleDirectDownload = async (model, classes) => {
+    const handleDirectDownload = async (model, downloadType) => {
         try {
             setLoading(true);
 
             const idToken = await currentUser.getIdToken();
 
-            window.location.href = "https://api.datasetcolab.com/model/download/" + model + classes.map(item => item.slice(0, 2).toUpperCase()).join('') + "?idToken=" + idToken;
+            if (downloadType === "") {
+                window.location.href = "https://api.datasetcolab.com/model/download/" + model + "?idToken=" + idToken;
+            } else {
+                window.location.href = "https://api.datasetcolab.com/model/download/" + model + "?idToken=" + idToken + "&downloadType=" + downloadType;
+            }
 
             logEvent(analytics, 'model/download');
         } catch (err) {
@@ -138,6 +147,12 @@ export default function PretrainedModels() {
             for (const variant of ["YOLOv8n", "YOLOv5n", "YOLOv8s", "YOLOv5s"]) {
                 for (const class_ of ["NO", "RO", "NORO"]) {
                     newPerformance[variant + class_] = (await axios.get("https://api.datasetcolab.com/model/performance/" + variant + class_)).data;
+                }
+            }
+
+            for (const tfmodel of ["ssdmobilenet", "efficientdet"]) {
+                for (const class_ of ["NO", "RO", "NORO"]) {
+                    newPerformance[tfmodel + class_] = (await axios.get("https://api.datasetcolab.com/model/performance/" + tfmodel + class_)).data;
                 }
             }
 
@@ -167,7 +182,96 @@ export default function PretrainedModels() {
         fetchApiKey();
     }, []);
 
-    console.log(datasets[0].classes.map(item => item.slice(0, 2).toUpperCase()).join(''));
+    function PerformanceTable(props) {
+        const dataset = datasets[props.index];
+        if (performance[dataset.model + dataset.classes.map(item => item.slice(0, 2).toUpperCase()).join('')]) {
+            const mAP50 = performance[dataset.model + dataset.classes.map(item => item.slice(0, 2).toUpperCase()).join('')]["metrics/mAP50(B)"];
+            const mAP50_95 = performance[dataset.model + dataset.classes.map(item => item.slice(0, 2).toUpperCase()).join('')]["metrics/mAP50-95(B)"];
+            const precision = performance[dataset.model + dataset.classes.map(item => item.slice(0, 2).toUpperCase()).join('')]["metrics/precision(B)"];
+            const recall = performance[dataset.model + dataset.classes.map(item => item.slice(0, 2).toUpperCase()).join('')]["metrics/recall(B)"];
+
+            console.log(mAP50, mAP50_95, precision, recall)
+
+            return (
+                <>
+                    <div className="row">
+                        {mAP50 !== undefined && (
+                            <div className="col">
+                                <strong>mAP50:</strong> {(mAP50 * 100).toFixed(2)}%
+                            </div>
+                        )}
+                        {mAP50_95 !== undefined && (
+                            <div className="col">
+                                <strong>mAP50-95:</strong> {(mAP50_95 * 100).toFixed(2)}%
+                            </div>
+                        )}
+                    </div>
+                    <div className="row">
+                        {precision !== undefined && (
+                            <div className="col">
+                                <strong>Precision:</strong> {(precision * 100).toFixed(2)}%
+                            </div>
+                        )}
+                        {recall !== undefined && (
+                            <div className="col">
+                                <strong>Recall:</strong> {(recall * 100).toFixed(2)}%
+                            </div>
+                        )}
+                    </div>
+                </>
+            );
+
+        }
+    }
+
+    function ImageGrid(props) {
+        const dataset = datasets[props.index];
+        const url = dataset.model + dataset.classes.map(item => item.slice(0, 2).toUpperCase()).join('');
+        return (
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)" }}>
+                <img src={"https://api.datasetcolab.com/model/inference/" + url + "/0"} style={{ width: "100%", margin: "0", padding: "0" }} />
+                <img src={"https://api.datasetcolab.com/model/inference/" + url + "/1"} style={{ width: "100%", margin: "0", padding: "0" }} />
+                <img src={"https://api.datasetcolab.com/model/inference/" + url + "/2"} style={{ width: "100%", margin: "0", padding: "0" }} />
+                <img src={"https://api.datasetcolab.com/model/inference/" + url + "/3"} style={{ width: "100%", margin: "0", padding: "0" }} />
+                <img src={"https://api.datasetcolab.com/model/inference/" + url + "/4"} style={{ width: "100%", margin: "0", padding: "0" }} />
+                <img src={"https://api.datasetcolab.com/model/inference/" + url + "/5"} style={{ width: "100%", margin: "0", padding: "0" }} />
+                <img src={"https://api.datasetcolab.com/model/inference/" + url + "/6"} style={{ width: "100%", margin: "0", padding: "0" }} />
+                <img src={"https://api.datasetcolab.com/model/inference/" + url + "/7"} style={{ width: "100%", margin: "0", padding: "0" }} />
+                <img src={"https://api.datasetcolab.com/model/inference/" + url + "/8"} style={{ width: "100%", margin: "0", padding: "0" }} />
+                <img src={"https://api.datasetcolab.com/model/inference/" + url + "/9"} style={{ width: "100%", margin: "0", padding: "0" }} />
+                <img src={"https://api.datasetcolab.com/model/inference/" + url + "/10"} style={{ width: "100%", margin: "0", padding: "0" }} />
+                <img src={"https://api.datasetcolab.com/model/inference/" + url + "/11"} style={{ width: "100%", margin: "0", padding: "0" }} />
+                <img src={"https://api.datasetcolab.com/model/inference/" + url + "/12"} style={{ width: "100%", margin: "0", padding: "0" }} />
+                <img src={"https://api.datasetcolab.com/model/inference/" + url + "/13"} style={{ width: "100%", margin: "0", padding: "0" }} />
+                <img src={"https://api.datasetcolab.com/model/inference/" + url + "/14"} style={{ width: "100%", margin: "0", padding: "0" }} />
+            </div>
+        );
+    }
+
+    function DownloadButton(props) {
+        const dataset = datasets[props.index];
+        let text = dataset.model + dataset.classes.map(item => item.slice(0, 2).toUpperCase()).join('');
+        let downloadType = "";
+        let fileType = "";
+        if (dataset.model === "efficientdet" || dataset.model === "ssdmobilenet") {
+            downloadType = dataset.downloadType === "Tensorflow" ? "TF" : "TFLite";
+            fileType = ".zip";
+        } else {
+            fileType = ".pt";
+        }
+
+
+        return (
+            <Button
+                variant="primary"
+                onClick={() => handleDirectDownload(text, downloadType)}
+                style={{ width: "100%" }}
+                disabled={loading}
+            >
+                {loading ? "Downloading..." : "Download " + text + downloadType + fileType}
+            </Button>
+        );
+    }
 
     return (
         <div style={styles}>
@@ -208,53 +312,38 @@ export default function PretrainedModels() {
                                         )}
                                         {dataset.classes.length > 0 && (
                                             <>
-                                                <h5 style={{ paddingTop: "10px" }}>Model Variant</h5>
-                                                <Form.Group>
-                                                    <ButtonGroup toggle>
-                                                        {dataset.variants.map((variant, variantIndex) => (
-                                                            <ToggleButton
-                                                                key={variantIndex}
-                                                                type="radio"
-                                                                variant="outline-primary"
-                                                                name={`modelVariant-${variant}`}
-                                                                value={variant}
-                                                                checked={dataset.model === variant}
-                                                                onClick={() =>
-                                                                    setDatasets((prevDatasets) => {
-                                                                        const newDatasets = [...prevDatasets];
-                                                                        newDatasets[index] = {
-                                                                            ...newDatasets[index],
-                                                                            model: variant
-                                                                        };
-                                                                        return newDatasets;
-                                                                    })
-                                                                }
-                                                            >
-                                                                {variant}
-                                                            </ToggleButton>
-                                                        ))}
-                                                    </ButtonGroup>
-                                                </Form.Group>
-                                                <h5 style={{ paddingTop: "10px" }}>Performance</h5>
-                                                {performance[dataset.model + dataset.classes.map(item => item.slice(0, 2).toUpperCase()).join('')] && (
-                                                    <>  <div className="row">
-                                                        <div className="col">
-                                                            <strong>mAP50:</strong> {(performance[dataset.model + dataset.classes.map(item => item.slice(0, 2).toUpperCase()).join('')]["metrics/mAP50(B)"] * 100).toFixed(2)}%
-                                                        </div>
-                                                        <div className="col">
-                                                            <strong>mAP50-95:</strong> {(performance[dataset.model + dataset.classes.map(item => item.slice(0, 2).toUpperCase()).join('')]["metrics/mAP50-95(B)"] * 100).toFixed(2)}%
-                                                        </div>
-                                                    </div>
-                                                        <div className="row">
-                                                            <div className="col">
-                                                                <strong>Precision:</strong> {(performance[dataset.model + dataset.classes.map(item => item.slice(0, 2).toUpperCase()).join('')]["metrics/precision(B)"] * 100).toFixed(2)}%
-                                                            </div>
-                                                            <div className="col">
-                                                                <strong>Recall:</strong> {(performance[dataset.model + dataset.classes.map(item => item.slice(0, 2).toUpperCase()).join('')]["metrics/recall(B)"] * 100).toFixed(2)}%
-                                                            </div>
-                                                        </div>
-                                                    </>
+                                                {dataset.variants && (
+                                                    <>
+                                                        <h5 style={{ paddingTop: "10px" }}>Model Variant</h5>
+                                                        <Form.Group>
+                                                            <ButtonGroup toggle>
+                                                                {dataset.variants.map((variant, variantIndex) => (
+                                                                    <ToggleButton
+                                                                        key={variantIndex}
+                                                                        type="radio"
+                                                                        variant="outline-primary"
+                                                                        name={`modelVariant-${variant}`}
+                                                                        value={variant}
+                                                                        checked={dataset.model === variant}
+                                                                        onClick={() =>
+                                                                            setDatasets((prevDatasets) => {
+                                                                                const newDatasets = [...prevDatasets];
+                                                                                newDatasets[index] = {
+                                                                                    ...newDatasets[index],
+                                                                                    model: variant
+                                                                                };
+                                                                                return newDatasets;
+                                                                            })
+                                                                        }
+                                                                    >
+                                                                        {variant}
+                                                                    </ToggleButton>
+                                                                ))}
+                                                            </ButtonGroup>
+                                                        </Form.Group></>
                                                 )}
+                                                <h5 style={{ paddingTop: "10px" }}>Performance</h5>
+                                                <PerformanceTable index={index} />
                                                 {currentUser && currentUser.emailVerified ? (
                                                     <>
                                                         <h5 style={{ paddingTop: "10px" }}>Download Weights</h5>
@@ -263,7 +352,7 @@ export default function PretrainedModels() {
                                                                 <ToggleButton
                                                                     type="radio"
                                                                     variant="outline-primary"
-                                                                    name={`downloadMethod-${dataset.name}`}
+                                                                    name={`downloadMethod-${dataset.model}`}
                                                                     value="direct"
                                                                     checked={dataset.download === "direct"}
                                                                     onClick={() =>
@@ -282,7 +371,7 @@ export default function PretrainedModels() {
                                                                 <ToggleButton
                                                                     type="radio"
                                                                     variant="outline-primary"
-                                                                    name={`downloadMethod-${dataset.name}`}
+                                                                    name={`downloadMethod-${dataset.model}`}
                                                                     value="curl"
                                                                     checked={dataset.download === "curl"}
                                                                     onClick={() =>
@@ -300,6 +389,35 @@ export default function PretrainedModels() {
                                                                 </ToggleButton>
                                                             </ButtonGroup>
                                                         </Form.Group>
+
+                                                        {dataset.downloadTypes && (
+                                                            <Form.Group style={{ paddingTop: "10px" }}>
+                                                                <ButtonGroup toggle>
+                                                                    {dataset.downloadTypes.map((download, downloadIndex) => (
+                                                                        <ToggleButton
+                                                                            key={downloadIndex}
+                                                                            type="radio"
+                                                                            variant="outline-primary"
+                                                                            name={`modelVariant-${dataset.model + download}`}
+                                                                            value={download}
+                                                                            checked={dataset.downloadType === download}
+                                                                            onClick={() =>
+                                                                                setDatasets((prevDatasets) => {
+                                                                                    const newDatasets = [...prevDatasets];
+                                                                                    newDatasets[index] = {
+                                                                                        ...newDatasets[index],
+                                                                                        downloadType: download
+                                                                                    };
+                                                                                    return newDatasets;
+                                                                                })
+                                                                            }
+                                                                        >
+                                                                            {download}
+                                                                        </ToggleButton>
+                                                                    ))}
+                                                                </ButtonGroup>
+                                                            </Form.Group>
+                                                        )}
                                                         <div style={{ paddingTop: "10px" }}>
                                                             {dataset.download === "curl" ? (
                                                                 <div>
@@ -317,19 +435,7 @@ export default function PretrainedModels() {
                                                                 </div>
                                                             ) : (
                                                                 <div style={{ width: "100%" }}>
-                                                                    <Button
-                                                                        variant="primary"
-                                                                        onClick={() =>
-                                                                            handleDirectDownload(
-                                                                                dataset.model,
-                                                                                dataset.classes
-                                                                            )
-                                                                        }
-                                                                        style={{ width: "100%" }}
-                                                                        disabled={loading}
-                                                                    >
-                                                                        {loading ? "Downloading..." : "Download " + dataset.model + ".pt"}
-                                                                    </Button>
+                                                                    <DownloadButton index={index} />
                                                                 </div>
                                                             )}
                                                         </div>
@@ -344,9 +450,7 @@ export default function PretrainedModels() {
                                                         </div>
                                                     </>
                                                 )}
-                                                <h5 style={{ paddingTop: "10px" }}>Getting Started</h5>
-                                                <div>
-                                                    {" "}
+                                                <h5 style={{ paddingTop: "10px" }}>Getting Started</h5><div>
                                                     <Link to={`/docs/${dataset.model}`}>Read the Docs</Link> to learn how to use this
                                                     model!
                                                 </div>
@@ -357,23 +461,7 @@ export default function PretrainedModels() {
                                         {dataset.classes.length > 0 && (
                                             <>
                                                 <h5 style={{ paddingTop: "10px" }}>Sample Inferences</h5>
-                                                <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)" }}>
-                                                    <img src={"https://api.datasetcolab.com/model/inference/" + dataset.model + dataset.classes.map(item => item.slice(0, 2).toUpperCase()).join('') + "/0"} style={{ width: "100%", margin: "0", padding: "0" }} />
-                                                    <img src={"https://api.datasetcolab.com/model/inference/" + dataset.model + dataset.classes.map(item => item.slice(0, 2).toUpperCase()).join('') + "/1"} style={{ width: "100%", margin: "0", padding: "0" }} />
-                                                    <img src={"https://api.datasetcolab.com/model/inference/" + dataset.model + dataset.classes.map(item => item.slice(0, 2).toUpperCase()).join('') + "/4"} style={{ width: "100%", margin: "0", padding: "0" }} />
-                                                    <img src={"https://api.datasetcolab.com/model/inference/" + dataset.model + dataset.classes.map(item => item.slice(0, 2).toUpperCase()).join('') + "/6"} style={{ width: "100%", margin: "0", padding: "0" }} />
-                                                    <img src={"https://api.datasetcolab.com/model/inference/" + dataset.model + dataset.classes.map(item => item.slice(0, 2).toUpperCase()).join('') + "/7"} style={{ width: "100%", margin: "0", padding: "0" }} />
-                                                    <img src={"https://api.datasetcolab.com/model/inference/" + dataset.model + dataset.classes.map(item => item.slice(0, 2).toUpperCase()).join('') + "/9"} style={{ width: "100%", margin: "0", padding: "0" }} />
-                                                    <img src={"https://api.datasetcolab.com/model/inference/" + dataset.model + dataset.classes.map(item => item.slice(0, 2).toUpperCase()).join('') + "/10"} style={{ width: "100%", margin: "0", padding: "0" }} />
-                                                    <img src={"https://api.datasetcolab.com/model/inference/" + dataset.model + dataset.classes.map(item => item.slice(0, 2).toUpperCase()).join('') + "/12"} style={{ width: "100%", margin: "0", padding: "0" }} />
-                                                    <img src={"https://api.datasetcolab.com/model/inference/" + dataset.model + dataset.classes.map(item => item.slice(0, 2).toUpperCase()).join('') + "/15"} style={{ width: "100%", margin: "0", padding: "0" }} />
-                                                    <img src={"https://api.datasetcolab.com/model/inference/" + dataset.model + dataset.classes.map(item => item.slice(0, 2).toUpperCase()).join('') + "/18"} style={{ width: "100%", margin: "0", padding: "0" }} />
-                                                    <img src={"https://api.datasetcolab.com/model/inference/" + dataset.model + dataset.classes.map(item => item.slice(0, 2).toUpperCase()).join('') + "/19"} style={{ width: "100%", margin: "0", padding: "0" }} />
-                                                    <img src={"https://api.datasetcolab.com/model/inference/" + dataset.model + dataset.classes.map(item => item.slice(0, 2).toUpperCase()).join('') + "/21"} style={{ width: "100%", margin: "0", padding: "0" }} />
-                                                    <img src={"https://api.datasetcolab.com/model/inference/" + dataset.model + dataset.classes.map(item => item.slice(0, 2).toUpperCase()).join('') + "/27"} style={{ width: "100%", margin: "0", padding: "0" }} />
-                                                    <img src={"https://api.datasetcolab.com/model/inference/" + dataset.model + dataset.classes.map(item => item.slice(0, 2).toUpperCase()).join('') + "/42"} style={{ width: "100%", margin: "0", padding: "0" }} />
-                                                    <img src={"https://api.datasetcolab.com/model/inference/" + dataset.model + dataset.classes.map(item => item.slice(0, 2).toUpperCase()).join('') + "/47"} style={{ width: "100%", margin: "0", padding: "0" }} />
-                                                </div>
+                                                <ImageGrid index={index} />
                                             </>
                                         )}
                                     </div>
