@@ -11,7 +11,7 @@ pip install -r requirements.txt
 **Download the Dataset Colab SSD Mobilenet v2 model**
 
 <iframe
-  src="https://datasetcolab.com/embed?dataset=ssdmobilenet&model=ssdmobilenet"
+  src="https://datasetcolab.com/embed?model=ssdmobilenet"
   style="width: 100%; height: 250px;"
 ></iframe>
 

@@ -1,9 +1,19 @@
 import os
 from PIL import Image
 
+exclude = {
+    "YOLOv5n": [2, 3, 5, 8, 11, 13, 14, 16, 20, 22],
+    "YOLOv5s": [2, 3, 5, 8, 11, 13, 14, 16, 20, 22],
+    "YOLOv6n": [2, 3, 5, 8, 11, 13, 14, 16, 20, 22],
+    "YOLOv6s": [2, 3, 5, 8, 11, 13, 14, 16, 20, 22],
+    "YOLOv8n": [2, 3, 5, 8, 11, 13, 14, 16, 20, 22],
+    "YOLOv8s": [2, 3, 5, 8, 11, 13, 14, 16, 20, 22]
+}
+
 # Iterate through the model names
 for model_name in ["YOLOv8n", "YOLOv8s", "YOLOv5s", "YOLOv5n", "YOLOv6n", "YOLOv6s"]:
     for classes in ["NORO", "NO", "RO"]:
+        imageindex = 0
         for batch_num in range(3):  # Iterate through batch numbers 0, 1, and 2
             # Open the image grid
             image_grid = Image.open(f"/home/team4169/datasetcolab/app/models/{model_name +  classes}/val_batch{batch_num}_pred.jpg")
@@ -15,6 +25,9 @@ for model_name in ["YOLOv8n", "YOLOv8s", "YOLOv5s", "YOLOv5n", "YOLOv6n", "YOLOv
             # Split the image grid into individual images
             for i in range(4):
                 for j in range(4):
+                    if (batch_num * 16 + i * 4 + j) in exclude[model_name]:
+                        continue
+
                     # Calculate the coordinates of the current image
                     left = j * image_width
                     upper = i * image_height
@@ -28,4 +41,5 @@ for model_name in ["YOLOv8n", "YOLOv8s", "YOLOv5s", "YOLOv5n", "YOLOv6n", "YOLOv
                     os.makedirs(f"/home/team4169/datasetcolab/app/models/{model_name +  classes}/images", exist_ok=True)
 
                     # Save the cropped image with the appropriate label
-                    image.save(f"/home/team4169/datasetcolab/app/models/{model_name +  classes}/images/processed_{batch_num * 16 + i * 4 + j}.jpg")
+                    image.save(f"/home/team4169/datasetcolab/app/models/{model_name +  classes}/images/processed_{imageindex}.jpg")
+                    imageindex += 1

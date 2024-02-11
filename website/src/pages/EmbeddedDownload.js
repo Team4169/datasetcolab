@@ -74,12 +74,15 @@ export default function EmbeddedDownload() {
 
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
-    if (searchParams.get("dataset") != null) {
+    console.log(searchParams.get("dataset"));
+    console.log(searchParams.get("model"));
+    if (searchParams.get("dataset") != null && searchParams.get("model") != null) {
       setDataset(datasets.find((item) => item.name === searchParams.get("dataset")));
-    }
-    if (searchParams.get("model") != null) {
       setDataset((prevDataset) => ({ ...prevDataset, model: searchParams.get("model") }));
+    } else if (searchParams.get("model") != null) {
+      setDataset(datasets.find((item) => item.model === searchParams.get("model")));
     }
+    console.log(dataset);
   }, [location.search]);
 
   const [classes, setClasses] = useState(["note", "robot"]);
@@ -88,6 +91,7 @@ export default function EmbeddedDownload() {
   const [apiKey, setApiKey] = useState("API_KEY");
 
   const handleDownloadCurl = (dataset) => {
+    console.log(dataset);
     if (dataset.downloadType === undefined || dataset.downloadType === "") {
       return `curl -o ${dataset.model + dataset.classes.map(item => item.slice(0, 2).toUpperCase()).join('')}.pt 'https://api.datasetcolab.com/model/download/${dataset.model + dataset.classes.map(item => item.slice(0, 2).toUpperCase()).join('')}?api=${apiKey}'`;
     } else {
@@ -179,6 +183,8 @@ export default function EmbeddedDownload() {
       </Button>
     );
   }
+
+  console.log(dataset);
 
   return (
     <Form.Group style={{ maxWidth: "500px" }}>

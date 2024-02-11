@@ -11,7 +11,7 @@ pip install -r requirements.txt
 **Download the Dataset Colab EfficientDet model**
 
 <iframe
-  src="https://datasetcolab.com/embed?dataset=efficientdet&model=efficientdet"
+  src="https://datasetcolab.com/embed?model=efficientdet"
   style="width: 100%; height: 250px;"
 ></iframe>
 
