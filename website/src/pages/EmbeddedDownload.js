@@ -61,10 +61,11 @@ export default function EmbeddedDownload() {
   const { currentUser } = useAuth();
 
   const [datasets, setDatasets] = useState([
-    { name: "YOLOv8", dataset: "FRC 2024", model: "YOLOv8n", classes: ["note", "robot"], download: "direct" },
-    { name: "YOLOv5", dataset: "FRC 2024", model: "YOLOv5n", classes: ["note", "robot"], download: "direct" },
-    { name: "ssdmobilenet", dataset: "FRC 2024", model: "ssdmobilenet", downloadType: "TFLite", downloadTypes: ["TFLite", "Tensorflow"], classes: ["note", "robot"], download: "direct" },
-    { name: "efficientdet", dataset: "FRC 2024", model: "efficientdet", downloadType: "TFLite", downloadTypes: ["TFLite", "Tensorflow"], classes: ["note", "robot"], download: "direct" },
+    { name: "YOLOv8", dataset: "FRC 2024", model: "YOLOv8n", variants: ["YOLOv8n", "YOLOv8s"], classes: ["note", "robot"], download: "direct" },
+    { name: "YOLOv6", dataset: "FRC 2024", model: "YOLOv6n", variants: ["YOLOv6n", "YOLOv6s"], classes: ["note", "robot"], download: "direct" },
+    { name: "YOLOv5", dataset: "FRC 2024", model: "YOLOv5n", variants: ["YOLOv5n", "YOLOv5s"], classes: ["note", "robot"], download: "direct" },
+    { name: "SSD Mobilenet v2", dataset: "FRC 2024", model: "ssdmobilenet", downloadType: "TFLite", downloadTypes: ["TFLite", "Tensorflow"], classes: ["note", "robot"], download: "direct" },
+    { name: "EfficientDet", dataset: "FRC 2024", model: "efficientdet", downloadType: "TFLite", downloadTypes: ["TFLite", "Tensorflow"], classes: ["note", "robot"], download: "direct" },
   ]);
 
   const [dataset, setDataset] = useState(null);
@@ -87,7 +88,7 @@ export default function EmbeddedDownload() {
   const [apiKey, setApiKey] = useState("API_KEY");
 
   const handleDownloadCurl = (dataset) => {
-    if (dataset.downloadType === "") {
+    if (dataset.downloadType === undefined || dataset.downloadType === "") {
       return `curl -o ${dataset.model + dataset.classes.map(item => item.slice(0, 2).toUpperCase()).join('')}.pt 'https://api.datasetcolab.com/model/download/${dataset.model + dataset.classes.map(item => item.slice(0, 2).toUpperCase()).join('')}?api=${apiKey}'`;
     } else {
       return `curl -o ${dataset.model + dataset.classes.map(item => item.slice(0, 2).toUpperCase()).join('')}.zip 'https://api.datasetcolab.com/model/download/${dataset.model + dataset.classes.map(item => item.slice(0, 2).toUpperCase()).join('')}?api=${apiKey}&downloadType=${dataset.downloadType === "Tensorflow" ? "TF" : "TFLite"}'`;
@@ -259,7 +260,7 @@ export default function EmbeddedDownload() {
                       </div>
                     ) : (
                       <div style={{ width: "317px" }}>
-                       <DownloadButton dataset={dataset} />
+                        <DownloadButton dataset={dataset} />
                       </div>
                     )}
                   </div>

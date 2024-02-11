@@ -56,6 +56,28 @@ export default function Docs() {
               <Nav.Item>
                 <Nav.Link
                   onClick={() => {
+                    navigate("/docs/YOLOv6n");
+                    window.location.reload();
+                  }}
+                  className="black-text text-dark"
+                >
+                  YOLOv6n
+                </Nav.Link>
+              </Nav.Item>
+              <Nav.Item>
+                <Nav.Link
+                  onClick={() => {
+                    navigate("/docs/YOLOv6s");
+                    window.location.reload();
+                  }}
+                  className="black-text text-dark"
+                >
+                  YOLOv6s
+                </Nav.Link>
+              </Nav.Item>
+              <Nav.Item>
+                <Nav.Link
+                  onClick={() => {
                     navigate("/docs/YOLOv8n");
                     window.location.reload();
                   }}

@@ -2,6 +2,8 @@ import React, { useState, useEffect, Component } from 'react';
 import Markdown from 'react-markdown';
 import YOLOv5n from '../docs/YOLOv5n.md';
 import YOLOv5s from '../docs/YOLOv5s.md';
+import YOLOv6n from '../docs/YOLOv6n.md';
+import YOLOv6s from '../docs/YOLOv6s.md';
 import YOLOv8n from '../docs/YOLOv8n.md';
 import YOLOv8s from '../docs/YOLOv8s.md';
 import SSDMobileNet from '../docs/ssdmobilenet.md';
@@ -22,6 +24,10 @@ class DocsMarkdownViewer extends Component {
       fetch(YOLOv5n).then(res => res.text()).then(text => this.setState({ markdown: text }));
     } else if (page === 'YOLOv5s') {
       fetch(YOLOv5s).then(res => res.text()).then(text => this.setState({ markdown: text }));
+    } else if (page === 'YOLOv6n') {
+      fetch(YOLOv6n).then(res => res.text()).then(text => this.setState({ markdown: text }));
+    } else if (page === 'YOLOv6s') {
+      fetch(YOLOv6s).then(res => res.text()).then(text => this.setState({ markdown: text }));
     } else if (page === 'YOLOv8n') {
       fetch(YOLOv8n).then(res => res.text()).then(text => this.setState({ markdown: text }));
     } else if (page === 'YOLOv8s') {

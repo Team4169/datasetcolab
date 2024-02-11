@@ -65,6 +65,7 @@ export default function PretrainedModels() {
 
     const [datasets, setDatasets] = useState([
         { name: "YOLOv8", dataset: "FRC 2024", model: "YOLOv8n", variants: ["YOLOv8n", "YOLOv8s"], classes: ["note", "robot"], download: "direct" },
+        { name: "YOLOv6", dataset: "FRC 2024", model: "YOLOv6n", variants: ["YOLOv6n", "YOLOv6s"], classes: ["note", "robot"], download: "direct" },
         { name: "YOLOv5", dataset: "FRC 2024", model: "YOLOv5n", variants: ["YOLOv5n", "YOLOv5s"], classes: ["note", "robot"], download: "direct" },
         { name: "SSD Mobilenet v2", dataset: "FRC 2024", model: "ssdmobilenet", downloadType: "TFLite", downloadTypes: ["TFLite", "Tensorflow"], classes: ["note", "robot"], download: "direct" },
         { name: "EfficientDet", dataset: "FRC 2024", model: "efficientdet", downloadType: "TFLite", downloadTypes: ["TFLite", "Tensorflow"], classes: ["note", "robot"], download: "direct" },
@@ -78,12 +79,14 @@ export default function PretrainedModels() {
     const [performance, setPerformance] = useState({
         "YOLOv8n": {},
         "YOLOv8s": {},
+        "YOLOv6n": {},
+        "YOLOv6s": {},
         "YOLOv5n": {},
         "YOLOv5s": {},
     });
 
     const handleDownloadCurl = (dataset) => {
-        if (dataset.downloadType === "") {
+        if (dataset.downloadType === undefined || dataset.downloadType === "") {
             return `curl -o ${dataset.model + dataset.classes.map(item => item.slice(0, 2).toUpperCase()).join('')}.pt 'https://api.datasetcolab.com/model/download/${dataset.model + dataset.classes.map(item => item.slice(0, 2).toUpperCase()).join('')}?api=${apiKey}'`;
         } else {
             return `curl -o ${dataset.model + dataset.classes.map(item => item.slice(0, 2).toUpperCase()).join('')}.zip 'https://api.datasetcolab.com/model/download/${dataset.model + dataset.classes.map(item => item.slice(0, 2).toUpperCase()).join('')}?api=${apiKey}&downloadType=${dataset.downloadType === "Tensorflow" ? "TF" : "TFLite"}'`;
@@ -144,7 +147,7 @@ export default function PretrainedModels() {
         try {
             const newPerformance = {};
 
-            for (const variant of ["YOLOv8n", "YOLOv5n", "YOLOv8s", "YOLOv5s"]) {
+            for (const variant of ["YOLOv8n", "YOLOv6n", "YOLOv5n", "YOLOv8s", "YOLOv6s", "YOLOv5s"]) {
                 for (const class_ of ["NO", "RO", "NORO"]) {
                     newPerformance[variant + class_] = (await axios.get("https://api.datasetcolab.com/model/performance/" + variant + class_)).data;
                 }
@@ -155,8 +158,6 @@ export default function PretrainedModels() {
                     newPerformance[tfmodel + class_] = (await axios.get("https://api.datasetcolab.com/model/performance/" + tfmodel + class_)).data;
                 }
             }
-
-            console.log(newPerformance);
 
             setPerformance(newPerformance);
 
@@ -189,8 +190,6 @@ export default function PretrainedModels() {
             const mAP50_95 = performance[dataset.model + dataset.classes.map(item => item.slice(0, 2).toUpperCase()).join('')]["metrics/mAP50-95(B)"];
             const precision = performance[dataset.model + dataset.classes.map(item => item.slice(0, 2).toUpperCase()).join('')]["metrics/precision(B)"];
             const recall = performance[dataset.model + dataset.classes.map(item => item.slice(0, 2).toUpperCase()).join('')]["metrics/recall(B)"];
-
-            console.log(mAP50, mAP50_95, precision, recall)
 
             return (
                 <>

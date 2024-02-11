@@ -2,7 +2,7 @@ import os
 from PIL import Image
 
 # Iterate through the model names
-for model_name in ["YOLOv8n", "YOLOv8s", "YOLOv5s", "YOLOv5n"]:
+for model_name in ["YOLOv8n", "YOLOv8s", "YOLOv5s", "YOLOv5n", "YOLOv6n", "YOLOv6s"]:
     for classes in ["NORO", "NO", "RO"]:
         for batch_num in range(3):  # Iterate through batch numbers 0, 1, and 2
             # Open the image grid
