@@ -8,7 +8,7 @@ import {
     Alert,
 } from "react-bootstrap";
 import { useAuth } from "../contexts/AuthContext";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import axios from "axios";
 import { analytics } from "../firebase";
 import { logEvent } from "firebase/analytics";
@@ -178,6 +178,22 @@ export default function PretrainedModels() {
         });
     }
 
+    const location = useLocation();
+
+    useEffect(() => {
+        const searchParams = new URLSearchParams(location.search);
+        if (searchParams.get("model") != null) {
+            setDatasets((prevDatasets) => {
+                const newDatasets = [...prevDatasets];
+                const dataset = datasets.find((item) => item.variants.includes(searchParams.get("model")));
+                const index = datasets.indexOf(dataset);
+                newDatasets[index] = { ...newDatasets[index], model: searchParams.get("model") };
+                return newDatasets;
+            });
+                
+        }
+    }, [location.search]);
+
     useEffect(() => {
         handlePerformance();
         fetchApiKey();
@@ -288,7 +304,10 @@ export default function PretrainedModels() {
                     {datasets.map((dataset, index) => (
                         <Card key={index} style={styles.datasetCard}>
                             <Card.Body>
-                                <h3>{dataset.name}</h3>
+                                {dataset.variants ? dataset.variants.map((variant) => (
+                                    <div id={variant}></div>
+                                )) : <div id={dataset.model}></div>}
+                                <h3 id={dataset.model}>{dataset.name}</h3>
                                 <div className="row">
                                     <div className="col-md-4">
                                         <h5 style={{ paddingTop: "10px" }}>Dataset Classes</h5>
