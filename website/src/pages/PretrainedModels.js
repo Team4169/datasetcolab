@@ -243,7 +243,7 @@ export default function PretrainedModels() {
         const dataset = datasets[props.index];
         const url = dataset.model + dataset.classes.map(item => item.slice(0, 2).toUpperCase()).join('');
         return (
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)" }}>
                 <img src={"https://api.datasetcolab.com/model/inference/" + url + "/0"} style={{ width: "100%", margin: "0", padding: "0" }} />
                 <img src={"https://api.datasetcolab.com/model/inference/" + url + "/1"} style={{ width: "100%", margin: "0", padding: "0" }} />
                 <img src={"https://api.datasetcolab.com/model/inference/" + url + "/2"} style={{ width: "100%", margin: "0", padding: "0" }} />
@@ -259,7 +259,10 @@ export default function PretrainedModels() {
                 <img src={"https://api.datasetcolab.com/model/inference/" + url + "/12"} style={{ width: "100%", margin: "0", padding: "0" }} />
                 <img src={"https://api.datasetcolab.com/model/inference/" + url + "/13"} style={{ width: "100%", margin: "0", padding: "0" }} />
                 <img src={"https://api.datasetcolab.com/model/inference/" + url + "/14"} style={{ width: "100%", margin: "0", padding: "0" }} />
-            </div>
+                <img src={"https://api.datasetcolab.com/model/inference/" + url + "/15"} style={{ width: "100%", margin: "0", padding: "0" }} />
+                <img src={"https://api.datasetcolab.com/model/inference/" + url + "/16"} style={{ width: "100%", margin: "0", padding: "0" }} />
+                <img src={"https://api.datasetcolab.com/model/inference/" + url + "/17"} style={{ width: "100%", margin: "0", padding: "0" }} />
+              </div>
         );
     }
 
