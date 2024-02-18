@@ -44,6 +44,7 @@ def mergeCocoDatasets(dataset_paths, output_path, classes):
 
     print(merged_data['categories'])
 
+    images = {}
     annotations = {}
 
     for dataset_path in updated_dataset_paths:
@@ -63,6 +64,7 @@ def mergeCocoDatasets(dataset_paths, output_path, classes):
             id_mapping[old_id] = new_id
             image['id'] = new_id
             merged_data['images'].append(image)
+            images[os.path.basename(image['file_name'])] = dataset_path + '/' + image['file_name']
 
         for annotation in data['annotations']:
             approved = False
@@ -81,10 +83,15 @@ def mergeCocoDatasets(dataset_paths, output_path, classes):
             annotation['id'] += max_annotation_id
             annotation['image_id'] = id_mapping[annotation['image_id']]
             if approved:
-                if (annotation['id'] not in annotations):
-                    annotations[annotation['id']] = [annotation]
+                filename = ""
+                for image in merged_data['images']:
+                    if image['id'] == annotation['image_id']:
+                        filename = image['file_name']
+                        break
+                if annotation['image_id'] not in annotations:
+                    annotations[filename] = [annotation]
                 else:
-                    annotations[annotation['id']].append(annotation)
+                    annotations[filename].append(annotation)
                 merged_data['annotations'].append(annotation)
 
         # Remove images without annotations
@@ -94,7 +101,7 @@ def mergeCocoDatasets(dataset_paths, output_path, classes):
         max_image_id = max([img['id'] for img in merged_data['images']], default=max_image_id)
         max_annotation_id = max([ann['id'] for ann in merged_data['annotations']], default=max_annotation_id)
 
-        # Copy images to output folder
+        # Save merged JSON
         os.makedirs(output_path, exist_ok=True)
 
         with concurrent.futures.ThreadPoolExecutor() as executor:
@@ -106,11 +113,10 @@ def mergeCocoDatasets(dataset_paths, output_path, classes):
             # Wait for all tasks to complete
             concurrent.futures.wait(futures)
 
-    # Save merged JSON
     with open(os.path.join(output_path, '_annotations.coco.json'), 'w') as file:
         json.dump(merged_data, file)
 
-    return annotations
+    return images, annotations
 
 def findMetadataFolders(directoryPath, year, classcombo):
     matchingMetadataFolders = []
@@ -132,21 +138,27 @@ def findMetadataFolders(directoryPath, year, classcombo):
     return matchingMetadataFolders
 
 
+def newZipDataset(images, path):
+    with zipfile.ZipFile(path + ".zip", 'w') as zipf:
+        for testimage in images["test"].values():
+            zipf.write(testimage, "test/" + os.path.basename(testimage))
+        for trainimage in images["train"].values():
+            zipf.write(trainimage, "train/" + os.path.basename(trainimage))
+        for validimage in images["valid"].values():
+            zipf.write(validimage, "valid/" + os.path.basename(validimage))
+
+        zipf.write(os.path.join(path, "test/_annotations.coco.json"), "test/_annotations.coco.json")
+        zipf.write(os.path.join(path, "train/_annotations.coco.json"), "train/_annotations.coco.json")
+        zipf.write(os.path.join(path, "valid/_annotations.coco.json"), "valid/_annotations.coco.json")
+
+    zipf.close()
+
 def zipDataset(dataset_path, output_path):
     with zipfile.ZipFile(output_path, 'w') as zipf:
         with concurrent.futures.ThreadPoolExecutor() as executor:
             for root, dirs, files in os.walk(dataset_path):
                 for file in files:
-                    if file not in ['annotations.json', 'metadata.json']:
-                        zipf.write(os.path.join(root, file), os.path.relpath(os.path.join(root, file), dataset_path))
-
-def countImages(folder_path):
-    image_count = 0
-    for root, dirs, files in os.walk(folder_path):
-        for file in files:
-            if file.endswith(('.jpg', '.jpeg', '.png')):
-                image_count += 1
-    return image_count
+                    zipf.write(os.path.join(root, file), os.path.relpath(os.path.join(root, file), dataset_path))
 
 def countAnnotations(folder_path):
     annotation_count = 0
@@ -179,15 +191,17 @@ for year in years:
         validFolders = [s + "/valid" for s in metadataFolders]
 
         outputPathCOCO = '/home/team4169/datasetcolab/app/download/' + tempNamesCOCO[year][-1]
+        images = {}
         annotations = {}
-        annotations["test"] = mergeCocoDatasets(testFolders, outputPathCOCO + "/test", classcombo)
-        annotations["train"] = mergeCocoDatasets(trainFolders, outputPathCOCO + "/train", classcombo)
-        annotations["valid"] = mergeCocoDatasets(validFolders, outputPathCOCO + "/valid", classcombo)
+        images["test"], annotations["test"] = mergeCocoDatasets(testFolders, outputPathCOCO + "/test", classcombo)
+        images["train"], annotations["train"] = mergeCocoDatasets(trainFolders, outputPathCOCO + "/train", classcombo)
+        images["valid"], annotations["valid"] = mergeCocoDatasets(validFolders, outputPathCOCO + "/valid", classcombo)
+        json.dump(images, open(outputPathCOCO + "/images.json", "w"))
         json.dump(annotations, open(outputPathCOCO + "/annotations.json", "w"))
 
-        test_image_count = countImages(outputPathCOCO + "/test")
-        train_image_count = countImages(outputPathCOCO + "/train")
-        valid_image_count = countImages(outputPathCOCO + "/valid")
+        test_image_count = len(images["test"])
+        train_image_count = len(images["train"])
+        valid_image_count = len(images["valid"])
         test_annotation_count = countAnnotations(outputPathCOCO + "/test")
         train_annotation_count = countAnnotations(outputPathCOCO + "/train")
         valid_annotation_count = countAnnotations(outputPathCOCO + "/valid")
@@ -209,7 +223,7 @@ for year in years:
         with open(metadataFilePath, 'w') as f:
             json.dump(metadata, f)
 
-        zipDataset(outputPathCOCO, outputPathCOCO + '.zip')
+        newZipDataset(images, outputPathCOCO)
 
         coco_zip_size = os.path.getsize(outputPathCOCO + '.zip')
         metadata["zipSize"] = coco_zip_size
