@@ -4,6 +4,8 @@ import { useAuth } from "../contexts/AuthContext";
 import Form from "react-bootstrap/Form";
 import Button from "react-bootstrap/Button";
 import Alert from "react-bootstrap/Alert";
+import { logEvent } from "firebase/analytics";
+import { analytics } from "../firebase";
 
 export default function ForgotPassword() {
   const emailRef = useRef();
@@ -22,6 +24,7 @@ export default function ForgotPassword() {
       setMessage("Check your inbox for further instructions");
     } catch {
       setError("Failed to reset password");
+      logEvent(analytics, 'resetpassword/error');
     }
 
     setLoading(false);

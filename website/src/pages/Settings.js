@@ -136,7 +136,7 @@ export default function Settings() {
 
   const fetchApiKey = async (isNew) => {
     try {
-      const setLoading = isNew ? setLoadingNewApiKey : () => {};
+      const setLoading = isNew ? setLoadingNewApiKey : () => { };
       setLoading(true);
 
       const idToken = await currentUser.getIdToken();

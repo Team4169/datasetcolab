@@ -114,6 +114,7 @@ export default function PretrainedModels() {
             }
         } catch (err) {
             setError("Error fetching API key.");
+            logEvent(analytics, 'api/error');
         }
     };
 
@@ -138,6 +139,7 @@ export default function PretrainedModels() {
             logEvent(analytics, 'model/download');
         } catch (err) {
             setError("Error downloading model.");
+            logEvent(analytics, 'model/download/error')
         } finally {
             setLoading(false);
         }
@@ -164,6 +166,7 @@ export default function PretrainedModels() {
             logEvent(analytics, 'model/performance');
         } catch (err) {
             setError("Error loading performance data.");
+            logEvent(analytics, 'model/performance/error');
         }
     }
 

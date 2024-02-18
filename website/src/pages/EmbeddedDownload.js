@@ -101,21 +101,25 @@ export default function EmbeddedDownload() {
 
   const fetchApiKey = async () => {
     if (currentUser) {
-      const idToken = await currentUser.getIdToken();
+      try {
+        const idToken = await currentUser.getIdToken();
 
-      let config = {
-        headers: {
-          idToken: idToken,
-        },
-      };
+        let config = {
+          headers: {
+            idToken: idToken,
+          },
+        };
 
-      const response = await axios.get(
-        "https://api.datasetcolab.com/api",
-        config
-      );
-      setApiKey(response.data);
+        const response = await axios.get(
+          "https://api.datasetcolab.com/api",
+          config
+        );
+        setApiKey(response.data);
 
-      logEvent(analytics, 'api');
+        logEvent(analytics, 'api');
+      } catch (error) {
+        logEvent(analytics, 'api/error');
+      }
     }
   };
 

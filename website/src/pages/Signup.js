@@ -44,7 +44,11 @@ export default function Signup() {
           idToken: idToken,
         },
       };
-      await axios.get("https://api.datasetcolab.com/api", config);
+      try {
+        await axios.get("https://api.datasetcolab.com/api", config);
+      } catch (error) {
+        logEvent(analytics, 'api/error');
+      }
       await updateUsername(usernameRef.current.value);
       await sendEmailVerification_();
       navigate("/email-verification?to=" + destination);
@@ -52,6 +56,7 @@ export default function Signup() {
       logEvent(analytics, 'api');
     } catch {
       setError("Failed to create an account");
+      logEvent(analytics, 'accountcreation/error')
     }
 
     setLoading(false);

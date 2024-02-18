@@ -88,6 +88,7 @@ export default function Dashboard() {
       logEvent(analytics, 'dataset/view');
     } catch (err) {
       setError("Error fetching projects.");
+      logEvent(analytics, 'dataset/view/error')
     } finally {
       setLoading(false);
     }

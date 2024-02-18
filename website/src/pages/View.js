@@ -266,6 +266,7 @@ export default function View() {
       }
     } catch (err) {
       setError("Error fetching project details.");
+      logEvent(analytics, "dataset/view/error");
     } finally {
       setLoading(false);
     }
@@ -286,6 +287,7 @@ export default function View() {
       logEvent(analytics, "dataset/delete");
     } catch (err) {
       setError("Error deleting project.");
+      logEvent(analytics, "dataset/delete/error");
     }
   };
 

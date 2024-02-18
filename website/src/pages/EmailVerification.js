@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
+import { analytics } from "../firebase";
 import { useNavigate, useLocation } from "react-router-dom";
+import { logEvent } from "firebase/analytics";
 import Alert from "react-bootstrap/Alert";
 
 export default function EmailVerification() {
@@ -18,6 +20,7 @@ export default function EmailVerification() {
             await currentUser.reload();
           } catch (error) {
             setError("Failed to check email verification status.");
+            logEvent(analytics, "emailverification/error");
           }
         }
       }

@@ -156,6 +156,7 @@ export default function Upload() {
       logEvent(analytics, 'dataset/upload');
     } catch (error) {
       setError("Error: " + error.message);
+      logEvent(analytics, 'dataset/upload/error')
       setUploadLoading(false);
     }
   };
@@ -189,6 +190,7 @@ export default function Upload() {
       logEvent(analytics, 'dataset/classes');
     } catch (error) {
       setError("Error: " + error.message);
+      logEvent(analytics, 'dataset/classes/error')
     }
   }
 

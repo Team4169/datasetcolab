@@ -148,6 +148,7 @@ export default function DownloadDataset() {
       logEvent(analytics, 'dataset/download');
     } catch (err) {
       setError("Error downloading dataset.");
+      logEvent(analytics, 'dataset/download/error');
     } finally {
       setLoading(false);
     }
@@ -174,6 +175,7 @@ export default function DownloadDataset() {
       }
     } catch (err) {
       setError("Error fetching API key.");
+      logEvent(analytics, 'api/error');
     }
   };
 
@@ -215,6 +217,7 @@ export default function DownloadDataset() {
       }
     } catch (err) {
       setError("Error fetching project details.");
+      logEvent(analytics, 'dataset/metadata/error');
     } finally {
       setLoading(false);
     }
