@@ -381,6 +381,58 @@ public class App {
             System.out.println("/dataset/annotations/ time: " + totalTime + " ms");
         });
 
+        app.get("/dataset/newannotations/{project}/{subproject}/{image}", ctx -> {
+            long startTime = System.currentTimeMillis();
+            try {
+                String uid = "";
+                if (!ctx.pathParam("project").startsWith("FRC2023") && !ctx.pathParam("project").startsWith("FRC2024")) {
+                    if (ctx.header("idToken") != null || ctx.queryParam("idToken") != null) {
+                        String idToken = ctx.header("idToken") != null ? ctx.header("idToken") : ctx.queryParam("idToken");
+                        FirebaseToken decodedToken = FirebaseAuth
+                            .getInstance()
+                            .verifyIdToken(idToken);
+                        uid = decodedToken.getUid();
+                    } else if (ctx.header("api") != null || ctx.queryParam("api") != null) {
+                        String api = ctx.header("api") != null ? ctx.header("api") : ctx.queryParam("api");
+                        uid = validAPI(api);
+                    } else {
+                        throw new IllegalArgumentException("Invalid request: uid is null or both idToken and api are null.");
+                    }
+                }
+
+                String project = "upload/" + uid + "/" + ctx.pathParam("project");
+                if (ctx.pathParam("project").startsWith("FRC2023") || ctx.pathParam("project").startsWith("FRC2024")) {
+                    File datasetFile = new File("important.json");
+
+                    String projectSubstring = ctx.pathParam("project").substring(0, ctx.pathParam("project").indexOf("/"));
+
+                    try (FileReader fileReader = new FileReader(datasetFile)) {
+                        JSONParser parser = new JSONParser();
+                        JSONObject currentDataset = (JSONObject) parser.parse(fileReader);
+
+                        project = "download/" + (String) currentDataset.get(projectSubstring) + ctx.pathParam("project").substring(ctx.pathParam("project").indexOf(projectSubstring) + projectSubstring.length());
+                    }
+                }
+
+                try (FileReader fileReader = new FileReader(project)) {
+                    JSONParser parser = new JSONParser();
+                    JSONObject json = (JSONObject) parser.parse(fileReader);
+
+                    JSONArray subproject = (JSONArray) json.get(ctx.pathParam("subproject"));
+                    JSONObject image = (JSONObject) subproject.get(ctx.pathParam("image"));
+
+                    ctx.json(image);
+                }
+
+            } catch (FirebaseAuthException | ParseException e) {
+                e.printStackTrace();
+                ctx.status(401).result("Error: Authentication failed.");
+            }
+            long endTime = System.currentTimeMillis();
+            long totalTime = endTime - startTime;
+            System.out.println("/dataset/annotations/ time: " + totalTime + " ms");
+        });
+
 
         app.get("/dataset/delete/{folderName}", ctx -> {
             try {
