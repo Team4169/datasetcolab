@@ -53,10 +53,8 @@ const AnnotationOverlay = ({ annotationUrl, imageUrl, label }) => {
 
   const fetchAnnotations = async () => {
     try {
-      console.log(annotationUrl);
       const response = await axios.get(annotationUrl);
       setAnnotations(response.data);
-      console.log(response.data);
       logEvent(analytics, "dataset/annotations");
     } catch (err) {
       console.error("Error fetching annotations:", err);

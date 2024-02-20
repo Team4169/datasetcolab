@@ -284,104 +284,8 @@ public class App {
                 ctx.status(401).result("Error: Authentication failed.");
             }
         });
-
-        app.get("/dataset/annotations/<folderName>", ctx -> {
-            long startTime = System.currentTimeMillis();
-            try {
-                String uid = "";
-                if (!ctx.pathParam("folderName").startsWith("FRC2023") && !ctx.pathParam("folderName").startsWith("FRC2024")) {
-                    if (ctx.header("idToken") != null || ctx.queryParam("idToken") != null) {
-                        String idToken = ctx.header("idToken") != null ? ctx.header("idToken") : ctx.queryParam("idToken");
-                        FirebaseToken decodedToken = FirebaseAuth
-                            .getInstance()
-                            .verifyIdToken(idToken);
-                        uid = decodedToken.getUid();
-                    } else if (ctx.header("api") != null || ctx.queryParam("api") != null) {
-                        String api = ctx.header("api") != null ? ctx.header("api") : ctx.queryParam("api");
-                        uid = validAPI(api);
-                    } else {
-                        throw new IllegalArgumentException("Invalid request: uid is null or both idToken and api are null.");
-                    }
-                }
-
-                String folderName = "upload/" + uid + "/" + ctx.pathParam("folderName");
-                if (ctx.pathParam("folderName").startsWith("FRC2023") || ctx.pathParam("folderName").startsWith("FRC2024")) {
-                    File datasetFile = new File("important.json");
-
-                    String folderNameSubstring = ctx.pathParam("folderName").substring(0, ctx.pathParam("folderName").indexOf("/"));
-
-                    try (FileReader fileReader = new FileReader(datasetFile)) {
-                        JSONParser parser = new JSONParser();
-                        JSONObject currentDataset = (JSONObject) parser.parse(fileReader);
-
-                        folderName = "download/" + (String) currentDataset.get(folderNameSubstring) + ctx.pathParam("folderName").substring(ctx.pathParam("folderName").indexOf(folderNameSubstring) + folderNameSubstring.length());
-                    }
-                }
-
-                String[] folderNameArray = folderName.split("/");
-                List<String> folderNameList = new ArrayList<>(Arrays.asList(folderNameArray));
-
-                String imageName = folderNameList.get(folderNameList.size() - 1);
-                folderNameList.remove(folderNameList.size() - 1);
-
-                String filePath = String.join("/", folderNameList);
-
-                File folder = new File(filePath);
-                File[] files = folder.listFiles((dir, name) -> name.toLowerCase().endsWith(".json"));
-
-                JSONArray outAnnotations = new JSONArray();
-
-                if (files != null) {
-                    Map<Long, String> categoryMap = new HashMap<>();
-
-                    for (File file : files) {
-                        if (file.getName().endsWith(".json")) {
-                            try (FileReader fileReader = new FileReader(file)) {
-                                JSONParser parser = new JSONParser();
-                                JSONObject json = (JSONObject) parser.parse(fileReader);
-
-                                JSONArray categories = (JSONArray) json.get("categories");
-                                for (Object category : categories) {
-                                    JSONObject categoryObj = (JSONObject) category;
-                                    Long categoryId = (Long) categoryObj.get("id");
-                                    String categoryName = (String) categoryObj.get("name");
-                                    categoryMap.put(categoryId, categoryName);
-                                }
-
-                                JSONArray images = (JSONArray) json.get("images");
-                                for (Object image : images) {
-                                    JSONObject imageObj = (JSONObject) image;
-                                    if (imageObj.get("file_name").equals(imageName)) {
-                                        Long imageID = (Long) imageObj.get("id");
-
-                                        JSONArray annotations = (JSONArray) json.get("annotations");
-                                        for (Object annotation : annotations) {
-                                            JSONObject annotationObj = (JSONObject) annotation;
-                                            if (annotationObj.get("image_id").equals(imageID)) {
-                                                Long categoryId = (Long) annotationObj.get("category_id");
-                                                String categoryName = categoryMap.get(categoryId);
-                                                annotationObj.put("category_name", categoryName);
-                                                outAnnotations.add(annotationObj);
-                                            }
-                                        }
-                                        break;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-                ctx.json(outAnnotations);
-            } catch (FirebaseAuthException | ParseException e) {
-                e.printStackTrace();
-                ctx.status(401).result("Error: Authentication failed.");
-            }
-            long endTime = System.currentTimeMillis();
-            long totalTime = endTime - startTime;
-            System.out.println("/dataset/annotations/ time: " + totalTime + " ms");
-        });
 	
-        app.get("/dataset/newannotations/{project}/{subproject}/{image}", ctx -> {
+        app.get("/dataset/annotations/{project}/{subproject}/{image}", ctx -> {
             long startTime = System.currentTimeMillis();
             try {
                 String uid = "";
@@ -400,32 +304,24 @@ public class App {
                     }
                 }
 
-		System.out.println(ctx.pathParam("project"));
-		System.out.println(ctx.pathParam("subproject"));
-		System.out.println(ctx.pathParam("image"));
-
                 String project = "upload/" + uid + "/" + ctx.pathParam("project");
                 if (ctx.pathParam("project").startsWith("FRC2023") || ctx.pathParam("project").startsWith("FRC2024")) {
                     File datasetFile = new File("important.json");
-
                     try (FileReader fileReader = new FileReader(datasetFile)) {
                         JSONParser parser = new JSONParser();
                         JSONObject currentDataset = (JSONObject) parser.parse(fileReader);
 
                         project = "download/" + (String) currentDataset.get(ctx.pathParam("project"));
                     }
-                
-                
-		    try (FileReader fileReader = new FileReader(project + "/annotations.json")) {
+                }
+
+		        try (FileReader fileReader = new FileReader(project + "/annotations.json")) {
                         JSONParser parser = new JSONParser();
                         JSONObject json = (JSONObject) parser.parse(fileReader);
-
                         JSONObject subproject = (JSONObject) json.get(ctx.pathParam("subproject"));
                         JSONArray image = (JSONArray) subproject.get(ctx.pathParam("image"));
-
                         ctx.json(image);
-		    }
-                }
+		        }
 
             } catch (FirebaseAuthException | ParseException e) {
                 e.printStackTrace();
