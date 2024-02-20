@@ -80,16 +80,16 @@ const AnnotationOverlay = ({ annotationUrl, imageUrl, label }) => {
 
       context.fillStyle = color;
       context.fillRect(
-        x + width - (context.measureText(annotation.category_name).width + 10),
+        x + width - (context.measureText(annotation.category).width + 10),
         y + height,
-        context.measureText(annotation.category_name).width + 11,
+        context.measureText(annotation.category).width + 11,
         20
       );
       context.fillStyle = "white";
       context.font = "12px Arial";
       context.fillText(
-        annotation.category_name,
-        x + width - context.measureText(annotation.category_name).width - 2,
+        annotation.category,
+        x + width - context.measureText(annotation.category).width - 2,
         y + height + 15
       );
     });
@@ -149,7 +149,7 @@ const AnnotationOverlay = ({ annotationUrl, imageUrl, label }) => {
                     height: "20px",
                   }}
                 ></div>
-                <span>{annotation.category_name}</span>
+                <span>{annotation.category}</span>
               </div>
             );
           })}
