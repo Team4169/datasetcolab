@@ -380,7 +380,7 @@ public class App {
             long totalTime = endTime - startTime;
             System.out.println("/dataset/annotations/ time: " + totalTime + " ms");
         });
-
+	
         app.get("/dataset/newannotations/{project}/{subproject}/{image}", ctx -> {
             long startTime = System.currentTimeMillis();
             try {
@@ -400,28 +400,31 @@ public class App {
                     }
                 }
 
+		System.out.println(ctx.pathParam("project"));
+		System.out.println(ctx.pathParam("subproject"));
+		System.out.println(ctx.pathParam("image"));
+
                 String project = "upload/" + uid + "/" + ctx.pathParam("project");
                 if (ctx.pathParam("project").startsWith("FRC2023") || ctx.pathParam("project").startsWith("FRC2024")) {
                     File datasetFile = new File("important.json");
-
-                    String projectSubstring = ctx.pathParam("project").substring(0, ctx.pathParam("project").indexOf("/"));
 
                     try (FileReader fileReader = new FileReader(datasetFile)) {
                         JSONParser parser = new JSONParser();
                         JSONObject currentDataset = (JSONObject) parser.parse(fileReader);
 
-                        project = "download/" + (String) currentDataset.get(projectSubstring) + ctx.pathParam("project").substring(ctx.pathParam("project").indexOf(projectSubstring) + projectSubstring.length());
+                        project = "download/" + (String) currentDataset.get(ctx.pathParam("project"));
                     }
-                }
+                
+                
+		    try (FileReader fileReader = new FileReader(project + "/annotations.json")) {
+                        JSONParser parser = new JSONParser();
+                        JSONObject json = (JSONObject) parser.parse(fileReader);
 
-                try (FileReader fileReader = new FileReader(project)) {
-                    JSONParser parser = new JSONParser();
-                    JSONObject json = (JSONObject) parser.parse(fileReader);
+                        JSONObject subproject = (JSONObject) json.get(ctx.pathParam("subproject"));
+                        JSONArray image = (JSONArray) subproject.get(ctx.pathParam("image"));
 
-                    JSONArray subproject = (JSONArray) json.get(ctx.pathParam("subproject"));
-                    JSONObject image = (JSONObject) subproject.get(ctx.pathParam("image"));
-
-                    ctx.json(image);
+                        ctx.json(image);
+		    }
                 }
 
             } catch (FirebaseAuthException | ParseException e) {
@@ -432,7 +435,6 @@ public class App {
             long totalTime = endTime - startTime;
             System.out.println("/dataset/annotations/ time: " + totalTime + " ms");
         });
-
 
         app.get("/dataset/delete/{folderName}", ctx -> {
             try {
