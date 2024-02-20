@@ -45,7 +45,6 @@ def mergeCocoDatasets(dataset_paths, output_path, classes):
     print(merged_data['categories'])
 
     images = {}
-    annotations = {}
 
     for dataset_path in updated_dataset_paths:
         json_file = findJsonFile(dataset_path)
@@ -83,15 +82,6 @@ def mergeCocoDatasets(dataset_paths, output_path, classes):
             annotation['id'] += max_annotation_id
             annotation['image_id'] = id_mapping[annotation['image_id']]
             if approved:
-                filename = ""
-                for image in merged_data['images']:
-                    if image['id'] == annotation['image_id']:
-                        filename = image['file_name']
-                        break
-                if annotation['image_id'] not in annotations:
-                    annotations[filename] = [annotation]
-                else:
-                    annotations[filename].append(annotation)
                 merged_data['annotations'].append(annotation)
 
         # Remove images without annotations
@@ -116,7 +106,7 @@ def mergeCocoDatasets(dataset_paths, output_path, classes):
     with open(os.path.join(output_path, '_annotations.coco.json'), 'w') as file:
         json.dump(merged_data, file)
 
-    return images, annotations
+    return images
 
 def findMetadataFolders(directoryPath, year, classcombo):
     matchingMetadataFolders = []
@@ -192,12 +182,11 @@ for year in years:
 
         outputPathCOCO = '/home/team4169/datasetcolab/app/download/' + tempNamesCOCO[year][-1]
         images = {}
-        annotations = {}
-        images["test"], annotations["test"] = mergeCocoDatasets(testFolders, outputPathCOCO + "/test", classcombo)
-        images["train"], annotations["train"] = mergeCocoDatasets(trainFolders, outputPathCOCO + "/train", classcombo)
-        images["valid"], annotations["valid"] = mergeCocoDatasets(validFolders, outputPathCOCO + "/valid", classcombo)
+        images["test"] = mergeCocoDatasets(testFolders, outputPathCOCO + "/test", classcombo)
+        images["train"] = mergeCocoDatasets(trainFolders, outputPathCOCO + "/train", classcombo)
+        images["valid"] = mergeCocoDatasets(validFolders, outputPathCOCO + "/valid", classcombo)
         json.dump(images, open(outputPathCOCO + "/images.json", "w"))
-        json.dump(annotations, open(outputPathCOCO + "/annotations.json", "w"))
+        subprocess.run(["python3", "simplifyAnnotations.py", outputPathCOCO])
 
         test_image_count = len(images["test"])
         train_image_count = len(images["train"])

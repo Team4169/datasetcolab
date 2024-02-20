@@ -304,6 +304,10 @@ public class App {
                     }
                 }
 
+		System.out.println(ctx.pathParam("project"));
+		System.out.println(ctx.pathParam("subproject"));
+		System.out.println(ctx.pathParam("image"));
+
                 String project = "upload/" + uid + "/" + ctx.pathParam("project");
                 if (ctx.pathParam("project").startsWith("FRC2023") || ctx.pathParam("project").startsWith("FRC2024")) {
                     File datasetFile = new File("important.json");

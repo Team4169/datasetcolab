@@ -12,25 +12,35 @@ if not os.path.exists(path):
     print("Path does not exist.")
     sys.exit(1)
 
-for json_file in glob(os.path.join(path, '*.json')):
-    if not json_file:
-        print(f"No JSON file found in {dataset_path}. Skipping this dataset.")
-        continue
+annotations = {}
+for subproject in ["train", "test", "valid"]:
+    for json_file in glob(os.path.join(path, subproject, '*.json')):
+        if not json_file:
+            print(f"No JSON file found in {dataset_path}. Skipping this dataset.")
+            continue
 
-    with open(json_file) as file:
-        data = json.load(file)
+        with open(json_file) as file:
+            data = json.load(file)
 
-    annotations = {}
-    for annotation in data['annotations']:
-        filename = ""
-        for image in merged_data['images']:
-            if image['id'] == annotation['image_id']:
-                filename = image['file_name']
-                break
-        if annotation['image_id'] not in annotations:
-            annotations[filename] = [annotation]
-        else:
-            annotations[filename].append(annotation)
+        categories = {}
+        for category in data["categories"]:
+            if category["name"] != "REMOVE":
+                categories[category["id"]] = category["name"]
 
-    with open(os.path.join(path, "annotations.json"), "w") as outfile:
-        json.dump(annotations, outfile)
+        subannotations = {}
+        for annotation in data['annotations']:
+            filename = ""
+            for image in data['images']:
+                if image['id'] == annotation['image_id']:
+                    filename = image['file_name']
+                    break
+            if annotation["category_id"] in categories:
+                simplifiedannotation = { "bbox": annotation["bbox"], "category": categories[annotation["category_id"]], "category_id": annotation["category_id"]  }
+                if filename not in subannotations:
+                    subannotations[filename] = [simplifiedannotation]
+                else:
+                    subannotations[filename].append(simplifiedannotation)
+        annotations[subproject] = subannotations
+
+with open(os.path.join(path, "annotations.json"), "w") as outfile:
+    json.dump(annotations, outfile)
