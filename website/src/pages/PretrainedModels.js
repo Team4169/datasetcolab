@@ -149,21 +149,37 @@ export default function PretrainedModels() {
         try {
             const newPerformance = {};
 
+            const variantRequests = [];
             for (const variant of ["YOLOv8n", "YOLOv6n", "YOLOv5n", "YOLOv8s", "YOLOv6s", "YOLOv5s"]) {
                 for (const class_ of ["NO", "RO", "NORO"]) {
-                    newPerformance[variant + class_] = (await axios.get("https://api.datasetcolab.com/model/performance/" + variant + class_)).data;
+                    variantRequests.push(axios.get("https://4iqdpced90.execute-api.us-east-1.amazonaws.com/model/performance/FRC2024/" + variant + class_));
                 }
             }
 
+            const tfmodelRequests = [];
             for (const tfmodel of ["ssdmobilenet", "efficientdet"]) {
                 for (const class_ of ["NO", "RO", "NORO"]) {
-                    newPerformance[tfmodel + class_] = (await axios.get("https://api.datasetcolab.com/model/performance/" + tfmodel + class_)).data;
+                    tfmodelRequests.push(axios.get("https://4iqdpced90.execute-api.us-east-1.amazonaws.com/model/performance/FRC2024/" + tfmodel + class_));
                 }
+            }
+
+            const [variantResponses, tfmodelResponses] = await Promise.all([Promise.all(variantRequests), Promise.all(tfmodelRequests)]);
+
+            for (let i = 0; i < variantResponses.length; i++) {
+                const variant = variantResponses[i].config.url.split('/').pop().slice(0, -2); // Extracting variant from URL
+                const class_ = variantResponses[i].config.url.split('/').pop().slice(-2); // Extracting class from URL
+                newPerformance[variant + class_] = variantResponses[i].data;
+                logEvent(analytics, 'model/performance');
+            }
+
+            for (let i = 0; i < tfmodelResponses.length; i++) {
+                const tfmodel = tfmodelResponses[i].config.url.split('/').pop().slice(0, -2); // Extracting tfmodel from URL
+                const class_ = tfmodelResponses[i].config.url.split('/').pop().slice(-2); // Extracting class from URL
+                newPerformance[tfmodel + class_] = tfmodelResponses[i].data;
+                logEvent(analytics, 'model/performance');
             }
 
             setPerformance(newPerformance);
-
-            logEvent(analytics, 'model/performance');
         } catch (err) {
             setError("Error loading performance data.");
             logEvent(analytics, 'model/performance/error');
