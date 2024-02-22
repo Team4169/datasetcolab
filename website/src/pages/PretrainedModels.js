@@ -263,24 +263,24 @@ export default function PretrainedModels() {
         const url = dataset.model + dataset.classes.map(item => item.slice(0, 2).toUpperCase()).join('');
         return (
             <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)" }}>
-                <img src={"https://api.datasetcolab.com/model/inference/" + url + "/0"} style={{ width: "100%", margin: "0", padding: "0" }} />
-                <img src={"https://api.datasetcolab.com/model/inference/" + url + "/1"} style={{ width: "100%", margin: "0", padding: "0" }} />
-                <img src={"https://api.datasetcolab.com/model/inference/" + url + "/2"} style={{ width: "100%", margin: "0", padding: "0" }} />
-                <img src={"https://api.datasetcolab.com/model/inference/" + url + "/3"} style={{ width: "100%", margin: "0", padding: "0" }} />
-                <img src={"https://api.datasetcolab.com/model/inference/" + url + "/4"} style={{ width: "100%", margin: "0", padding: "0" }} />
-                <img src={"https://api.datasetcolab.com/model/inference/" + url + "/5"} style={{ width: "100%", margin: "0", padding: "0" }} />
-                <img src={"https://api.datasetcolab.com/model/inference/" + url + "/6"} style={{ width: "100%", margin: "0", padding: "0" }} />
-                <img src={"https://api.datasetcolab.com/model/inference/" + url + "/7"} style={{ width: "100%", margin: "0", padding: "0" }} />
-                <img src={"https://api.datasetcolab.com/model/inference/" + url + "/8"} style={{ width: "100%", margin: "0", padding: "0" }} />
-                <img src={"https://api.datasetcolab.com/model/inference/" + url + "/9"} style={{ width: "100%", margin: "0", padding: "0" }} />
-                <img src={"https://api.datasetcolab.com/model/inference/" + url + "/10"} style={{ width: "100%", margin: "0", padding: "0" }} />
-                <img src={"https://api.datasetcolab.com/model/inference/" + url + "/11"} style={{ width: "100%", margin: "0", padding: "0" }} />
-                <img src={"https://api.datasetcolab.com/model/inference/" + url + "/12"} style={{ width: "100%", margin: "0", padding: "0" }} />
-                <img src={"https://api.datasetcolab.com/model/inference/" + url + "/13"} style={{ width: "100%", margin: "0", padding: "0" }} />
-                <img src={"https://api.datasetcolab.com/model/inference/" + url + "/14"} style={{ width: "100%", margin: "0", padding: "0" }} />
-                <img src={"https://api.datasetcolab.com/model/inference/" + url + "/15"} style={{ width: "100%", margin: "0", padding: "0" }} />
-                <img src={"https://api.datasetcolab.com/model/inference/" + url + "/16"} style={{ width: "100%", margin: "0", padding: "0" }} />
-                <img src={"https://api.datasetcolab.com/model/inference/" + url + "/17"} style={{ width: "100%", margin: "0", padding: "0" }} />
+                <img src={"https://4iqdpced90.execute-api.us-east-1.amazonaws.com/model/inference/" + url + "/0"} style={{ width: "100%", margin: "0", padding: "0" }} />
+                <img src={"https://4iqdpced90.execute-api.us-east-1.amazonaws.com/model/inference/" + url + "/1"} style={{ width: "100%", margin: "0", padding: "0" }} />
+                <img src={"https://4iqdpced90.execute-api.us-east-1.amazonaws.com/model/inference/" + url + "/2"} style={{ width: "100%", margin: "0", padding: "0" }} />
+                <img src={"https://4iqdpced90.execute-api.us-east-1.amazonaws.com/model/inference/" + url + "/3"} style={{ width: "100%", margin: "0", padding: "0" }} />
+                <img src={"https://4iqdpced90.execute-api.us-east-1.amazonaws.com/model/inference/" + url + "/4"} style={{ width: "100%", margin: "0", padding: "0" }} />
+                <img src={"https://4iqdpced90.execute-api.us-east-1.amazonaws.com/model/inference/" + url + "/5"} style={{ width: "100%", margin: "0", padding: "0" }} />
+                <img src={"https://4iqdpced90.execute-api.us-east-1.amazonaws.com/model/inference/" + url + "/6"} style={{ width: "100%", margin: "0", padding: "0" }} />
+                <img src={"https://4iqdpced90.execute-api.us-east-1.amazonaws.com/model/inference/" + url + "/7"} style={{ width: "100%", margin: "0", padding: "0" }} />
+                <img src={"https://4iqdpced90.execute-api.us-east-1.amazonaws.com/model/inference/" + url + "/8"} style={{ width: "100%", margin: "0", padding: "0" }} />
+                <img src={"https://4iqdpced90.execute-api.us-east-1.amazonaws.com/model/inference/" + url + "/9"} style={{ width: "100%", margin: "0", padding: "0" }} />
+                <img src={"https://4iqdpced90.execute-api.us-east-1.amazonaws.com/model/inference/" + url + "/10"} style={{ width: "100%", margin: "0", padding: "0" }} />
+                <img src={"https://4iqdpced90.execute-api.us-east-1.amazonaws.com/model/inference/" + url + "/11"} style={{ width: "100%", margin: "0", padding: "0" }} />
+                <img src={"https://4iqdpced90.execute-api.us-east-1.amazonaws.com/model/inference/" + url + "/12"} style={{ width: "100%", margin: "0", padding: "0" }} />
+                <img src={"https://4iqdpced90.execute-api.us-east-1.amazonaws.com/model/inference/" + url + "/13"} style={{ width: "100%", margin: "0", padding: "0" }} />
+                <img src={"https://4iqdpced90.execute-api.us-east-1.amazonaws.com/model/inference/" + url + "/14"} style={{ width: "100%", margin: "0", padding: "0" }} />
+                <img src={"https://4iqdpced90.execute-api.us-east-1.amazonaws.com/model/inference/" + url + "/15"} style={{ width: "100%", margin: "0", padding: "0" }} />
+                <img src={"https://4iqdpced90.execute-api.us-east-1.amazonaws.com/model/inference/" + url + "/16"} style={{ width: "100%", margin: "0", padding: "0" }} />
+                <img src={"https://4iqdpced90.execute-api.us-east-1.amazonaws.com/model/inference/" + url + "/17"} style={{ width: "100%", margin: "0", padding: "0" }} />
               </div>
         );
     }
