@@ -4,8 +4,12 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+openssl = "0.10.64"
 lambda_http = "0.9.3"
 lambda_runtime = "0.9.2"
+rusoto_s3 = "0.48.0"
 tokio = { version = "1", features = ["macros"] }
 tracing = { version = "0.1", features = ["log"] }
 tracing-subscriber = { version = "0.3", default-features = false, features = ["env-filter", "fmt"] }
+csv = "1.1.6"
+serde_json = "1.0.64"
