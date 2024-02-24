@@ -1,12 +1,15 @@
-use tracing_subscriber::filter::{EnvFilter, LevelFilter};use lambda_http::{run, service_fn, Body, Error, Request, RequestExt, Response};
+use tracing_subscriber::filter::{EnvFilter, LevelFilter};
+use lambda_http::{run, service_fn, Body, Error, Request, RequestExt, Response};
 
 async fn function_handler(event: Request) -> Result<Response<Body>, Error> {
     let who = event
         .query_string_parameters_ref()
         .and_then(|params| params.first("name"))
         .unwrap_or("world");
-    let message = format!("Hello {who}, this is an AWS Lambda HTTP request");
-    println!("{}", message);
+    let message = format!("Hello {who}, this is an AWS Lambda HTTP request. Query string parameters: {:?}, Path parameters: {:?}", event.query_string_parameters_ref(), event.path_parameters_ref());
+    // println!("{:?}", event);
+    println!("{:?}", event.query_string_parameters_ref());
+    println!("{:?}", event.path_parameters_ref());
 
     let resp = Response::builder()
         .status(200)
