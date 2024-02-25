@@ -1,40 +1,33 @@
-use tracing_subscriber::filter::{EnvFilter, LevelFilter};use lambda_http::{run, service_fn, Body, Error, Request, RequestExt, Response};
-
-/// This is the main body for the function.
-/// Write your code inside it.
-/// There are some code example in the following URLs:
-/// - https://github.com/awslabs/aws-lambda-rust-runtime/tree/main/examples
-async fn function_handler(event: Request) -> Result<Response<Body>, Error> {
-    // Extract some useful information from the request
-    let who = event
-        .query_string_parameters_ref()
-        .and_then(|params| params.first("name"))
-        .unwrap_or("world");
-    let message = format!("Hello {who}, this is an AWS Lambda HTTP request");
-
-    // Return something that implements IntoResponse.
-    // It will be serialized to the right response event automatically by the runtime
-    let resp = Response::builder()
-        .status(200)
-        .header("content-type", "text/html")
-        .body(message.into())
-        .map_err(Box::new)?;
-    Ok(resp)
-}
+use aws_config::meta::region::RegionProviderChain;
+use aws_sdk_s3::presigning::{PresigningConfig};
+use aws_sdk_s3::{config::Region, Client};
+use std::error::Error;
+use std::time::Duration;
 
 #[tokio::main]
-async fn main() -> Result<(), Error> {
-    tracing_subscriber::fmt()
-        .with_env_filter(
-            EnvFilter::builder()
-                .with_default_directive(LevelFilter::INFO.into())
-                .from_env_lossy(),
-        )
-        // disable printing the name of the module in every log line.
-        .with_target(false)
-        // disabling time is handy because CloudWatch will add the ingestion time.
-        .without_time()
-        .init();
+async fn main() -> Result<(), Box<dyn Error>> {
+    tracing_subscriber::fmt::init();
 
-    run(service_fn(function_handler)).await
+    let region: Option<String> = Some(String::from("us-east-1"));
+    let bucket: String = String::from("datasetcolab");
+    let object: String = String::from("download/2m70.zip");
+    let expires_in: u64 = 900;
+
+    let region_provider = RegionProviderChain::first_try(region.map(Region::new))
+        .or_default_provider()
+        .or_else(Region::new("us-east-1"));
+    let shared_config = aws_config::from_env().region(region_provider).load().await;
+    let client = Client::new(&shared_config);
+
+    let expires_in = Duration::from_secs(expires_in);
+
+    let presigned_request = client
+        .put_object()
+        .bucket(bucket)
+        .key(object)
+        .presigned(PresigningConfig::expires_in(expires_in)?)
+        .await?;
+
+    println!("Object URI: {}", presigned_request.uri());
+    Ok(())
 }

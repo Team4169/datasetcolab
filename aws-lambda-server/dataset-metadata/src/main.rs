@@ -1,25 +1,37 @@
-use tracing_subscriber::filter::{EnvFilter, LevelFilter};use lambda_http::{run, service_fn, Body, Error, Request, RequestExt, Response};
+use tracing_subscriber::filter::{EnvFilter, LevelFilter};
+use lambda_http::{run, service_fn, Error, Request, RequestExt, Response};
+use rusoto_s3::{S3, S3Client, GetObjectRequest};
+use lambda_http::Body as LambdaBody;
+use tokio::io::AsyncReadExt;
+use csv::ReaderBuilder;
+use serde_json::{json, Value};
 
-/// This is the main body for the function.
-/// Write your code inside it.
-/// There are some code example in the following URLs:
-/// - https://github.com/awslabs/aws-lambda-rust-runtime/tree/main/examples
-async fn function_handler(event: Request) -> Result<Response<Body>, Error> {
-    // Extract some useful information from the request
-    let who = event
-        .query_string_parameters_ref()
-        .and_then(|params| params.first("name"))
-        .unwrap_or("world");
-    let message = format!("Hello {who}, this is an AWS Lambda HTTP request");
+async fn function_handler(event: Request) -> Result<Response<LambdaBody>, Error> {
+    let dataset = event
+        .path_parameters_ref()
+        .and_then(|params| params.first("dataset"))
+        .unwrap_or("default");
 
-    // Return something that implements IntoResponse.
-    // It will be serialized to the right response event automatically by the runtime
-    let resp = Response::builder()
+    let s3_client = S3Client::new(Default::default());
+    let bucket = "datasetcolab";
+    let key = if (dataset.contains("FRC")) {
+        format!("download/{}/metadata.json", dataset)
+    } else {
+        format!("upload/{}/metadata.json", dataset)
+    };
+    let request = GetObjectRequest {
+        bucket: bucket.to_string(),
+        key: key.to_string(),
+        ..Default::default()
+    };
+    let response = s3_client.get_object(request).await?;
+    let mut body_text = String::new();
+    
+    Ok(Response::builder()
         .status(200)
-        .header("content-type", "text/html")
-        .body(message.into())
-        .map_err(Box::new)?;
-    Ok(resp)
+        .header("content-type", "application/json")
+        .body(LambdaBody::from(body_text))
+        .map_err(Box::new)?)
 }
 
 #[tokio::main]
@@ -30,9 +42,7 @@ async fn main() -> Result<(), Error> {
                 .with_default_directive(LevelFilter::INFO.into())
                 .from_env_lossy(),
         )
-        // disable printing the name of the module in every log line.
         .with_target(false)
-        // disabling time is handy because CloudWatch will add the ingestion time.
         .without_time()
         .init();
 

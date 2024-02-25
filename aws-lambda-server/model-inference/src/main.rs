@@ -27,17 +27,16 @@ async fn function_handler(event: Request) -> Result<Response<LambdaBody>, Error>
     };
     let response = s3_client.get_object(request).await?;
 
-    let body = response.body.unwrap();
-    let mut body_bytes = Vec::new();
-    body.into_async_read().read_to_end(&mut body_bytes).await?;
+    let mut image_data = Vec::new();
+    response.body.unwrap().into_async_read().read_to_end(&mut image_data).await?;
+    let encoded_image = encode(&image_data);
 
-    let base64_encoded_body = encode(&body_bytes);
-
-    Ok(Response::builder()
+    let response = Response::builder()
         .status(StatusCode::OK)
         .header(CONTENT_TYPE, HeaderValue::from_static("image/jpeg"))
-        .body(LambdaBody::from(base64_encoded_body))
-        .map_err(Error::from)?)
+        .body(LambdaBody::from(encoded_image))?;
+
+    Ok(response)
 }
 
 #[tokio::main]
