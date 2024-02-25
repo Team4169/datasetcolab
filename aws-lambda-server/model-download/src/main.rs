@@ -1,29 +1,23 @@
-use aws_sdk_s3::presigning::{PresignedRequest, PresigningConfig};
+use tracing_subscriber::filter::{EnvFilter, LevelFilter};
+use lambda_http::{run, service_fn, Request, Response};
+use lambda_http::Body as LambdaBody;
+use aws_sdk_s3::presigning::{PresigningConfig};
 use aws_sdk_s3::{config::Region, Client};
+use aws_config::BehaviorVersion;
 use std::error::Error;
 use std::time::Duration;
 
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn Error>> {
-    let region = Some("us-west-2".to_string());
-    let body = "Hello, world!".to_string();
-    let bucket = "my-bucket".to_string();
-    let object = "my-object".to_string();
-    let expires_in = 900;
-    let verbose = true;
+async fn function_handler(event: Request) -> Result<Response<LambdaBody>, Box<dyn Error>> {
+    let region = Some("us-east-1".to_string());
+    let bucket = "datasetcolab".to_string();
+    let object = "fiducials.fmap".to_string();
+    let expires_in = Duration::from_secs(900);
 
-    let shared_config = aws_config::from_env().region(region.map(Region::new)).load().await;
+    let shared_config = aws_config::defaults(BehaviorVersion::latest())
+        .region(region.map(Region::new))
+        .load()
+        .await;
     let client = Client::new(&shared_config);
-
-    if verbose {
-        println!("Bucket:            {}", &bucket);
-        println!("Object:            {}", &object);
-        println!("Body:              {}", &body);
-        println!("Expires in:        {} seconds", expires_in);
-        println!();
-    }
-
-    let expires_in = Duration::from_secs(expires_in);
 
     let presigned_request = client
         .put_object()
@@ -31,7 +25,26 @@ async fn main() -> Result<(), Box<dyn Error>> {
         .key(object)
         .presigned(PresigningConfig::expires_in(expires_in)?)
         .await?;
+    let redirect_url = presigned_request.uri().to_string();
 
+    Ok(Response::builder()
+        .status(302)
+        .header("Location", redirect_url)
+        .body(LambdaBody::Empty)
+        .map_err(Box::new)?)
+}
 
-    warp::serve(function_handler).run(([127, 0, 0, 1], 3030)).await;
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
+    tracing_subscriber::fmt()
+        .with_env_filter(
+            EnvFilter::builder()
+                .with_default_directive(LevelFilter::INFO.into())
+                .from_env_lossy(),
+        )
+        .with_target(false)
+        .without_time()
+        .init();
+
+    run(service_fn(function_handler)).await
 }

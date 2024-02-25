@@ -1,7 +1,7 @@
 use tracing_subscriber::filter::{EnvFilter, LevelFilter};
 use lambda_http::{run, service_fn, Error, Request, RequestExt, Response};
-use rusoto_s3::{S3, S3Client, GetObjectRequest};
 use lambda_http::Body as LambdaBody;
+use rusoto_s3::{S3, S3Client, GetObjectRequest};
 use tokio::io::AsyncReadExt;
 use csv::ReaderBuilder;
 use serde_json::{json, Value};
