@@ -5,8 +5,10 @@ use std::error::Error;
 use rusoto_secretsmanager::{SecretsManager, SecretsManagerClient, GetSecretValueRequest};
 use rusoto_core::Region as RusotoRegion;
 use rs_firebase_admin_sdk::{auth::token::TokenVerifier, App, CustomServiceAccount};
+use serde_json::{json, Value};
 
 async fn function_handler(event: Request) -> Result<Response<LambdaBody>, Box<dyn Error>> {
+    
     let id_token = event.uri().query()
         .and_then(|query| {
             query.split('&')
@@ -66,9 +68,13 @@ async fn function_handler(event: Request) -> Result<Response<LambdaBody>, Box<dy
                 .map_err(Box::new)?);
         }
 
+        let mut json_object = json!({});
+        json_object["isAuthorized"] = Value::Bool(true);
+        json_object["context"]["uid"] = Value::String(uid);
+
         Ok(Response::builder()
             .status(200)
-            .body(LambdaBody::from(uid))
+            .body(LambdaBody::from(json_object.to_string()))
             .map_err(Box::new)?)
     }
 }
