@@ -8,9 +8,22 @@ use std::error::Error;
 use std::time::Duration;
 
 async fn function_handler(event: Request) -> Result<Response<LambdaBody>, Box<dyn Error>> {
+    let model = event.uri().path().trim_start_matches("/model/download/").trim_end_matches('?');
+    let download_type = event.uri().query()
+        .and_then(|query| {
+            query.split('&')
+                .find(|param| param.starts_with("downloadType="))
+                .map(|param| param.trim_start_matches("downloadType="))
+        })
+        .unwrap_or_default();
+
     let region = Some("us-east-1".to_string());
     let bucket = "datasetcolab".to_string();
-    let object = "fiducials.fmap".to_string();
+    let object = if model.contains("YOLO") {
+        format!("models/{}/weights/best.pt", model)
+    } else {
+        format!("models/{}/{}{}.zip", model, model, download_type)
+    };
     let expires_in = Duration::from_secs(900);
 
     let shared_config = aws_config::defaults(BehaviorVersion::latest())
@@ -20,7 +33,7 @@ async fn function_handler(event: Request) -> Result<Response<LambdaBody>, Box<dy
     let client = Client::new(&shared_config);
 
     let presigned_request = client
-        .put_object()
+        .get_object()
         .bucket(bucket)
         .key(object)
         .presigned(PresigningConfig::expires_in(expires_in)?)

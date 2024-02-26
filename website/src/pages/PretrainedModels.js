@@ -87,9 +87,9 @@ export default function PretrainedModels() {
 
     const handleDownloadCurl = (dataset) => {
         if (dataset.downloadType === undefined || dataset.downloadType === "") {
-            return `curl -o ${dataset.model + dataset.classes.map(item => item.slice(0, 2).toUpperCase()).join('')}.pt 'https://api.datasetcolab.com/model/download/${dataset.model + dataset.classes.map(item => item.slice(0, 2).toUpperCase()).join('')}?api=${apiKey}'`;
+            return `curl -L -o ${dataset.model + dataset.classes.map(item => item.slice(0, 2).toUpperCase()).join('')}.pt 'https://4iqdpced90.execute-api.us-east-1.amazonaws.com/model/download/${dataset.model + dataset.classes.map(item => item.slice(0, 2).toUpperCase()).join('')}?api=${apiKey}'`;
         } else {
-            return `curl -o ${dataset.model + dataset.classes.map(item => item.slice(0, 2).toUpperCase()).join('')}.zip 'https://api.datasetcolab.com/model/download/${dataset.model + dataset.classes.map(item => item.slice(0, 2).toUpperCase()).join('')}?api=${apiKey}&downloadType=${dataset.downloadType === "Tensorflow" ? "TF" : "TFLite"}'`;
+            return `curl -L -o ${dataset.model + dataset.classes.map(item => item.slice(0, 2).toUpperCase()).join('')}.zip 'https://4iqdpced90.execute-api.us-east-1.amazonaws.com/model/download/${dataset.model + dataset.classes.map(item => item.slice(0, 2).toUpperCase()).join('')}?api=${apiKey}&downloadType=${dataset.downloadType === "Tensorflow" ? "TF" : "TFLite"}'`;
         }
     };
 
@@ -131,9 +131,9 @@ export default function PretrainedModels() {
             const idToken = await currentUser.getIdToken();
 
             if (downloadType === "") {
-                window.location.href = "https://api.datasetcolab.com/model/download/" + model + "?idToken=" + idToken;
+                window.location.href = "https://4iqdpced90.execute-api.us-east-1.amazonaws.com/model/download/" + model + "?idToken=" + idToken;
             } else {
-                window.location.href = "https://api.datasetcolab.com/model/download/" + model + "?idToken=" + idToken + "&downloadType=" + downloadType;
+                window.location.href = "https://4iqdpced90.execute-api.us-east-1.amazonaws.com/model/download/" + model + "?idToken=" + idToken + "&downloadType=" + downloadType;
             }
 
             logEvent(analytics, 'model/download');

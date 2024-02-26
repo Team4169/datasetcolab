@@ -10,5 +10,5 @@ tokio = { version = "1", features = ["macros"] }
 tracing = { version = "0.1", features = ["log"] }
 tracing-subscriber = { version = "0.3", default-features = false, features = ["env-filter", "fmt"] }
 openssl = { version = "0.10.35", features = ["vendored"] }
-rusoto_s3 = "0.48.0"
-base64 = "0.21.7"
+aws-sdk-s3 = "1.16.0"
+aws-config = "1.1.6"

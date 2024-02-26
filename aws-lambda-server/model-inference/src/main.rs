@@ -1,46 +1,46 @@
 use tracing_subscriber::filter::{EnvFilter, LevelFilter};
-use lambda_http::{run, service_fn, Error, Request, RequestExt, Response};
-use rusoto_s3::{S3, S3Client, GetObjectRequest};
+use lambda_http::{run, service_fn, Request, Response};
 use lambda_http::Body as LambdaBody;
-use tokio::io::AsyncReadExt;
-use base64::encode;
-use lambda_http::http::header::{HeaderValue, CONTENT_TYPE};
-use lambda_http::http::StatusCode;
+use aws_sdk_s3::presigning::{PresigningConfig};
+use aws_sdk_s3::{config::Region, Client};
+use aws_config::BehaviorVersion;
+use std::error::Error;
+use std::time::Duration;
 
-async fn function_handler(event: Request) -> Result<Response<LambdaBody>, Error> {
-    let model = event
-        .path_parameters_ref()
-        .and_then(|params| params.first("model"))
-        .unwrap_or("default");
-    let image = event
-        .path_parameters_ref()
-        .and_then(|params| params.first("image"))
-        .unwrap_or("default");
-    
-    let s3_client = S3Client::new(Default::default());
-    let bucket = "datasetcolab";
-    let key = format!("models/{}/images/processed_{}.jpg", model, image);
-    let request = GetObjectRequest {
-        bucket: bucket.to_string(),
-        key: key.to_string(),
-        ..Default::default()
-    };
-    let response = s3_client.get_object(request).await?;
+async fn function_handler(event: Request) -> Result<Response<LambdaBody>, Box<dyn Error>> {
+    let path = event.uri().path();
+    let parts: Vec<&str> = path.split('/').collect();
+    let model = parts[3];
+    let image = parts[4];
 
-    let mut image_data = Vec::new();
-    response.body.unwrap().into_async_read().read_to_end(&mut image_data).await?;
-    let encoded_image = encode(&image_data);
+    let region = Some("us-east-1".to_string());
+    let bucket = "datasetcolab".to_string();
+    let object = format!("models/{}/images/processed_{}.jpg", model, image);
+    let expires_in = Duration::from_secs(900);
 
-    let response = Response::builder()
-        .status(StatusCode::OK)
-        .header(CONTENT_TYPE, HeaderValue::from_static("image/jpeg"))
-        .body(LambdaBody::from(encoded_image))?;
+    let shared_config = aws_config::defaults(BehaviorVersion::latest())
+        .region(region.map(Region::new))
+        .load()
+        .await;
+    let client = Client::new(&shared_config);
 
-    Ok(response)
+    let presigned_request = client
+        .get_object()
+        .bucket(bucket)
+        .key(object)
+        .presigned(PresigningConfig::expires_in(expires_in)?)
+        .await?;
+    let redirect_url = presigned_request.uri().to_string();
+
+    Ok(Response::builder()
+        .status(302)
+        .header("Location", redirect_url)
+        .body(LambdaBody::Empty)
+        .map_err(Box::new)?)
 }
 
 #[tokio::main]
-async fn main() -> Result<(), Error> {
+async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
     tracing_subscriber::fmt()
         .with_env_filter(
             EnvFilter::builder()
