@@ -129,12 +129,15 @@ export default function PretrainedModels() {
             setLoading(true);
 
             const idToken = await currentUser.getIdToken();
+            console.log(idToken);
 
+            /*
             if (downloadType === "") {
                 window.location.href = "https://4iqdpced90.execute-api.us-east-1.amazonaws.com/model/download/" + model + "?idToken=" + idToken;
             } else {
                 window.location.href = "https://4iqdpced90.execute-api.us-east-1.amazonaws.com/model/download/" + model + "?idToken=" + idToken + "&downloadType=" + downloadType;
             }
+            */
 
             logEvent(analytics, 'model/download');
         } catch (err) {

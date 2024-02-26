@@ -10,5 +10,6 @@ tokio = { version = "1", features = ["macros"] }
 tracing = { version = "0.1", features = ["log"] }
 tracing-subscriber = { version = "0.3", default-features = false, features = ["env-filter", "fmt"] }
 openssl = { version = "0.10.35", features = ["vendored"] }
-aws-sdk-s3 = "1.16.0"
-aws-config = "1.1.6"
+rusoto_secretsmanager = "0.48.0"
+rusoto_core = "0.48.0"
+rs-firebase-admin-sdk = "1.2.2"

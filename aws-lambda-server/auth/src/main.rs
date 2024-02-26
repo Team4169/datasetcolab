@@ -1,14 +1,13 @@
 use tracing_subscriber::filter::{EnvFilter, LevelFilter};
 use lambda_http::{run, service_fn, Request, Response};
 use lambda_http::Body as LambdaBody;
-use aws_sdk_s3::presigning::{PresigningConfig};
-use aws_sdk_s3::{config::Region, Client};
-use aws_config::BehaviorVersion;
 use std::error::Error;
-use std::time::Duration;
+use rusoto_secretsmanager::{SecretsManager, SecretsManagerClient, GetSecretValueRequest};
+use rusoto_core::Region as RusotoRegion;
+use rs_firebase_admin_sdk::{auth::token::TokenVerifier, App, CustomServiceAccount};
 
 async fn function_handler(event: Request) -> Result<Response<LambdaBody>, Box<dyn Error>> {
-    let idToken = event.uri().query()
+    let id_token = event.uri().query()
         .and_then(|query| {
             query.split('&')
                 .find(|param| param.starts_with("idToken="))
@@ -16,12 +15,12 @@ async fn function_handler(event: Request) -> Result<Response<LambdaBody>, Box<dy
         })
         .unwrap_or_else(|| {
             event.headers()
-                .get("idToken")
+                .get("id_token")
                 .and_then(|value| value.to_str().ok())
                 .unwrap_or_default()
         });
 
-    if idToken.is_empty() {
+    if id_token.is_empty() {
         let api = event.uri().query()
             .and_then(|query| {
                 query.split('&')
@@ -38,7 +37,7 @@ async fn function_handler(event: Request) -> Result<Response<LambdaBody>, Box<dy
         if api.is_empty() {
             return Ok(Response::builder()
                 .status(400)
-                .body(LambdaBody::from("Missing idToken and api"))
+                .body(LambdaBody::from("Missing id_token and api"))
                 .map_err(Box::new)?);
         } else {
             return Ok(Response::builder()
@@ -47,10 +46,59 @@ async fn function_handler(event: Request) -> Result<Response<LambdaBody>, Box<dy
                 .map_err(Box::new)?);
         }
     } else {
-        return Ok(Response::builder()
+        let gcp_service_account = CustomServiceAccount::from_json(&get_firebase_secret().await?).unwrap();
+        let live_app = match App::live(gcp_service_account.into()).await {
+            Ok(app) => app,
+            Err(error) => {
+                eprintln!("Error while creating live app: {:?}", error);
+                return Ok(Response::builder()
+                    .status(500)
+                    .body(LambdaBody::from("Internal Server Error"))
+                    .map_err(Box::new)?);
+            }
+        };
+        let live_token_verifier = live_app.id_token_verifier().await.unwrap();
+        let uid = verify_token(&id_token, &live_token_verifier).await;
+        if uid == "" {
+            return Ok(Response::builder()
+                .status(401)
+                .body(LambdaBody::from("Unauthorized"))
+                .map_err(Box::new)?);
+        }
+
+        Ok(Response::builder()
             .status(200)
-            .body(LambdaBody::from(idToken))
-            .map_err(Box::new)?);
+            .body(LambdaBody::from(uid))
+            .map_err(Box::new)?)
+    }
+}
+
+async fn get_firebase_secret() -> Result<String, Box<dyn Error>> {
+    let secret_name = "FirebaseAdminDatasetColab";
+
+    let client = SecretsManagerClient::new(RusotoRegion::UsEast1);
+    let request = GetSecretValueRequest {
+        secret_id: secret_name.to_string(),
+        ..Default::default()
+    };
+
+    let response = client.get_secret_value(request).await?;
+    let secret_string = response.secret_string.ok_or("Secret string not found")?;
+
+    Ok(secret_string)
+}
+
+async fn verify_token<T: TokenVerifier>(token: &str, verifier: &T) -> String {
+    match verifier.verify_token(token).await {
+        Ok(token) => {
+            let user_id = token.critical_claims.sub;
+            println!("Token for user {user_id} is valid!");
+            user_id
+        }
+        Err(err) => {
+            println!("Token is invalid because {err}!");
+            String::new()
+        }
     }
 }
 
