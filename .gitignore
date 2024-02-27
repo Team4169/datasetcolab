@@ -46,3 +46,4 @@ possible.txt
 *.pem
 *.lock
 nextjswebsite/node_modules
+nextjswebsite/.next
