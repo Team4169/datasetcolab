@@ -1,11 +1,13 @@
 "use client"
 import React, { useState, useEffect, useRef } from 'react';
+import {Button} from '../../components/ui/button';
 
 interface Rectangle {
   startX: number;
   startY: number;
   endX: number;
   endY: number;
+  label: string; // Add label property to Rectangle interface
 }
 
 const DrawableCanvas: React.FC = () => {
@@ -20,7 +22,7 @@ const DrawableCanvas: React.FC = () => {
     const canvas = canvasRef.current;
     const context = canvas?.getContext('2d');
     const image = new Image();
-    image.src = 'https://www.firstinspires.org/sites/default/files/uploads/hero_headers/header-image_1.jpg';
+    image.src = 'https://www.firstinspires.org/sites/default/files/uploads/hero_headers/header-image_1.jpg'
     image.onload = () => {
       if (canvas && context) {
         const scaleToFit = Math.min(750 / image.width, 750 / image.height);
@@ -50,8 +52,10 @@ const DrawableCanvas: React.FC = () => {
     context.lineWidth = 2;
     context.stroke();
 
-    // Print coordinates of the rectangle corners, adjusted for scale
-    console.log(`Rectangle corners: (${rect.startX * scale}, ${rect.startY * scale}), (${rect.endX * scale}, ${rect.startY * scale}), (${rect.startX * scale}, ${rect.endY * scale}), (${rect.endX * scale}, ${rect.endY * scale})`);
+    // Show label with the rectangle
+    context.fillStyle = color;
+    context.font = '14px Arial';
+    context.fillText(rect.label, rect.startX * scale, rect.startY * scale - 5);
   };
 
   const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
@@ -60,7 +64,7 @@ const DrawableCanvas: React.FC = () => {
       setIsDrawing(true);
       const startX = (e.clientX - rect.left) / scale;
       const startY = (e.clientY - rect.top) / scale;
-      setCurrentRect({ startX, startY, endX: startX, endY: startY });
+      setCurrentRect({ startX, startY, endX: startX, endY: startY, label: '' }); // Initialize label as empty string
     }
   };
 
@@ -78,7 +82,12 @@ const DrawableCanvas: React.FC = () => {
 
   const handleMouseUp = () => {
     if (currentRect) {
-      setRectangles([...rectangles, currentRect]);
+      const label = prompt('Enter a label for the rectangle'); // Ask user for label
+      if (label) {
+        setRectangles([...rectangles, { ...currentRect, label }]);
+        console.log(`Rectangle label: ${label}`); // Print the rectangle's label to console
+        console.log(`Rectangle corners: (${currentRect.startX * scale}, ${currentRect.startY * scale}), (${currentRect.endX * scale}, ${currentRect.startY * scale}), (${currentRect.startX * scale}, ${currentRect.endY * scale}), (${currentRect.endX * scale}, ${currentRect.endY * scale})`);
+      }
       setCurrentRect(null);
     }
     setIsDrawing(false);
@@ -88,6 +97,9 @@ const DrawableCanvas: React.FC = () => {
   const handleChangeColor = (newColor: string) => {
     setColor(newColor);
   };
+  const handleClearRectangles = () => {
+    setRectangles([]);
+  }
 
   return (
     <>
@@ -99,9 +111,10 @@ const DrawableCanvas: React.FC = () => {
         style={{ width: '750px', height: '750px' }} // Adjust canvas size for CSS, keeping actual drawing scaled
       />
       <div>
-        <button onClick={() => handleChangeColor('red')}>Red</button>
-        <button onClick={() => handleChangeColor('green')}>Green</button>
-        <button onClick={() => handleChangeColor('blue')}>Blue</button>
+        <Button onClick={() => handleChangeColor('red')}>Red</Button>
+        <Button onClick={() => handleChangeColor('green')}>Green</Button>
+        <Button onClick={() => handleChangeColor('blue')}>Blue</Button>
+        <Button onClick={() => handleClearRectangles()}>Clear</Button>
       </div>
     </>
   );
