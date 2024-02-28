@@ -9,22 +9,17 @@ use lambda_http::{run, service_fn, Error, Request, Response, RequestExt};
 use lambda_http::Body as LambdaBody;
 use rusoto_core::Region;
 use rusoto_s3::{S3, S3Client, PutObjectRequest};
-use rusoto_dynamodb::{DynamoDb, DynamoDbClient, PutItemInput, AttributeValue};
+use rusoto_dynamodb::{DynamoDb, DynamoDbClient, GetItemInput, PutItemInput, AttributeValue};
 use rusoto_secretsmanager::{SecretsManager, SecretsManagerClient, GetSecretValueRequest};
 use rusoto_ec2::{Ec2, Ec2Client, RunInstancesRequest};
-use std::time::SystemTime;
 use std::collections::HashMap;
 use lambda_http::http::header::HeaderValue;
 use lambda_http::http::header::HeaderMap;
 use url::Url;
 use reqwest;
-use serde_json::Value; 
-use reqwest::Response as ReqwestResponse;
+use serde_json::Value;
 use std::fs::File;
-use std::io::Write;
 use std::io::Read;
-use std::path::Path;
-use std::process::Command;
 use tempfile::tempdir;
 use zip::ZipArchive;
 use rusoto_core::ByteStream;
@@ -66,6 +61,63 @@ async fn function_handler(event: Request) -> Result<Response<LambdaBody>, Error>
     let export = json.get("export").and_then(|value| value.as_object()).ok_or("Invalid JSON format")?;
     let export_link = export.get("link").and_then(|value| value.as_str()).ok_or("Export link not found")?.to_string();
     let export_size = export.get("size").and_then(|value| value.as_f64()).ok_or("Export size not found").unwrap();
+    
+    let dynamodb_client = DynamoDbClient::new(Region::default());
+    let table_name = "repositories";
+    let full_name = format!("{}/{}", user_name, repository_name);
+    let repository = dynamodb_client.get_item(GetItemInput {
+        table_name: table_name.to_string(),
+        key: {
+            let mut key = HashMap::new();
+            key.insert("full_name".to_string(), AttributeValue {
+                s: Some(full_name.to_string()),
+                ..Default::default()
+            });
+            key
+        },
+        ..Default::default()
+    }).await?;
+    println!("repository {:?}", repository);
+
+    /*
+    let cloned_item = repository.item.clone();
+    let new_dataset_attribute = cloned_item.and_then(|item| item.get("datasets")).and_then(|attribute| attribute.s.clone());
+    let mut datasets: Vec<Value> = new_dataset_attribute.and_then(|attribute| serde_json::from_str(&attribute).ok()).unwrap_or_default();
+
+    let new_dataset = serde_json::json!({
+        "dataset_id": dataset_id,
+        "workspace": workspace,
+        "project": project,
+        "version_id": version_id,
+        "export_size": export_size,
+    });
+
+    let new_dataset_attribute = AttributeValue {
+        s: Some(new_dataset.to_string()),
+        ..Default::default()
+    };
+
+    let new_dataset_value: Value = serde_json::from_str(&new_dataset_attribute.s.unwrap()).unwrap();
+    datasets.push(new_dataset_value);
+
+    let update_item_input = PutItemInput {
+        table_name: table_name.to_string(),
+        item: {
+            let mut item = HashMap::new();
+            item.insert("full_name".to_string(), AttributeValue {
+                s: Some(full_name.to_string()),
+                ..Default::default()
+            });
+            item.insert("datasets".to_string(), AttributeValue {
+                s: Some(serde_json::to_string(&new_dataset)?),
+                ..Default::default()
+            });
+            item
+        },
+        ..Default::default()
+    };
+
+    dynamodb_client.put_item(update_item_input).await?;
     
     if export_size > 8192.0 {
         let client = Ec2Client::new(Region::UsEast1);
@@ -158,7 +210,7 @@ async fn function_handler(event: Request) -> Result<Response<LambdaBody>, Error>
             s3_client.put_object(request).await?;
         }
     }
-    
+    */
     Ok(Response::builder()
         .status(200)
         .header("content-type", "application/json")
