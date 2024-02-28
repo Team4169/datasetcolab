@@ -21,6 +21,7 @@ const Navbar: React.FC = () => {
           </a>
           <div className="flex space-x-5">
             <a href="/repositories" className="text-blue-900 hover:text-blue-600">Repositories</a>
+            <a href="/draw" className="text-blue-900 hover:text-blue-600">Draw</a>
             <a href="/pricing" className="text-blue-900 hover:text-blue-600">Pricing</a>
             <a href="/about" className="text-blue-900 hover:text-blue-600">About</a>
           </div>

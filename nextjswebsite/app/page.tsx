@@ -27,7 +27,7 @@ const Homepage: React.FC = () => {
         </section>
         <div className="flex justify-center">
           <button className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg mr-4">
-            Explore Datasets
+            Explore Repositories (Datasets + Models)
           </button>
           <button className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg">
             Join the Community

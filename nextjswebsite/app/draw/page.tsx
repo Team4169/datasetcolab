@@ -1,6 +1,6 @@
 "use client"
 import { FC, useState } from 'react';
-import { useDraw } from '@/hooks/useDraw'; // Ensure this path matches your project structure
+import { useDraw } from '../../hooks/useDraw'; // Ensure this path matches your project structure
 import { Button } from '../../components/ui/button'; // Adjust the import path as needed
 
 const Page: FC<{}> = () => {
