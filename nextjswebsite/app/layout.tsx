@@ -28,8 +28,8 @@ const Navbar: React.FC = () => {
         </div>
         <div className="hidden md:flex items-center space-x-4">
           <input type="text" placeholder="Search Repositiories" className="py-2 px-3 bg-white text-blue-900 rounded" />
-          <a href="/login" className="py-2 px-3 bg-blue-500 text-white rounded hover:bg-blue-600 transition duration-300">Login</a>
-          <a href="/signup" className="py-2 px-3 bg-blue-500 text-white rounded hover:bg-blue-600 transition duration-300">Sign Up</a>
+          <a href="/auth/login" className="py-2 px-3 bg-blue-500 text-white rounded hover:bg-blue-600 transition duration-300">Login</a>
+          <a href="/auth/signup" className="py-2 px-3 bg-blue-500 text-white rounded hover:bg-blue-600 transition duration-300">Sign Up</a>
         </div>
       </div>
     </nav>
