@@ -34,3 +34,7 @@ yarn-error.log*
 
 .contentlayer
 .env
+
+# next stuff
+.next/
+.swc/
