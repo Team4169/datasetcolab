@@ -1,22 +1,5 @@
 "use client"
 import React from "react";
-import { Button } from "@/components/ui/button";
-import {
-  //Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-
-import * as Dialog from '@radix-ui/react-dialog';
-
-
-
 
 const Homepage: React.FC = () => {
 
@@ -77,22 +60,7 @@ const Homepage: React.FC = () => {
             Join the Community
           </button>
         </div>
-        <Dialog.Root open={open} onOpenChange={setOpen}>
-      <Dialog.Trigger>Open</Dialog.Trigger>
-      <Dialog.Portal>
-        <Dialog.Overlay />
-        <Dialog.Content>
-          <form
-            onSubmit={(event) => {
-              wait().then(() => setOpen(false));
-              event.preventDefault();
-            }}
-          >
-            <button type="submit">Submit</button>
-          </form>
-        </Dialog.Content>
-      </Dialog.Portal>
-    </Dialog.Root>
+        
       </div>
     </div>
   );
