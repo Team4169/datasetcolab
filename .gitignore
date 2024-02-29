@@ -38,7 +38,7 @@ app/download
 app/models
 
 app/*.json
-*.json
+
 
 # Ignore Gradle build output directory
 build

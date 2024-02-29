@@ -1,27 +1,71 @@
-import React from 'react';
+"use client"
+import React from "react";
+import { Button } from "@/components/ui/button";
+import {
+  //Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+
+import * as Dialog from '@radix-ui/react-dialog';
+
+
+
 
 const Homepage: React.FC = () => {
+
+  const wait = () => new Promise((resolve) => setTimeout(resolve, 1000));
+  const [open, setOpen] = React.useState(false);
+
   return (
     <div className="bg-blue-50 min-h-screen flex items-center justify-center">
       <div className="container mx-auto px-4">
         <header className="text-center py-10">
-          <h1 className="text-4xl font-bold text-blue-900">Welcome to Dataset Colab</h1>
-          <p className="text-blue-600">The ultimate platform for discovering, sharing, and collaborating on datasets across various domains.</p>
+          <h1 className="text-4xl font-bold text-blue-900">
+            Welcome to Dataset Colab
+          </h1>
+          <p className="text-blue-600">
+            The ultimate platform for discovering, sharing, and collaborating on
+            datasets across various domains.
+          </p>
         </header>
         <section className="py-10">
-          <h2 className="text-3xl font-bold text-blue-900">Why Dataset Colab?</h2>
+          <h2 className="text-3xl font-bold text-blue-900">
+            Why Dataset Colab?
+          </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-5">
             <div className="p-6 max-w-sm bg-white rounded-lg border border-gray-200 shadow-md">
-              <h5 className="mb-2 text-2xl font-bold tracking-tight text-blue-900">Discover & Access</h5>
-              <p className="font-normal text-gray-700">Gain access to a vast repository of datasets, curated for quality and relevance.</p>
+              <h5 className="mb-2 text-2xl font-bold tracking-tight text-blue-900">
+                Discover & Access
+              </h5>
+              <p className="font-normal text-gray-700">
+                Gain access to a vast repository of datasets, curated for
+                quality and relevance.
+              </p>
             </div>
             <div className="p-6 max-w-sm bg-white rounded-lg border border-gray-200 shadow-md">
-              <h5 className="mb-2 text-2xl font-bold tracking-tight text-blue-900">Contribute & Collaborate</h5>
-              <p className="font-normal text-gray-700">Share your datasets and collaborate with the community to enhance research and innovation.</p>
+              <h5 className="mb-2 text-2xl font-bold tracking-tight text-blue-900">
+                Contribute & Collaborate
+              </h5>
+              <p className="font-normal text-gray-700">
+                Share your datasets and collaborate with the community to
+                enhance research and innovation.
+              </p>
             </div>
             <div className="p-6 max-w-sm bg-white rounded-lg border border-gray-200 shadow-md">
-              <h5 className="mb-2 text-2xl font-bold tracking-tight text-blue-900">Tools & Analytics</h5>
-              <p className="font-normal text-gray-700">Leverage advanced tools for dataset analysis and visualization to drive insights.</p>
+              <h5 className="mb-2 text-2xl font-bold tracking-tight text-blue-900">
+                Tools & Analytics
+              </h5>
+              <p className="font-normal text-gray-700">
+                Leverage advanced tools for dataset analysis and visualization
+                to drive insights.
+              </p>
             </div>
           </div>
         </section>
@@ -33,6 +77,22 @@ const Homepage: React.FC = () => {
             Join the Community
           </button>
         </div>
+        <Dialog.Root open={open} onOpenChange={setOpen}>
+      <Dialog.Trigger>Open</Dialog.Trigger>
+      <Dialog.Portal>
+        <Dialog.Overlay />
+        <Dialog.Content>
+          <form
+            onSubmit={(event) => {
+              wait().then(() => setOpen(false));
+              event.preventDefault();
+            }}
+          >
+            <button type="submit">Submit</button>
+          </form>
+        </Dialog.Content>
+      </Dialog.Portal>
+    </Dialog.Root>
       </div>
     </div>
   );
