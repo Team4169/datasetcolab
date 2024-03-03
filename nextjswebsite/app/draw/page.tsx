@@ -1,12 +1,6 @@
 "use client"
-<<<<<<< HEAD
-import { FC, useState } from 'react';
-import { useDraw } from '../../hooks/useDraw'; // Ensure this path matches your project structure
-import { Button } from '../../components/ui/button'; // Adjust the import path as needed
-=======
 import React, { useState, useEffect, useRef } from 'react';
 import {Button} from '../../components/ui/button';
->>>>>>> cd828885b020ea193791940b2911f5edf2f38747
 
 interface Rectangle {
   startX: number;
