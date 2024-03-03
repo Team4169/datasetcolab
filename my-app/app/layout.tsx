@@ -9,7 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-import { LoginDialog } from "@/components/auth/loginDialog";
+import { LoginDialogDesktop } from "@/components/auth/loginDialogDesktop";
+import { LoginDialogMobile } from "@/components/auth/loginDialogMobile";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -59,7 +60,7 @@ export default function RootLayout({
                 <div className="ml-4">
                 </div>
               </div>
-              <LoginDialog />
+              <LoginDialogDesktop />
             </div>
             <div className="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0">
               <div className="relative ml-3">
@@ -104,7 +105,7 @@ export default function RootLayout({
             >
               Calendar
             </a>
-            
+            <LoginDialogMobile />
           </div>
         </div>
       </nav>

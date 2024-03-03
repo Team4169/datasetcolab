@@ -21,7 +21,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-export function LoginDialog() {
+export function LoginDialogDesktop() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [signInWithEmailAndPassword] = useSignInWithEmailAndPassword(auth);
@@ -61,7 +61,7 @@ export function LoginDialog() {
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="name" className="text-right">
+            <Label htmlFor="email" className="col-span-1 text-right">
               Email
             </Label>
             <Input
@@ -73,7 +73,7 @@ export function LoginDialog() {
             />
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="username" className="text-right">
+            <Label htmlFor="password" className="col-span-1 text-right">
               Password
             </Label>
             <Input
@@ -86,9 +86,25 @@ export function LoginDialog() {
           </div>
         </div>
         <DialogFooter>
-          <Button type="submit" onClick={handleSignIn}>
-            Submit
-          </Button>
+          <div className="flex flex-col items-center">
+            <Button type="submit" onClick={handleSignIn}>
+              Submit
+            </Button>
+            <div className="mt-4 text-gray-500 text-sm">
+              <span>Don&apos;t have an account? </span>
+              <Link legacyBehavior href="/auth/signup">
+                <a className="text-gray-500 hover:text-indigo-600">Sign Up</a>
+              </Link>
+            </div>
+            <div className="mt-2 text-gray-500 text-sm">
+              <span>Forgot your password? </span>
+              <Link legacyBehavior href="/auth/reset">
+                <a className="text-gray-500 hover:text-indigo-600">
+                  Reset Password
+                </a>
+              </Link>
+            </div>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>
