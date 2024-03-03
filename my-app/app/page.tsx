@@ -1,8 +1,22 @@
-"use client"
+"use client";
 import React from "react";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
 
 const Homepage: React.FC = () => {
-
   const wait = () => new Promise((resolve) => setTimeout(resolve, 1000));
   const [open, setOpen] = React.useState(false);
 
@@ -60,7 +74,62 @@ const Homepage: React.FC = () => {
             Join the Community
           </button>
         </div>
-        
+
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button variant="outline">New Dataset</Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[500px]">
+            <DialogHeader>
+              <DialogTitle>New Dataset</DialogTitle>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="description">Dataset Name</Label>
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label
+                  htmlFor="name"
+                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                >
+                  <Badge variant="outline">username</Badge>
+                  <span className="text-lg">{"     "}/</span>
+                </Label>
+                <Input id="name" className="col-span-3 ml-0" />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="description">Description</Label>
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Textarea id="description" className="col-span-4" />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="tags">Tags</Label>
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Input id="tags" className="col-span-4" />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="visibility">Visibility</Label>
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <RadioGroup defaultValue="public">
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="public" id="public" />
+                    <Label htmlFor="public">Public</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="private" id="private" disabled />
+                    <Label htmlFor="private">Private</Label>
+                  </div>
+                </RadioGroup>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button type="submit">Create Dataset</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
