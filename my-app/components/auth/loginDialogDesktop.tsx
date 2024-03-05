@@ -7,6 +7,8 @@ import { useRouter } from "next/navigation";
 import { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import {  GithubAuthProvider, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
+import { Icons } from "@/components/icons";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -45,6 +47,71 @@ export function LoginDialogDesktop() {
     }
   };
 
+  const handleSignInWithGoogle = async () => {
+
+    const provider = new GoogleAuthProvider();
+    signInWithPopup(auth, provider)
+      .then((result) => {
+        // This gives you a Google Access Token. You can use it to access the Google API.
+        const credential = GoogleAuthProvider.credentialFromResult(result);
+        const token = credential?.accessToken;
+        // The signed-in user info.
+        const user = result.user;
+        console.log({ user });
+        sessionStorage.setItem("user", "true");
+        setEmail("");
+        setPassword("");
+        router.push("/");
+        setError("");
+        // IdP data available using getAdditionalUserInfo(result)
+        // ...
+      }).catch((error) => {
+        // Handle Errors here.
+        const errorCode = error.code;
+        const errorMessage = error.message;
+        // The email of the user's account used.
+        const email = error.customData.email;
+        // The AuthCredential type that was used.
+        const credential = GoogleAuthProvider.credentialFromError(error);
+
+        console.error(error);
+        setError(error.message);
+        // ...
+      });
+}
+
+const handleSignInWithGithub = async () => {
+  const provider = new GithubAuthProvider();
+  signInWithPopup(auth, provider)
+  .then((result) => {
+    // This gives you a GitHub Access Token. You can use it to access the GitHub API.
+    const credential = GithubAuthProvider.credentialFromResult(result);
+    const token = credential?.accessToken;
+
+    // The signed-in user info.
+    const user = result.user;
+    console.log({ user });
+    sessionStorage.setItem("user", "true");
+    setEmail("");
+    setPassword("");
+    router.push("/");
+    setError("");
+    // IdP data available using getAdditionalUserInfo(result)
+    // ...
+  }).catch((error) => {
+    // Handle Errors here.
+    const errorCode = error.code;
+    const errorMessage = error.message;
+    // The email of the user's account used.
+    const email = error.customData.email;
+    // The AuthCredential type that was used.
+    const credential = GithubAuthProvider.credentialFromError(error);
+    console.error(error);
+    setError(error.message);
+    // ...
+  });
+}
+
   return (
     <Dialog>
       <DialogTrigger asChild>
@@ -60,6 +127,16 @@ export function LoginDialogDesktop() {
           <DialogTitle>Login</DialogTitle>
         </DialogHeader>
         <div className="grid gap-4 py-4">
+        <div className="grid grid-cols-2 gap-6">
+            <Button variant="outline" onClick={handleSignInWithGithub}>
+              <Icons.gitHub className="mr-2 h-4 w-4" />
+              Github
+            </Button>
+            <Button variant="outline" onClick={handleSignInWithGoogle}>
+              <Icons.google className="mr-2 h-4 w-4" />
+              Google
+            </Button>
+          </div>
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="email" className="col-span-1 text-right">
               Email
@@ -110,78 +187,3 @@ export function LoginDialogDesktop() {
     </Dialog>
   );
 }
-/*
-<Dialog>
-                    <DialogTrigger asChild>
-                      <a
-                        href="#"
-                        className="text-gray-300 hover:bg-gray-200 hover:text-gray-800 rounded-md px-3 py-2 text-sm font-medium"
-                      >
-                        Login
-                      </a>
-                    </DialogTrigger>
-                    <DialogContent className="sm:max-w-[425px]">
-                      <DialogHeader>
-                        <DialogTitle>Login</DialogTitle>
-                      </DialogHeader>
-                      <div className="grid gap-4 py-4">
-                        <div className="grid grid-cols-4 items-center gap-4">
-                          <Label htmlFor="name" className="text-right">
-                            Email
-                          </Label>
-                          <Input
-                            id="email"
-                            type="email"
-                            placeholder="user@example.com"
-                            className="col-span-3"
-                            onChange={(e) => setEmail(e.target.value)}
-                          />
-                        </div>
-                        <div className="grid grid-cols-4 items-center gap-4">
-                          <Label htmlFor="username" className="text-right">
-                            Password
-                          </Label>
-                          <Input
-                            id="password"
-                            type="password"
-                            placeholder="Enter your password"
-                            className="col-span-3"
-                            onChange={(e) => setPassword(e.target.value)}
-                          />
-                        </div>
-                      </div>
-                      <DialogFooter>
-                        <Button type="submit" onClick={handleSignIn} >Submit</Button>
-                      </DialogFooter>
-                    </DialogContent>
-                  </Dialog>
-
-
-<Dialog>
-      <DialogTrigger asChild>
-        <Button variant="outline">Edit Profile</Button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>Edit profile</DialogTitle>
-        </DialogHeader>
-        <div className="grid gap-4 py-4">
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="name" className="text-right">
-              Name
-            </Label>
-            <Input id="name" value="Pedro Duarte" className="col-span-3" />
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="username" className="text-right">
-              Username
-            </Label>
-            <Input id="username" value="@peduarte" className="col-span-3" />
-          </div>
-        </div>
-        <DialogFooter>
-          <Button type="submit">Save changes</Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-*/
