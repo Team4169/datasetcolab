@@ -47,3 +47,6 @@ possible.txt
 *.lock
 nextjswebsite/node_modules
 nextjswebsite/.next
+*.lockb
+my-app/*.lockb
+my-app/bun.lockb

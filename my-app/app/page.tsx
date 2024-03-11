@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useState, ChangeEvent } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -17,8 +17,33 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 
 const Homepage: React.FC = () => {
-  const wait = () => new Promise((resolve) => setTimeout(resolve, 1000));
-  const [open, setOpen] = React.useState(false);
+  const [name, setName] = React.useState("");
+  const [description, setDescription] = React.useState("");
+  const [tags, setTags] = React.useState("");
+  const [visibility, setVisibility] = React.useState("public");
+  const [loading, setLoading] = React.useState(false);
+  const [error, setError] = React.useState("");
+
+  const createDataset = async () => {
+    try {
+      const response = await fetch(`https://fqk4k22rqc.execute-api.us-east-1.amazonaws.com/new/seanmabli/${name}`, {
+        method: 'POST',
+        headers: {
+          'Description': description,
+          'Tags': tags,
+          'Visibility': visibility,
+        },
+      });
+
+      if (response.ok) {
+        console.log('Data submitted successfully');
+      } else {
+        console.error('Failed to submit data');
+      }
+    } catch (error) {
+      console.error('An error occurred while submitting data:', error);
+    }
+  };
 
   return (
     <div className="bg-blue-50 min-h-screen flex items-center justify-center">
@@ -74,7 +99,6 @@ const Homepage: React.FC = () => {
             Join the Community
           </button>
         </div>
-
         <Dialog>
           <DialogTrigger asChild>
             <Button variant="outline">New Dataset</Button>
@@ -95,38 +119,60 @@ const Homepage: React.FC = () => {
                   <Badge variant="outline">username</Badge>
                   <span className="text-lg">{"     "}/</span>
                 </Label>
-                <Input id="name" className="col-span-3 ml-0" />
+                <Input
+                  id="name"
+                  className="col-span-3 ml-0"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="description">Description</Label>
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
-                <Textarea id="description" className="col-span-4" />
+                <Textarea
+                  id="description"
+                  className="col-span-4"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="tags">Tags</Label>
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
-                <Input id="tags" className="col-span-4" />
+                <Input
+                  id="tags"
+                  className="col-span-4"
+                  value={tags}
+                  onChange={(e) => setTags(e.target.value)}
+                />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="visibility">Visibility</Label>
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
-                <RadioGroup defaultValue="public">
+                <RadioGroup
+                  defaultValue="public"
+                  value={visibility}
+                  onChange={(e) =>
+                    setVisibility((e.target as HTMLInputElement).value)
+                  }
+                >
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="public" id="public" />
                     <Label htmlFor="public">Public</Label>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="private" id="private" disabled />
+                    <RadioGroupItem value="private" id="private" />{" "}
+                    {/* disable */}
                     <Label htmlFor="private">Private</Label>
                   </div>
                 </RadioGroup>
               </div>
             </div>
             <DialogFooter>
-              <Button type="submit">Create Dataset</Button>
+              <Button type="submit" onClick={createDataset}>Create Dataset</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
