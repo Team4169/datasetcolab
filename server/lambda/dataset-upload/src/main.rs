@@ -7,23 +7,24 @@ future improvements:
 use tracing_subscriber::filter::{EnvFilter, LevelFilter};
 use lambda_http::{run, service_fn, Error, Request, Response, RequestExt};
 use lambda_http::Body as LambdaBody;
-use rusoto_core::Region;
-use rusoto_s3::{S3, S3Client, PutObjectRequest};
-use rusoto_dynamodb::{DynamoDb, DynamoDbClient, GetItemInput, PutItemInput, AttributeValue};
+use rusoto_core::{Region}; // ByteStream
+use rusoto_s3::{S3Client, PutObjectRequest}; // S3
+use rusoto_s3::util::PreSignedRequest; // S3
+// use rusoto_dynamodb::{DynamoDb, DynamoDbClient, GetItemInput, PutItemInput, AttributeValue};
 use rusoto_secretsmanager::{SecretsManager, SecretsManagerClient, GetSecretValueRequest};
-use rusoto_ec2::{Ec2, Ec2Client, RunInstancesRequest};
-use std::collections::HashMap;
+// use rusoto_ec2::{Ec2, Ec2Client, RunInstancesRequest};
+use rusoto_ecs::{Ecs, EcsClient, RunTaskRequest, NetworkConfiguration, AwsVpcConfiguration};
+// use std::collections::HashMap;
 use lambda_http::http::header::HeaderValue;
 use lambda_http::http::header::HeaderMap;
 use url::Url;
 use reqwest;
 use serde_json::Value;
-use std::fs::File;
-use std::io::Read;
-use tempfile::tempdir;
-use zip::ZipArchive;
-use rusoto_core::ByteStream;
-use std::fs;
+// use std::fs::File;
+// use std::io::Read;
+// use tempfile::tempdir;
+// use zip::ZipArchive;
+// use std::fs;
 use rand::Rng;
 
 async fn function_handler(event: Request) -> Result<Response<LambdaBody>, Error> {
@@ -41,27 +42,63 @@ async fn function_handler(event: Request) -> Result<Response<LambdaBody>, Error>
     let roboflow_url = headers
         .get("roboflow_url")
         .and_then(|value| value.to_str().ok())
-        .unwrap_or("No roboflow_url header found");
-    let api_key = get_roboflow_secret().await?;
-    let (workspace, project) = parse_roboflow_url(roboflow_url);
-
-    let version_id_url = format!("https://api.roboflow.com/{}/{}/?api_key={}", workspace, project, api_key);
-    let response = reqwest::get(&version_id_url).await?;
-    let body = response.text().await?;
-    let json: Value = serde_json::from_str(&body)?;
-    let versions_array = json.get("versions").and_then(|value| value.as_array()).ok_or("Invalid JSON format")?;
-    let latest_version = versions_array.get(0).and_then(|value| value.as_object()).ok_or("Invalid JSON format")?;
-    let version_id = latest_version.get("id").and_then(|value| value.as_str()).ok_or("Version ID not found")?.to_string();
-
-    let project_info_url = format!("https://api.roboflow.com/{}/coco?api_key={}", version_id, api_key);
-    let response = reqwest::get(&project_info_url).await?;
-    let body = response.text().await?;
-    let json: Value = serde_json::from_str(&body)?;
-    println!("project_info_url {:?}", json);
-    let export = json.get("export").and_then(|value| value.as_object()).ok_or("Invalid JSON format")?;
-    let export_link = export.get("link").and_then(|value| value.as_str()).ok_or("Export link not found")?.to_string();
-    let export_size = export.get("size").and_then(|value| value.as_f64()).ok_or("Export size not found").unwrap();
+        .unwrap_or("no_roboflow_url_provided");
+    if roboflow_url == "no_roboflow_url_provided" {
+        /*
+        let s3_client = S3Client::new(Region::default());
+        let bucket_name = "datasetcolab2";
+        let object_key = format!("{}/{}/datasets/{}/", user_name, repository_name, dataset_id);
+        println!("object_key {:?}", object_key);
+        let upload_url = PutObjectRequest {
+            bucket: bucket_name.to_string(),
+            key: object_key.to_string(),
+            ..Default::default()
+        };
+        println!("upload_url {:?}", upload_url);
+        */
+    } else {
+        let api_key = get_roboflow_secret().await?;
+        let (workspace, project) = parse_roboflow_url(roboflow_url);
     
+        let version_id_url = format!("https://api.roboflow.com/{}/{}/?api_key={}", workspace, project, api_key);
+        let response = reqwest::get(&version_id_url).await?;
+        let body = response.text().await?;
+        let json: Value = serde_json::from_str(&body)?;
+        let versions_array = json.get("versions").and_then(|value| value.as_array()).ok_or("Invalid JSON format")?;
+        let latest_version = versions_array.get(0).and_then(|value| value.as_object()).ok_or("Invalid JSON format")?;
+        let version_id = latest_version.get("id").and_then(|value| value.as_str()).ok_or("Version ID not found")?.to_string();
+    
+        let project_info_url = format!("https://api.roboflow.com/{}/coco?api_key={}", version_id, api_key);
+        let response = reqwest::get(&project_info_url).await?;
+        let body = response.text().await?;
+        let json: Value = serde_json::from_str(&body)?;
+        println!("project_info_url {:?}", json);
+        let export = json.get("export").and_then(|value| value.as_object()).ok_or("Invalid JSON format")?;
+        let export_link = export.get("link").and_then(|value| value.as_str()).ok_or("Export link not found")?.to_string();
+        let export_size = export.get("size").and_then(|value| value.as_f64()).ok_or("Export size not found").unwrap();
+
+        let ecs_client = EcsClient::new(Region::default());
+
+        let request = RunTaskRequest {
+            cluster: Some("dataset-upload-cluster".to_string()),
+            task_definition: "dataset-upload-task".to_string(),
+            launch_type: Some("FARGATE".to_string()),
+            network_configuration: Some(NetworkConfiguration {
+                awsvpc_configuration: Some(AwsVpcConfiguration {
+                    subnets: vec!["subnet-0ce18eca13acc78cd".to_string()],
+                    assign_public_ip: Some("ENABLED".to_string()),
+                    ..Default::default()
+                }),
+                ..Default::default()
+            }),
+            ..Default::default()
+        };
+
+        let response = ecs_client.run_task(request).await.unwrap();
+        println!("ecs run task response: {:?}", response);
+    }
+
+    /*
     let dynamodb_client = DynamoDbClient::new(Region::default());
     let table_name = "repositories";
     let full_name = format!("{}/{}", user_name, repository_name);
@@ -79,7 +116,6 @@ async fn function_handler(event: Request) -> Result<Response<LambdaBody>, Error>
     }).await?;
     println!("repository {:?}", repository);
 
-    /*
     let cloned_item = repository.item.clone();
     let new_dataset_attribute = cloned_item.and_then(|item| item.get("datasets")).and_then(|attribute| attribute.s.clone());
     let mut datasets: Vec<Value> = new_dataset_attribute.and_then(|attribute| serde_json::from_str(&attribute).ok()).unwrap_or_default();
