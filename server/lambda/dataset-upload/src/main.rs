@@ -1,30 +1,22 @@
 /*
 future improvements:
-- roboflow exists function
 - get possible versions function (so it doesn't automatically select the latest version)
 */
 
 use tracing_subscriber::filter::{EnvFilter, LevelFilter};
 use lambda_http::{run, service_fn, Error, Request, Response, RequestExt};
 use lambda_http::Body as LambdaBody;
-use rusoto_core::{Region}; // ByteStream
-use rusoto_s3::{S3Client, PutObjectRequest}; // S3
-use rusoto_s3::util::PreSignedRequest; // S3
-use rusoto_dynamodb::{DynamoDb, DynamoDbClient, GetItemInput, PutItemInput, AttributeValue};
+use rusoto_core::Region;
+use rusoto_s3::{PutObjectRequest, util::PreSignedRequest};
+use rusoto_dynamodb::{DynamoDb, DynamoDbClient, PutItemInput, AttributeValue};
 use rusoto_secretsmanager::{SecretsManager, SecretsManagerClient, GetSecretValueRequest};
-// use rusoto_ec2::{Ec2, Ec2Client, RunInstancesRequest};
 use rusoto_ecs::{Ecs, EcsClient, RunTaskRequest, NetworkConfiguration, AwsVpcConfiguration};
+use rusoto_credential::{DefaultCredentialsProvider, ProvideAwsCredentials};
 use std::collections::HashMap;
-use lambda_http::http::header::HeaderValue;
-use lambda_http::http::header::HeaderMap;
+use lambda_http::http::header::{HeaderValue, HeaderMap};
 use url::Url;
 use reqwest;
 use serde_json::Value;
-// use std::fs::File;
-// use std::io::Read;
-// use tempfile::tempdir;
-// use zip::ZipArchive;
-// use std::fs;
 use rand::Rng;
 
 async fn function_handler(event: Request) -> Result<Response<LambdaBody>, Error> {
@@ -44,18 +36,39 @@ async fn function_handler(event: Request) -> Result<Response<LambdaBody>, Error>
         .and_then(|value| value.to_str().ok())
         .unwrap_or("no_roboflow_url_provided");
     if roboflow_url == "no_roboflow_url_provided" {
-        /*
-        let s3_client = S3Client::new(Region::default());
         let bucket_name = "datasetcolab2";
         let object_key = format!("{}/{}/datasets/{}/", user_name, repository_name, dataset_id);
         println!("object_key {:?}", object_key);
-        let upload_url = PutObjectRequest {
+      
+        let upload_request = PutObjectRequest {
             bucket: bucket_name.to_string(),
             key: object_key.to_string(),
             ..Default::default()
         };
-        println!("upload_url {:?}", upload_url);
-        */
+
+        let presigned_url = match DefaultCredentialsProvider::new() {
+            Ok(credentials_provider) => {
+                let credentials = credentials_provider.credentials().await.unwrap();
+                upload_request.get_presigned_url(
+                    &Region::default(),
+                    &credentials,
+                    &Default::default(),
+                )
+            },
+            Err(error) => {
+                eprintln!("Unable to get AWS credentials: {:?}", error);
+                return Ok(Response::builder().status(500).body("Internal Server Error".into())?);
+            }
+        };
+
+        return Ok(Response::builder()
+            .status(200)
+            .header("content-type", "application/json")
+            .body(LambdaBody::from(serde_json::json!({
+                "presigned_url": presigned_url,
+                "object_key": object_key,
+            }).to_string()))
+            .map_err(Box::new)?);
     } else {
         let api_key = get_roboflow_secret().await?;
         let (workspace, project) = parse_roboflow_url(roboflow_url);
@@ -121,6 +134,15 @@ async fn function_handler(event: Request) -> Result<Response<LambdaBody>, Error>
 
         };
         dynamodb_client.put_item(put_item_input).await?;
+
+        return Ok(Response::builder()
+            .status(200)
+            .header("content-type", "application/json")
+            .body(LambdaBody::from(serde_json::json!({
+                "task_id": task_id,
+                "export_size": export_size,
+            }).to_string()))
+            .map_err(Box::new)?);
     }
 
     /*
@@ -179,104 +201,7 @@ async fn function_handler(event: Request) -> Result<Response<LambdaBody>, Error>
     };
 
     dynamodb_client.put_item(update_item_input).await?;
-    
-    if export_size > 8192.0 {
-        let client = Ec2Client::new(Region::UsEast1);
-        let request = RunInstancesRequest {
-            image_id: Some("ami-12345678".to_string()),
-            instance_type: Some("t2.micro".to_string()),
-            ..Default::default()
-        };
-        let response = client.run_instances(request).await?;
-        
-    } else {
-        let response = reqwest::get(&export_link).await?;
-        let bytes = response.bytes().await?;
-        let zip_data = bytes.to_vec();
-        println!("zip_data");
-
-        let temp_dir = tempdir()?;
-        let temp_file_path = temp_dir.path().join("export.zip");
-        std::fs::write(&temp_file_path, &zip_data)?;
-        println!("temp_file_path {:?}", temp_file_path);
-
-        let file_size = fs::metadata(&temp_file_path)?.len();
-        println!("File size: {} bytes", file_size);
-
-        println!("{:?}", temp_dir.path());
-
-        if !temp_file_path.exists() {
-            return Err(Error::from("File does not exist"));
-        }
-
-        let file = File::open(&temp_file_path)?;
-        let mut zip = ZipArchive::new(file)?;
-
-        for i in 0..zip.len() {
-            let mut file = zip.by_index(i)?;
-            let file_path = temp_dir.path().join(file.name());
-            if (&*file.name()).ends_with('/') {
-                fs::create_dir_all(&file_path)?;
-            } else {
-                if let Some(p) = file_path.parent() {
-                    if !p.exists() {
-                        fs::create_dir_all(&p)?;
-                    }
-                }
-                let mut outfile = fs::File::create(&file_path)?;
-                std::io::copy(&mut file, &mut outfile)?;
-            }
-        }
-
-        let s3_client = S3Client::new(Region::UsEast1);
-
-        let mut file_paths = Vec::new();
-        let mut full_file_paths = Vec::new();
-        for entry in std::fs::read_dir(&temp_dir)? {
-            let entry = entry?;
-            if entry.path().is_dir() {
-                let dataset_dir = entry.path().file_name().ok_or("Invalid file path")?.to_string_lossy().to_string();
-                for entry in std::fs::read_dir(&entry.path())? {
-                    let entry = entry?;
-                    let file_path = entry.path().as_path().to_path_buf();
-                    if file_path.is_file() {
-                        file_paths.push(file_path.clone());
-                        let file_name = file_path
-                            .file_name()
-                            .ok_or("Invalid file path")?
-                            .to_string_lossy()
-                            .to_string();
-                        full_file_paths.push(format!("{}/{}/datasets/{}/{}/{}", user_name, repository_name, dataset_id, dataset_dir, file_name));
-                    }
-                }
-            }
-        }
-        println!("file_paths {:?}", file_paths);
-        println!("full_file_paths {:?}", full_file_paths);
-
-        for (i, file_path) in file_paths.iter().enumerate() {
-            let file_bytes = {
-                let mut file = File::open(&file_path)?;
-                let mut bytes = Vec::new();
-                file.read_to_end(&mut bytes)?;
-                bytes
-            };
-            let key = &full_file_paths[i];
-            let request = PutObjectRequest {
-                bucket: "datasetcolab2".to_string(),
-                key: key.to_string(),
-                body: Some(ByteStream::from(file_bytes)),
-                ..Default::default()
-            };
-            s3_client.put_object(request).await?;
-        }
-    }
     */
-    Ok(Response::builder()
-        .status(200)
-        .header("content-type", "application/json")
-        .body(LambdaBody::from("Exported to S3"))
-        .map_err(Box::new)?)
 }
 
 fn generate_random_combination() -> String {

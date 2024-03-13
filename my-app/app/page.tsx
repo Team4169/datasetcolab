@@ -26,12 +26,12 @@ const Homepage: React.FC = () => {
 
   const createDataset = async () => {
     try {
-      const response = await fetch(`https://fqk4k22rqc.execute-api.us-east-1.amazonaws.com/new/seanmabli/${name}`, {
+      const response = await fetch(`https://fqk4k22rqc.execute-api.us-east-1.amazonaws.com/seanmabli/${name}/init`, {
         method: 'POST',
         headers: {
-          'Description': description,
-          'Tags': tags,
-          'Visibility': visibility,
+          'description': description,
+          'tags': tags,
+          'visibility': visibility,
         },
       });
 
@@ -44,6 +44,19 @@ const Homepage: React.FC = () => {
       console.error('An error occurred while submitting data:', error);
     }
   };
+
+  const repoExists = async (name: string): Promise<boolean> => {
+    try {
+      const response = await fetch(`https://fqk4k22rqc.execute-api.us-east-1.amazonaws.com/seanmabli/${name}/exists`, {
+        method: 'GET',
+      });
+
+      return response.ok;
+    } catch (error) {
+      console.error('An error occurred while checking if repo exists:', error);
+      return false;
+    }
+  }
 
   return (
     <div className="bg-blue-50 min-h-screen flex items-center justify-center">
@@ -119,12 +132,38 @@ const Homepage: React.FC = () => {
                   <Badge variant="outline">username</Badge>
                   <span className="text-lg">{"     "}/</span>
                 </Label>
-                <Input
-                  id="name"
-                  className="col-span-3 ml-0"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                />
+                {await repoExists(name) === true && (
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Input
+                      id="name"
+                      className="col-span-3 ml-0 bg-green-200"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                    />
+                  </div>
+                )}
+
+                {await repoExists(name) === false && (
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Input
+                      id="name"
+                      className="col-span-3 ml-0 bg-red-200"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                    />
+                  </div>
+                )}
+
+                {await repoExists(name) === null && (
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Input
+                      id="name"
+                      className="col-span-3 ml-0 bg-gray-200"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                    />
+                  </div>
+                )}
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="description">Description</Label>
@@ -164,8 +203,7 @@ const Homepage: React.FC = () => {
                     <Label htmlFor="public">Public</Label>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="private" id="private" />{" "}
-                    {/* disable */}
+                    <RadioGroupItem value="private" id="private" />
                     <Label htmlFor="private">Private</Label>
                   </div>
                 </RadioGroup>
