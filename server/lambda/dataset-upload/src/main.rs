@@ -10,11 +10,11 @@ use lambda_http::Body as LambdaBody;
 use rusoto_core::{Region}; // ByteStream
 use rusoto_s3::{S3Client, PutObjectRequest}; // S3
 use rusoto_s3::util::PreSignedRequest; // S3
-// use rusoto_dynamodb::{DynamoDb, DynamoDbClient, GetItemInput, PutItemInput, AttributeValue};
+use rusoto_dynamodb::{DynamoDb, DynamoDbClient, GetItemInput, PutItemInput, AttributeValue};
 use rusoto_secretsmanager::{SecretsManager, SecretsManagerClient, GetSecretValueRequest};
 // use rusoto_ec2::{Ec2, Ec2Client, RunInstancesRequest};
 use rusoto_ecs::{Ecs, EcsClient, RunTaskRequest, NetworkConfiguration, AwsVpcConfiguration};
-// use std::collections::HashMap;
+use std::collections::HashMap;
 use lambda_http::http::header::HeaderValue;
 use lambda_http::http::header::HeaderMap;
 use url::Url;
@@ -78,8 +78,7 @@ async fn function_handler(event: Request) -> Result<Response<LambdaBody>, Error>
         let export_size = export.get("size").and_then(|value| value.as_f64()).ok_or("Export size not found").unwrap();
 
         let ecs_client = EcsClient::new(Region::default());
-
-        let request = RunTaskRequest {
+        let ecs_request = RunTaskRequest {
             cluster: Some("dataset-upload-cluster".to_string()),
             task_definition: "dataset-upload-task".to_string(),
             launch_type: Some("FARGATE".to_string()),
@@ -93,9 +92,35 @@ async fn function_handler(event: Request) -> Result<Response<LambdaBody>, Error>
             }),
             ..Default::default()
         };
+        let ecs_response = ecs_client.run_task(ecs_request).await.unwrap();
+        println!("ecs_response {:?}", ecs_response);
+    
+        let task_arn = ecs_response.tasks.unwrap().get(0).and_then(|task| task.task_arn.clone()).unwrap_or("".to_string());
+        let task_id = task_arn.split("/").last().unwrap_or("").to_string();
+        println!("task_id {:?}", task_id);
 
-        let response = ecs_client.run_task(request).await.unwrap();
-        println!("ecs run task response: {:?}", response);
+        let dynamodb_client = DynamoDbClient::new(Region::default());
+        let table_name = "upload";
+        let mut item = HashMap::new();
+        item.insert("id".to_string(), AttributeValue {
+            s: Some(task_id.to_string()),
+            ..Default::default()
+        });
+        item.insert("roboflow_export_link".to_string(), AttributeValue {
+            s: Some(export_link.to_string()),
+            ..Default::default()
+        });
+        item.insert("file_key".to_string(), AttributeValue {
+            s: Some(format!("{}/{}/datasets/{}/", user_name, repository_name, dataset_id)),
+            ..Default::default()
+        });
+        let put_item_input = PutItemInput {
+            table_name: table_name.to_string(),
+            item: item,
+            ..Default::default()
+
+        };
+        dynamodb_client.put_item(put_item_input).await?;
     }
 
     /*
