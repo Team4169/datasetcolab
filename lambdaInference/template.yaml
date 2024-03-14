@@ -1,0 +1,22 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  yolov8-inference
+
+Resources:
+  YOLOV8Function:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: lambda-codebase/
+      Handler: app.main
+      Runtime: python3.9
+      MemorySize: 10240
+      Timeout: 60
+      FunctionUrlConfig:
+        AuthType: NONE
+
+Outputs:
+  YOLOV8FunctionUrlEndpoint:
+      Description: "URL Endpoint"
+      Value:
+        Fn::GetAtt: YOLOV8FunctionUrl.FunctionUrl
