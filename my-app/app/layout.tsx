@@ -57,10 +57,14 @@ export default function RootLayout({
                     <Button type="submit">Search</Button>
                   </div>
                 </div>
-                <div className="ml-4">
-                </div>
+                <div className="ml-4"></div>
               </div>
-              <LoginDialogDesktop />
+              <a
+                href="/auth/login"
+                className="text-gray-300 hover:bg-gray-200 hover:text-gray-800 rounded-md px-3 py-2 text-sm font-medium"
+              >
+                Login
+              </a>
             </div>
             <div className="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0">
               <div className="relative ml-3">

@@ -132,6 +132,7 @@ const Homepage: React.FC = () => {
                   <Badge variant="outline">username</Badge>
                   <span className="text-lg">{"     "}/</span>
                 </Label>
+                {/*
                 {await repoExists(name) === true && (
                   <div className="grid grid-cols-4 items-center gap-4">
                     <Input
@@ -164,6 +165,7 @@ const Homepage: React.FC = () => {
                     />
                   </div>
                 )}
+                */}
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="description">Description</Label>
