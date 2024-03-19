@@ -8,9 +8,10 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { cookies } from 'next/headers'
 
-import { LoginDialogDesktop } from "@/components/auth/loginDialogDesktop";
 import { LoginDialogMobile } from "@/components/auth/loginDialogMobile";
+import { LogoutUser } from "@/components/auth/logoutUser";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -24,6 +25,19 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const cookieStore = cookies()
+  let sessionTokenCookie:any = cookieStore.get('user')
+  let user:any;
+  if (!(sessionTokenCookie === undefined)) {
+    user = sessionTokenCookie.value;
+  }
+  let signedIn = false;
+  if (user!=undefined) {
+    if (user === 'true') {
+      signedIn = true;
+    }
+  }
+  
   return (
     <html lang="en">
       <nav className="bg-white">
@@ -59,12 +73,10 @@ export default function RootLayout({
                 </div>
                 <div className="ml-4"></div>
               </div>
-              <a
-                href="/auth/login"
-                className="text-gray-300 hover:bg-gray-200 hover:text-gray-800 rounded-md px-3 py-2 text-sm font-medium"
-              >
-                Login
-              </a>
+              {signedIn ? <LogoutUser /> : (<a
+              href="/auth/login"
+              className="text-gray-300 hover:bg-gray-200 hover:text-gray-800 rounded-md px-3 py-2 text-sm font-medium"
+            >Login</a>)}
             </div>
             <div className="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0">
               <div className="relative ml-3">

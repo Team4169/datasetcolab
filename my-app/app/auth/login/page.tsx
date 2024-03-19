@@ -37,19 +37,23 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 
+import { setCookie } from "@/components/auth/setCookie";
+
+
 export default function AuthenticationPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [signInWithEmailAndPassword] = useSignInWithEmailAndPassword(auth);
   const [error, setError] = useState("");
   const router = useRouter();
+
   
 
   const handleSignIn = async () => {
     try {
       const res = await signInWithEmailAndPassword(email, password);
       console.log({ res });
-      sessionStorage.setItem("user", "true");
+      setCookie('user', 'true');
       setEmail("");
       setPassword("");
       router.push("/");
@@ -70,7 +74,7 @@ export default function AuthenticationPage() {
         // The signed-in user info.
         const user = result.user;
         console.log({ user });
-        sessionStorage.setItem("user", "true");
+        setCookie('user', 'true');
         setEmail("");
         setPassword("");
         router.push("/");
@@ -103,7 +107,7 @@ export default function AuthenticationPage() {
         // The signed-in user info.
         const user = result.user;
         console.log({ user });
-        sessionStorage.setItem("user", "true");
+        setCookie('user', 'true');
         setEmail("");
         setPassword("");
         router.push("/");
