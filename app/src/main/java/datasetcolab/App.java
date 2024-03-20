@@ -547,7 +547,10 @@ public class App {
 
                 String model = ctx.pathParam("model");
                 String fileName = "";
-                if (model.startsWith("YOLO")) {
+                if (model == "YOLOv8n") {
+                    fileName = "models/" + model + "/" + model + ctx.queryParam("downloadType") + (ctx.queryParam("downloadType") == "" ? ".pt" : ".zip");
+                }
+                else if (model.startsWith("YOLO")) {
                     fileName = "models/" + model + "/weights/best.pt";
                 } else {
                     fileName = "models/" + model + "/" + model + ctx.queryParam("downloadType") + ".zip";
