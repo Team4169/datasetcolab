@@ -1,6 +1,7 @@
 "use client"
 import React, { useState, useEffect, useRef } from 'react';
 import {Button} from '../../components/ui/button';
+import './DrawableCanvas.css'; // Importing a separate CSS file for styles
 
 interface Rectangle {
   startX: number;
@@ -100,24 +101,30 @@ const DrawableCanvas: React.FC = () => {
   const handleClearRectangles = () => {
     setRectangles([]);
   }
-
+  // className="color-button red"
+  // className="color-button green"
+  // className="color-button blue"
+  // className="control-button"
   return (
-    <>
-      <canvas
-        ref={canvasRef}
-        onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
-        style={{ width: '750px', height: '750px' }} // Adjust canvas size for CSS, keeping actual drawing scaled
-      />
-      <div>
-        <Button onClick={() => handleChangeColor('red')}>Red</Button>
-        <Button onClick={() => handleChangeColor('green')}>Green</Button>
-        <Button onClick={() => handleChangeColor('blue')}>Blue</Button>
+    <div className="annotation-container">
+      <div className="toolbar">
+        <Button style={{ marginRight: '10px' }} onClick={() => handleChangeColor('red')}>Red</Button>
+        <Button style={{ marginRight: '10px' }} onClick={() => handleChangeColor('green')}>Green</Button>
+        <Button style={{ marginRight: '10px' }} onClick={() => handleChangeColor('blue')}>Blue</Button>
         <Button onClick={() => handleClearRectangles()}>Clear</Button>
       </div>
-    </>
+      <div className="canvas-container">
+        <canvas
+          ref={canvasRef}
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          className="drawable-canvas"
+        />
+      </div>
+    </div>
   );
 };
+
 
 export default DrawableCanvas;
