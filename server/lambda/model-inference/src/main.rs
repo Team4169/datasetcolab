@@ -1,33 +1,38 @@
 use tracing_subscriber::filter::{EnvFilter, LevelFilter};
 use lambda_http::{run, service_fn, Error, Request, Response};
 use lambda_http::Body;
-use onnxruntime::{environment::Environment, GraphOptimizationLevel, LoggingLevel, session::{Session, SessionOptions}};
-use std::path::Path;
+use onnxruntime::{environment::Environment, GraphOptimizationLevel, LoggingLevel, tensor::OrtOwnedTensor, ndarray::Array};
+use std::fs::read;
 
 async fn function_handler(_event: Request) -> Result<Response<Body>, Error> {
     let environment = Environment::builder()
         .with_name("onnxruntime_image_inference_example")
         .with_log_level(LoggingLevel::Verbose)
-        .build()
-        .unwrap();
+        .build()?;
 
-    let model_path = Path::new("best2.onnx");
+    let mut session = environment
+        .new_session_builder()?
+        .with_optimization_level(GraphOptimizationLevel::Basic)?
+        .with_number_threads(1)?
+        .with_model_from_file("best2.onnx")?;
 
-    // Create session options
-    let options = SessionOptions::new()
-        .with_environment(environment)
-        .with_model_from_file(model_path)
-        .with_optimization_level(GraphOptimizationLevel::Basic)
-        .unwrap();
+    let image_data = read("am-4999.jpg").expect("Failed to read image file");
+    
 
-    // Create the session
-    let session = Session::new(options).unwrap();
+    /*
+    let input_tensor = OrtOwnedTensor::from(Array::from(image_data).into_dyn());
+    let outputs: Vec<OrtOwnedTensor<f32, _>> = session.run(vec![input_tensor])?;
+        
+
+    for output in outputs {
+        println!("{:?}", output);
+    }
+    */
 
     Ok(Response::builder()
         .status(200)
-        .header("Content-Type", "application/json")
         .body(Body::from("Hello, World!"))
-        .expect("Failed to construct response"))
+        .expect("Failed to render response"))
 }
 
 #[tokio::main]
