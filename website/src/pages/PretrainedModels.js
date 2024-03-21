@@ -64,7 +64,7 @@ export default function PretrainedModels() {
     const [showCopyAlert, setShowCopyAlert] = useState(false);
 
     const [datasets, setDatasets] = useState([
-        { name: "YOLOv8", dataset: "FRC 2024", model: "YOLOv8n", variants: ["YOLOv8n", "YOLOv8s"], classes: ["note", "robot"], download: "direct" },
+        { name: "YOLOv8", dataset: "FRC 2024", model: "YOLOv8n", variants: ["YOLOv8n", "YOLOv8s"], downloadType: "PyTorch", downloadTypes: ["PyTorch", "TFLite"], classes: ["note", "robot"], download: "direct" },
         { name: "YOLOv6", dataset: "FRC 2024", model: "YOLOv6n", variants: ["YOLOv6n", "YOLOv6s"], classes: ["note", "robot"], download: "direct" },
         { name: "YOLOv5", dataset: "FRC 2024", model: "YOLOv5n", variants: ["YOLOv5n", "YOLOv5s"], classes: ["note", "robot"], download: "direct" },
         { name: "SSD Mobilenet v2", dataset: "FRC 2024", model: "ssdmobilenet", downloadType: "TFLite", downloadTypes: ["TFLite", "Tensorflow"], classes: ["note", "robot"], download: "direct" },
@@ -293,7 +293,12 @@ export default function PretrainedModels() {
         if (dataset.model === "efficientdet" || dataset.model === "ssdmobilenet") {
             downloadType = dataset.downloadType === "Tensorflow" ? "TF" : "TFLite";
             fileType = ".zip";
-        } else {
+        }
+        if (dataset.model === "YOLOv8n") {
+            downloadType = dataset.downloadType === "PyTorch" ? "" : "TFLite";
+            fileType = downloadType === "TFLite" ? ".zip" : ".pt";
+        }
+        else {
             fileType = ".pt";
         }
 
