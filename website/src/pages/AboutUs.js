@@ -11,9 +11,7 @@ const AboutUs = () => {
         enhances autonomous performance in advanced object-detection systems.
       </p>
       <p>
-        Dataset Colab was developed by Warrior Robotics (FRC Team 4169). Warrior
-        Robotics consisting of 35 students from Lincoln Sudbury Regional High
-        School and is entirely student-led. Over the past two years we have
+        Dataset Colab was developed by Arjun Goray and Sean Mabli. Over the past two years we have
         developed a comprehensive object detection system that allows our robot
         to quickly pick up game objects. Dataset Colab was developed in response
         to the poor preformance of our object detection models because of small

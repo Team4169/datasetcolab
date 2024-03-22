@@ -184,8 +184,11 @@ export default function RootLayout({
           </CommandGroup>
         </CommandList>
       </CommandDialog>
-      <header className="sticky top-0 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6">
-        <nav className="hidden flex-col gap-6 text-lg font-medium md:flex md:flex-row md:items-center md:gap-5 md:text-sm lg:gap-6">
+      <header className="sticky top-0 flex h-16 items-center gap-2 border-b bg-background px-4 md:px-6">
+        <nav
+          className="hidden flex-col gap-6 text-lg font-medium md:flex md:flex-row md:items-center md:gap-5 md:text-sm lg:gap-6"
+          style={{ gap: "0" }}
+        >
           <Link
             href="/"
             className="flex items-center gap-2 text-lg font-semibold md:text-base"
@@ -193,36 +196,15 @@ export default function RootLayout({
             <Package2 className="h-6 w-6" />
             <span className="sr-only">Acme Inc</span>
           </Link>
-          <Button variant="link">
+          <Button variant="link" style={{ marginLeft: "10px" }}>
             <Link href="/docs">Explore Datasets</Link>
           </Button>
           <Button variant="link">
             <Link href="/docs">Documentation</Link>
           </Button>
-          <Link
-            href="/docs"
-            className="text-muted-foreground transition-colors hover:text-foreground gap-3 rounded-lg bg-muted px-3 py-2 text-primary"
-          >
-            Documentation
-          </Link>
-          <Link
-            href="/discuss"
-            className="text-muted-foreground transition-colors hover:text-foreground"
-          >
-            Discuss
-          </Link>
-          <Link
-            href="#"
-            className="text-muted-foreground transition-colors hover:text-foreground"
-          >
-            Customers
-          </Link>
-          <Link
-            href="#"
-            className="text-foreground transition-colors hover:text-foreground"
-          >
-            Settings
-          </Link>
+          <Button variant="link">
+            <Link href="/docs">About Us</Link>
+          </Button>
         </nav>
         <Sheet>
           <SheetTrigger asChild>
@@ -274,17 +256,10 @@ export default function RootLayout({
             </nav>
           </SheetContent>
         </Sheet>
-        <div className="flex w-full items-center gap-4 md:ml-auto md:gap-2 lg:gap-4">
+        <div className="flex w-full items-center gap-2 md:ml-auto md:gap-2 lg:gap-4">
           <div className="ml-auto flex-1 sm:flex-initial">
-            <Button style={{ marginRight: "10px" }} variant="ghost">
-              <Link href="/auth/login" className="text-muted-foreground">
-                Login
-              </Link>
-            </Button>
-            <Button variant="outline">
-              <Link href="/auth/signup" className="text-muted-foreground">
-                Signup
-              </Link>
+            <Button variant="link" style={{ marginRight: "10px" }}>
+              <Link href="/auth/login">Login / Signup</Link>
             </Button>
           </div>
         </div>
