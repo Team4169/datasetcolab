@@ -1,1 +1,0 @@
-Pin<Box<dyn Future<Output = Result<GetItemOutput, RusotoError<GetItemError>>> + Send>>

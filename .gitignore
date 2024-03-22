@@ -50,3 +50,5 @@ nextjswebsite/.next
 *.lockb
 my-app/*.lockb
 my-app/bun.lockb
+new-website/node_modules
+new-website/.next

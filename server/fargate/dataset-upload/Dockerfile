@@ -1,9 +1,8 @@
-FROM rust:latest as builder
+FROM python:3-alpine
 WORKDIR /usr/src/app
-COPY . .
-RUN cargo build --release
+COPY requirements.txt ./
+RUN pip install --no-cache-dir -r requirements.txt
 
-FROM debian:buster-slim
-WORKDIR /usr/src/app
-COPY --from=builder /usr/src/app/target/release/myapp ./myapp
-CMD ["./myapp"]
+COPY src/ .
+
+CMD ["python", "main.py"]
