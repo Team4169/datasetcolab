@@ -28,7 +28,6 @@ async fn function_handler(event: Request) -> Result<Response<LambdaBody>, Error>
         .path_parameters_ref()
         .and_then(|params| params.first("repo"))
         .unwrap_or("default");
-    let dataset_id = generate_random_combination();
 
     let headers: &HeaderMap<HeaderValue> = event.headers();
     let roboflow_url = headers
@@ -37,6 +36,7 @@ async fn function_handler(event: Request) -> Result<Response<LambdaBody>, Error>
         .unwrap_or("no_roboflow_url_provided");
     if roboflow_url == "no_roboflow_url_provided" {
         let bucket_name = "datasetcolab2";
+        let dataset_id = generate_random_combination();
         let object_key = format!("{}/{}/datasets/{}/", user_name, repository_name, dataset_id);
         println!("object_key {:?}", object_key);
       
@@ -124,7 +124,7 @@ async fn function_handler(event: Request) -> Result<Response<LambdaBody>, Error>
             ..Default::default()
         });
         item.insert("file_key".to_string(), AttributeValue {
-            s: Some(format!("{}/{}/datasets/{}/", user_name, repository_name, dataset_id)),
+            s: Some(format!("{}/{}/datasets/{}/", user_name, repository_name, task_id)),
             ..Default::default()
         });
         let put_item_input = PutItemInput {

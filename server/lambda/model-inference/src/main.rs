@@ -3,20 +3,31 @@ use lambda_http::{run, service_fn, Error, Request, Response};
 use lambda_http::Body;
 use onnxruntime::{environment::Environment, GraphOptimizationLevel, LoggingLevel, tensor::OrtOwnedTensor, ndarray::Array};
 use std::fs::read;
+use lambda_http::http::header::{HeaderValue, HeaderMap};
 
-async fn function_handler(_event: Request) -> Result<Response<Body>, Error> {
+async fn function_handler(event: Request) -> Result<Response<Body>, Error> {
+
+    let headers: &HeaderMap<HeaderValue> = event.headers();
+    let image = headers
+        .get("image")
+        .and_then(|value| value.to_str().ok())
+        .unwrap_or("no_image");
+
     let environment = Environment::builder()
         .with_name("onnxruntime_image_inference_example")
-        .with_log_level(LoggingLevel::Verbose)
+        .with_log_level(LoggingLevel::Info)
         .build()?;
 
+        /*
     let mut session = environment
         .new_session_builder()?
         .with_optimization_level(GraphOptimizationLevel::Basic)?
         .with_number_threads(1)?
         .with_model_from_file("best2.onnx")?;
 
+    
     let image_data = read("am-4999.jpg").expect("Failed to read image file");
+    */
     
 
     /*

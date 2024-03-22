@@ -1,6 +1,0 @@
-- automatic dataset checking and upload (support all dataset types in roboflowTypes.txt)
-- dataset download (on website and with a curl api)
-- viewing images before upload (conferming valid dataset type on website side)
-- nicer website
-    - home page
-- add obstruction to final dataset
