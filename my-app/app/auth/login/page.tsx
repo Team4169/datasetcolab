@@ -56,7 +56,7 @@ export default function AuthenticationPage() {
       setCookie('user', 'true');
       setEmail("");
       setPassword("");
-      router.push("/");
+      window.location.reload()
       setError("");
     } catch (e: any) {
       console.error(e);
@@ -77,7 +77,7 @@ export default function AuthenticationPage() {
         setCookie('user', 'true');
         setEmail("");
         setPassword("");
-        router.push("/");
+        window.location.reload()
         setError("");
         // IdP data available using getAdditionalUserInfo(result)
         // ...
@@ -110,7 +110,7 @@ export default function AuthenticationPage() {
         setCookie('user', 'true');
         setEmail("");
         setPassword("");
-        router.push("/");
+        window.location.reload()
         setError("");
         // IdP data available using getAdditionalUserInfo(result)
         // ...

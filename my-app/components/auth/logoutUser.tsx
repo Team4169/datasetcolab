@@ -2,11 +2,14 @@
 import { signOut } from "firebase/auth";
 import { auth } from "../../app/firebase/config";
 import { setCookie } from "@/components/auth/setCookie";
+import { useRouter } from "next/navigation";
 
 export function LogoutUser() {
+  const router = useRouter();
   const handleLogout = () =>
     signOut(auth)
       .then(() => {
+        window.location.reload()
         setCookie("user", "false");
       })
       .catch((error) => {

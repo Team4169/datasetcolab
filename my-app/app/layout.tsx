@@ -12,6 +12,10 @@ import { cookies } from 'next/headers'
 
 import { LoginDialogMobile } from "@/components/auth/loginDialogMobile";
 import { LogoutUser } from "@/components/auth/logoutUser";
+import {onAuthStateChanged } from "firebase/auth";
+import {auth} from ".//firebase/config";
+
+import {GetUser} from "./firebase/GetUser";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -25,6 +29,7 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  /*
   const cookieStore = cookies()
   let sessionTokenCookie:any = cookieStore.get('user')
   let user:any;
@@ -37,6 +42,9 @@ export default function RootLayout({
       signedIn = true;
     }
   }
+  */
+  //console.log(valueOf(GetUser));
+  
   
   return (
     <html lang="en">
@@ -73,10 +81,11 @@ export default function RootLayout({
                 </div>
                 <div className="ml-4"></div>
               </div>
-              {signedIn ? <LogoutUser /> : (<a
+              {GetUser != undefined ? <LogoutUser /> : (<a
               href="/auth/login"
               className="text-gray-300 hover:bg-gray-200 hover:text-gray-800 rounded-md px-3 py-2 text-sm font-medium"
-            >Login</a>)}
+              >Login</a>)}
+            <LogoutUser />
             </div>
             <div className="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0">
               <div className="relative ml-3">
