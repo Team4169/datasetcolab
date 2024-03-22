@@ -1,13 +1,10 @@
 "use client";
 import { useState } from "react";
 import { useSignInWithEmailAndPassword } from "react-firebase-hooks/auth";
-import { useCreateUserWithEmailAndPassword } from "react-firebase-hooks/auth";
 import { useUpdateProfile } from "react-firebase-hooks/auth";
 import { auth } from "../../firebase/config";
 import { useRouter } from "next/navigation";
 import { Metadata } from "next";
-import Image from "next/image";
-import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Icons } from "@/components/icons";
 import { Label } from "@/components/ui/label";
@@ -27,16 +24,6 @@ import {
   GoogleAuthProvider,
 } from "firebase/auth";
 
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-
 import { setCookie } from "@/components/auth/setCookie";
 
 
@@ -53,10 +40,8 @@ export default function AuthenticationPage() {
     try {
       const res = await signInWithEmailAndPassword(email, password);
       console.log({ res });
-      setCookie('user', 'true');
       setEmail("");
       setPassword("");
-      window.location.reload()
       setError("");
     } catch (e: any) {
       console.error(e);
@@ -74,10 +59,8 @@ export default function AuthenticationPage() {
         // The signed-in user info.
         const user = result.user;
         console.log({ user });
-        setCookie('user', 'true');
         setEmail("");
         setPassword("");
-        window.location.reload()
         setError("");
         // IdP data available using getAdditionalUserInfo(result)
         // ...
@@ -107,10 +90,8 @@ export default function AuthenticationPage() {
         // The signed-in user info.
         const user = result.user;
         console.log({ user });
-        setCookie('user', 'true');
         setEmail("");
         setPassword("");
-        window.location.reload()
         setError("");
         // IdP data available using getAdditionalUserInfo(result)
         // ...
