@@ -1,13 +1,12 @@
-// "use client";
-// import React from "react";
+"use client";
+import React from "react";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import Link from "next/link";
 
-import { Button } from "@/components/ui/button";
-
 import { Menu, Package2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 import {
@@ -29,7 +28,6 @@ const metadata: Metadata = {
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
-  /*
   const [open, setOpen] = React.useState(false);
 
   React.useEffect(() => {
@@ -42,7 +40,7 @@ export default function RootLayout({
     document.addEventListener("keydown", down);
     return () => document.removeEventListener("keydown", down);
   }, []);
-  */
+
   /*
   const cookieStore = cookies()
   let sessionTokenCookie:any = cookieStore.get('user')
@@ -146,8 +144,8 @@ export default function RootLayout({
   );
   */
 
-  /*
-
+  return (
+    <html lang="en">
       <CommandDialog open={open} onOpenChange={setOpen}>
         <CommandInput placeholder="Type a command or search..." />
         <CommandList>
@@ -159,10 +157,6 @@ export default function RootLayout({
           </CommandGroup>
         </CommandList>
       </CommandDialog>
-*/
-
-  return (
-    <html lang="en">
       <div className="flex min-h-screen w-full flex-col">
         <header className="sticky top-0 flex h-16 items-center gap-2 border-b bg-background px-4 md:px-6">
           <nav
@@ -238,6 +232,19 @@ export default function RootLayout({
           </Sheet>
           <div className="flex w-full items-center gap-2 md:ml-auto md:gap-2 lg:gap-4">
             <div className="ml-auto flex-1 sm:flex-initial">
+              <Button
+                variant="outline"
+                className="relative h-8 w-full justify-start rounded-[0.5rem] bg-background text-sm font-normal text-muted-foreground shadow-none sm:pr-12 md:w-40 lg:w-64"
+                onClick={() => setOpen(true)}
+              >
+                <span className="hidden lg:inline-flex">
+                  Search...
+                </span>
+                <span className="inline-flex lg:hidden">Search...</span>
+                <kbd className="pointer-events-none absolute right-[0.3rem] top-[0.3rem] hidden h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium opacity-100 sm:flex">
+                  <span className="text-xs">⌘</span>K
+                </kbd>
+              </Button>
               <Button variant="link" style={{ marginRight: "10px" }}>
                 <Link href="/auth/login">Login / Signup</Link>
               </Button>
