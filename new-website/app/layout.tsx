@@ -1,5 +1,5 @@
-"use client";
-import React from "react";
+// "use client";
+// import React from "react";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
@@ -29,6 +29,7 @@ const metadata: Metadata = {
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  /*
   const [open, setOpen] = React.useState(false);
 
   React.useEffect(() => {
@@ -41,6 +42,7 @@ export default function RootLayout({
     document.addEventListener("keydown", down);
     return () => document.removeEventListener("keydown", down);
   }, []);
+  */
   /*
   const cookieStore = cookies()
   let sessionTokenCookie:any = cookieStore.get('user')
@@ -144,8 +146,8 @@ export default function RootLayout({
   );
   */
 
-  return (
-    <div className="flex min-h-screen w-full flex-col">
+  /*
+
       <CommandDialog open={open} onOpenChange={setOpen}>
         <CommandInput placeholder="Type a command or search..." />
         <CommandList>
@@ -157,88 +159,93 @@ export default function RootLayout({
           </CommandGroup>
         </CommandList>
       </CommandDialog>
-      <header className="sticky top-0 flex h-16 items-center gap-2 border-b bg-background px-4 md:px-6">
-        <nav
-          className="hidden flex-col gap-6 text-lg font-medium md:flex md:flex-row md:items-center md:gap-5 md:text-sm lg:gap-6"
-          style={{ gap: "0" }}
-        >
-          <Link
-            href="/"
-            className="flex items-center gap-2 text-lg font-semibold md:text-base"
-          >
-            <Package2 className="h-6 w-6" />
-            <span className="sr-only">Acme Inc</span>
-          </Link>
-          <Button variant="link" style={{ marginLeft: "10px" }}>
-            <Link href="/explore">Explore Datasets</Link>
-          </Button>
-          <Button variant="link">
-            <Link href="/docs">Documentation</Link>
-          </Button>
-          <Button variant="link">
-            <Link href="/about">About Us</Link>
-          </Button>
+*/
 
-        </nav>
-        <Sheet>
-          <SheetTrigger asChild>
-            <Button
-              variant="outline"
-              size="icon"
-              className="shrink-0 md:hidden"
+  return (
+    <html lang="en">
+      <div className="flex min-h-screen w-full flex-col">
+        <header className="sticky top-0 flex h-16 items-center gap-2 border-b bg-background px-4 md:px-6">
+          <nav
+            className="hidden flex-col gap-6 text-lg font-medium md:flex md:flex-row md:items-center md:gap-5 md:text-sm lg:gap-6"
+            style={{ gap: "0" }}
+          >
+            <Link
+              href="/"
+              className="flex items-center gap-2 text-lg font-semibold md:text-base"
             >
-              <Menu className="h-5 w-5" />
-              <span className="sr-only">Toggle navigation menu</span>
+              <Package2 className="h-6 w-6" />
+              <span className="sr-only">Acme Inc</span>
+            </Link>
+            <Button variant="link" style={{ marginLeft: "10px" }}>
+              <Link href="/explore">Explore Datasets</Link>
             </Button>
-          </SheetTrigger>
-          <SheetContent side="left">
-            <nav className="grid gap-6 text-lg font-medium">
-              <Link
-                href="#"
-                className="flex items-center gap-2 text-lg font-semibold"
-              >
-                <Package2 className="h-6 w-6" />
-                <span className="sr-only">Acme Inc</span>
-              </Link>
-              <Link
-                href="#"
-                className="text-muted-foreground hover:text-foreground"
-              >
-                Dashboard
-              </Link>
-              <Link
-                href="#"
-                className="text-muted-foreground hover:text-foreground"
-              >
-                Orders
-              </Link>
-              <Link
-                href="#"
-                className="text-muted-foreground hover:text-foreground"
-              >
-                Products
-              </Link>
-              <Link
-                href="#"
-                className="text-muted-foreground hover:text-foreground"
-              >
-                Customers
-              </Link>
-              <Link href="#" className="hover:text-foreground">
-                Settings
-              </Link>
-            </nav>
-          </SheetContent>
-        </Sheet>
-        <div className="flex w-full items-center gap-2 md:ml-auto md:gap-2 lg:gap-4">
-          <div className="ml-auto flex-1 sm:flex-initial">
-            <Button variant="link" style={{ marginRight: "10px" }}>
-              <Link href="/auth/login">Login / Signup</Link>
+            <Button variant="link">
+              <Link href="/docs">Documentation</Link>
             </Button>
+            <Button variant="link">
+              <Link href="/about">About Us</Link>
+            </Button>
+          </nav>
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button
+                variant="outline"
+                size="icon"
+                className="shrink-0 md:hidden"
+              >
+                <Menu className="h-5 w-5" />
+                <span className="sr-only">Toggle navigation menu</span>
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="left">
+              <nav className="grid gap-6 text-lg font-medium">
+                <Link
+                  href="#"
+                  className="flex items-center gap-2 text-lg font-semibold"
+                >
+                  <Package2 className="h-6 w-6" />
+                  <span className="sr-only">Acme Inc</span>
+                </Link>
+                <Link
+                  href="#"
+                  className="text-muted-foreground hover:text-foreground"
+                >
+                  Dashboard
+                </Link>
+                <Link
+                  href="#"
+                  className="text-muted-foreground hover:text-foreground"
+                >
+                  Orders
+                </Link>
+                <Link
+                  href="#"
+                  className="text-muted-foreground hover:text-foreground"
+                >
+                  Products
+                </Link>
+                <Link
+                  href="#"
+                  className="text-muted-foreground hover:text-foreground"
+                >
+                  Customers
+                </Link>
+                <Link href="#" className="hover:text-foreground">
+                  Settings
+                </Link>
+              </nav>
+            </SheetContent>
+          </Sheet>
+          <div className="flex w-full items-center gap-2 md:ml-auto md:gap-2 lg:gap-4">
+            <div className="ml-auto flex-1 sm:flex-initial">
+              <Button variant="link" style={{ marginRight: "10px" }}>
+                <Link href="/auth/login">Login / Signup</Link>
+              </Button>
+            </div>
           </div>
-        </div>
-      </header>
-      {children}
-    </div>
+        </header>
+        {children}
+      </div>
+    </html>
   );
 }
