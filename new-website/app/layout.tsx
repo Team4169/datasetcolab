@@ -5,43 +5,19 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import Link from "next/link";
 
-import { cn } from "@/lib/utils";
-
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { cookies } from "next/headers";
 
-import { LoginDialogMobile } from "@/components/auth/loginDialogMobile";
-import { LogoutUser } from "@/components/auth/logoutUser";
-import { onAuthStateChanged } from "firebase/auth";
-import { auth } from ".//firebase/config";
-
-import { GetUser } from "./firebase/GetUser";
-
-import { CircleUser, Menu, Package2, Search } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { Menu, Package2 } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 import {
-  Command,
   CommandDialog,
   CommandEmpty,
   CommandGroup,
   CommandInput,
   CommandItem,
   CommandList,
-  CommandSeparator,
-  CommandShortcut,
 } from "@/components/ui/command";
-import {LoginLogout} from "@/components/auth/loginLogout";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -194,14 +170,15 @@ export default function RootLayout({
             <span className="sr-only">Acme Inc</span>
           </Link>
           <Button variant="link" style={{ marginLeft: "10px" }}>
-            <Link href="/docs">Explore Datasets</Link>
+            <Link href="/explore">Explore Datasets</Link>
           </Button>
           <Button variant="link">
             <Link href="/docs">Documentation</Link>
           </Button>
           <Button variant="link">
-            <Link href="/docs">About Us</Link>
+            <Link href="/about">About Us</Link>
           </Button>
+
         </nav>
         <Sheet>
           <SheetTrigger asChild>
