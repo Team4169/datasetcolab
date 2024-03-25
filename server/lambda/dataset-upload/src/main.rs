@@ -206,9 +206,9 @@ async fn function_handler(event: Request) -> Result<Response<LambdaBody>, Error>
 
 fn generate_random_combination() -> String {
     let mut rng = rand::thread_rng();
-    let combination: String = (0..6)
+    let combination: String = (0..34)
         .map(|_| {
-            let random_char = rng.gen_range(b'A'..=b'Z') as char;
+            let random_char = rng.gen_range(b'a'..=b'z') as char;
             let random_digit = rng.gen_range(b'0'..=b'9') as char;
             if rng.gen_bool(0.5) {
                 random_char.to_string()
