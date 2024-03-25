@@ -4,10 +4,10 @@ import { auth } from "../../app/firebase/config";
 import { onAuthStateChanged } from "firebase/auth";
 import { useEffect, useState } from "react";
 
-import { LogoutUser } from "./logoutUser";
-import { LoginButton } from "./loginButton";
+import VisitorNavbar from "@/components/navbar/visitorNavbar";
+import UserNavbar from "@/components/navbar/userNavbar";
 
-export function LoginLogout() {
+export function CurrentNavbar() {
   const [user, setUser] = useState<any>(null);
   const [userEmail, setUserEmail] = useState<string | null>(null);
 
@@ -25,5 +25,5 @@ export function LoginLogout() {
     return () => unsubscribe();
   }, []);
 
-  return <>{user ? <LogoutUser /> : <LoginButton />}</>;
+  return <>{user ? <UserNavbar /> : <VisitorNavbar />}</>;
 }
