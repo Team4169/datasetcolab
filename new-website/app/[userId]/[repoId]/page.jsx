@@ -1,3 +1,5 @@
+"use client";
+import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -11,8 +13,60 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import axios from "axios";
 
-export default function repository({ params }) {
+export default function Repository({ params }) {
+  const [selectedFiles, setSelectedFiles] = useState([]);
+  const [selectedFolders, setSelectedFolders] = useState([]);
+
+  const handleFileChange = (event) => {
+    const files = event.target.files;
+    setSelectedFiles([...selectedFiles, ...files]);
+  };
+
+  const handleFolderChange = (event) => {
+    const folders = event.target.files;
+    setSelectedFolders([...selectedFolders, ...folders]);
+  };
+
+  const handleUpload = async () => {
+    const fileList = [];
+    selectedFiles.forEach((file) => {
+      fileList.push(file.name);
+    });
+    selectedFolders.forEach((folder) => {
+      fileList.push(folder.name);
+    });
+
+    const response = await axios.get(
+      `https://fqk4k22rqc.execute-api.us-east-1.amazonaws.com/${params.userId}/${params.repoId}/dataset/upload`,
+      {
+        headers: {
+          files: fileList,
+        },
+      }
+    );
+
+    const responseJson = response.data;
+    const { presigned_urls } = responseJson;
+    const combinedFiles = [...selectedFiles, ...selectedFolders];
+    for (let i = 0; i < presigned_urls.length; i++) {
+      const uploadResponse = await axios.put(
+        presigned_urls[i],
+        combinedFiles[i],
+        {
+          headers: {
+            "Content-Type": combinedFiles[i].type,
+          },
+        }
+      );
+      console.log(uploadResponse);
+    }
+
+    set(selectedFiles, []);
+    set(selectedFolders, []);
+  };
+
   return (
     <main className="flex min-h-[calc(100vh_-_theme(spacing.16))] flex-1 flex-col gap-4 bg-muted/40 p-4 md:gap-8 md:p-10">
       <div className="mx-auto grid w-full max-w-6xl gap-2">
@@ -56,7 +110,51 @@ export default function repository({ params }) {
               <Button type="submit">Upload</Button>
             </div>
           </TabsContent>
-          <TabsContent value="dataset">dataset</TabsContent>
+          <TabsContent value="dataset">
+            <Button>
+              <label htmlFor="file-upload">Upload Files</label>
+              <input
+                id="file-upload"
+                type="file"
+                multiple
+                onChange={handleFileChange}
+                style={{ display: "none" }}
+              />
+            </Button>
+            <Button>
+              <label htmlFor="folder-upload">Upload Folders</label>
+              <input
+                id="folder-upload"
+                type="file"
+                multiple
+                directory=""
+                webkitdirectory=""
+                onChange={handleFolderChange}
+                style={{ display: "none" }}
+              />
+            </Button>
+            {selectedFiles.length > 0 && (
+              <div>
+                <h2>Selected Files:</h2>
+                <ul>
+                  {selectedFiles.map((file, index) => (
+                    <li key={index}>{file.name}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {selectedFolders.length > 0 && (
+              <div>
+                <h2>Selected Folders:</h2>
+                <ul>
+                  {selectedFolders.map((folder, index) => (
+                    <li key={index}>{folder.name}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            <Button onClick={handleUpload}>Upload</Button>
+          </TabsContent>
           <TabsContent value="models">models</TabsContent>
           <TabsContent value="settings">settings</TabsContent>
         </Tabs>

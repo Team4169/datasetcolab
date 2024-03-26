@@ -29,47 +29,76 @@ async fn function_handler(event: Request) -> Result<Response<LambdaBody>, Error>
         .and_then(|params| params.first("repo"))
         .unwrap_or("default");
 
+    println!("headers {:?}", event.headers());
+    println!("body {:?}", event.body());
     let headers: &HeaderMap<HeaderValue> = event.headers();
     let roboflow_url = headers
         .get("roboflow_url")
         .and_then(|value| value.to_str().ok())
         .unwrap_or("no_roboflow_url_provided");
-    if roboflow_url == "no_roboflow_url_provided" {
+    let files = headers
+        .get("files")
+        .and_then(|value| value.to_str().ok())
+        .unwrap_or("no_files_provided");
+    
+    if files != "no_files_provided" {
         let bucket_name = "datasetcolab2";
         let dataset_id = generate_random_combination();
-        let object_key = format!("{}/{}/datasets/{}/", user_name, repository_name, dataset_id);
-        println!("object_key {:?}", object_key);
-      
-        let upload_request = PutObjectRequest {
-            bucket: bucket_name.to_string(),
-            key: object_key.to_string(),
-            ..Default::default()
-        };
+        let mut return_urls: Vec<String> = Vec::new();
+        for file in files.split(",") {
+            let object_key = format!("{}/{}/uploads/{}/{}", user_name, repository_name, dataset_id, file);
+            
+            let upload_request = PutObjectRequest {
+                bucket: bucket_name.to_string(),
+                key: object_key.to_string(),
+                ..Default::default()
+            };
 
-        let presigned_url = match DefaultCredentialsProvider::new() {
-            Ok(credentials_provider) => {
-                let credentials = credentials_provider.credentials().await.unwrap();
-                upload_request.get_presigned_url(
-                    &Region::default(),
-                    &credentials,
-                    &Default::default(),
-                )
-            },
-            Err(error) => {
-                eprintln!("Unable to get AWS credentials: {:?}", error);
-                return Ok(Response::builder().status(500).body("Internal Server Error".into())?);
-            }
+            let presigned_url = match DefaultCredentialsProvider::new() {
+                Ok(credentials_provider) => {
+                    let credentials = credentials_provider.credentials().await.unwrap();
+                    upload_request.get_presigned_url(
+                        &Region::default(),
+                        &credentials,
+                        &Default::default(),
+                    )
+                },
+                Err(error) => {
+                    eprintln!("Unable to get AWS credentials: {:?}", error);
+                    return Ok(Response::builder().status(500).body("Internal Server Error".into())?);
+                }
+            };
+
+            return_urls.push(presigned_url.to_string());
+        }
+
+        let dynamodb_client = DynamoDbClient::new(Region::default());
+        let table_name = "upload";
+        let mut item = HashMap::new();
+        item.insert("id".to_string(), AttributeValue {
+            s: Some(dataset_id.to_string()),
+            ..Default::default()
+        });
+        item.insert("status".to_string(), AttributeValue {
+            s: Some("presigned_urls_generated".to_string()),
+            ..Default::default()
+        });
+        let put_item_input = PutItemInput {
+            table_name: table_name.to_string(),
+            item: item,
+            ..Default::default()
+
         };
+        dynamodb_client.put_item(put_item_input).await?;
 
         return Ok(Response::builder()
             .status(200)
             .header("content-type", "application/json")
             .body(LambdaBody::from(serde_json::json!({
-                "presigned_url": presigned_url,
-                "object_key": object_key,
+                "presigned_urls": return_urls
             }).to_string()))
             .map_err(Box::new)?);
-    } else {
+    } else if roboflow_url == "no_roboflow_url_provided" {
         let api_key = get_roboflow_secret().await?;
         let (workspace, project) = parse_roboflow_url(roboflow_url);
     
@@ -127,6 +156,10 @@ async fn function_handler(event: Request) -> Result<Response<LambdaBody>, Error>
             s: Some(format!("{}/{}/datasets/{}/", user_name, repository_name, task_id)),
             ..Default::default()
         });
+        item.insert("status".to_string(), AttributeValue {
+            s: Some("ecs_instance_started".to_string()),
+            ..Default::default()
+        });
         let put_item_input = PutItemInput {
             table_name: table_name.to_string(),
             item: item,
@@ -143,65 +176,12 @@ async fn function_handler(event: Request) -> Result<Response<LambdaBody>, Error>
                 "export_size": export_size,
             }).to_string()))
             .map_err(Box::new)?);
+    } else {
+        return Ok(Response::builder()
+            .status(400)
+            .body("Bad Request".into())
+            .map_err(Box::new)?);
     }
-
-    /*
-    let dynamodb_client = DynamoDbClient::new(Region::default());
-    let table_name = "repositories";
-    let full_name = format!("{}/{}", user_name, repository_name);
-    let repository = dynamodb_client.get_item(GetItemInput {
-        table_name: table_name.to_string(),
-        key: {
-            let mut key = HashMap::new();
-            key.insert("full_name".to_string(), AttributeValue {
-                s: Some(full_name.to_string()),
-                ..Default::default()
-            });
-            key
-        },
-        ..Default::default()
-    }).await?;
-    println!("repository {:?}", repository);
-
-    let cloned_item = repository.item.clone();
-    let new_dataset_attribute = cloned_item.and_then(|item| item.get("datasets")).and_then(|attribute| attribute.s.clone());
-    let mut datasets: Vec<Value> = new_dataset_attribute.and_then(|attribute| serde_json::from_str(&attribute).ok()).unwrap_or_default();
-
-    let new_dataset = serde_json::json!({
-        "dataset_id": dataset_id,
-        "workspace": workspace,
-        "project": project,
-        "version_id": version_id,
-        "export_size": export_size,
-    });
-
-    let new_dataset_attribute = AttributeValue {
-        s: Some(new_dataset.to_string()),
-        ..Default::default()
-    };
-
-    let new_dataset_value: Value = serde_json::from_str(&new_dataset_attribute.s.unwrap()).unwrap();
-    datasets.push(new_dataset_value);
-
-    let update_item_input = PutItemInput {
-        table_name: table_name.to_string(),
-        item: {
-            let mut item = HashMap::new();
-            item.insert("full_name".to_string(), AttributeValue {
-                s: Some(full_name.to_string()),
-                ..Default::default()
-            });
-            item.insert("datasets".to_string(), AttributeValue {
-                s: Some(serde_json::to_string(&new_dataset)?),
-                ..Default::default()
-            });
-            item
-        },
-        ..Default::default()
-    };
-
-    dynamodb_client.put_item(update_item_input).await?;
-    */
 }
 
 fn generate_random_combination() -> String {

@@ -21,6 +21,6 @@
       "@/*": ["./*"]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "components/auth/getUser.js", "app/[userId]/[repoId]/page.jsx"],
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "components/auth/getUser.js", "app/[userId]/[repoId]/page.jsx", "app/[userId]/[repoId]/upload/page.jsx"],
   "exclude": ["node_modules"]
 }

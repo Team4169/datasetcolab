@@ -1,8 +1,16 @@
 import Link from "next/link";
 
-import { Menu, Package2 } from "lucide-react";
+import { CircleUser, Menu, Package2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 import CommandK from "@/components/navbar/commandK";
 
@@ -25,9 +33,6 @@ export default function UserNavbar() {
         </Button>
         <Button variant="link">
           <Link href="/docs">Documentation</Link>
-        </Button>
-        <Button variant="link">
-          <Link href="/about">About Us</Link>
         </Button>
       </nav>
       <Sheet>
@@ -79,9 +84,22 @@ export default function UserNavbar() {
       <div className="flex w-full items-center gap-2 md:ml-auto md:gap-2 lg:gap-4">
         <div className="ml-auto flex-1 sm:flex-initial">
           <CommandK />
-          <Button variant="link" style={{ marginRight: "10px" }}>
-            <Link href="/auth/login">Login / Signup</Link>
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="secondary" size="icon" className="rounded-full">
+                <CircleUser className="h-5 w-5" />
+                <span className="sr-only">Toggle user menu</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>My Account</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem>Settings</DropdownMenuItem>
+              <DropdownMenuItem>Support</DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem>Logout</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
     </header>

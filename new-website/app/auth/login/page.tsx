@@ -24,8 +24,6 @@ import {
   GoogleAuthProvider,
 } from "firebase/auth";
 
-import { setCookie } from "@/components/auth/setCookie";
-
 
 export default function AuthenticationPage() {
   const [email, setEmail] = useState("");
