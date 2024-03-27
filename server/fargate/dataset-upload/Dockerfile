@@ -5,4 +5,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY src/ .
 
+RUN apk add --no-cache ffmpeg
+
 CMD ["python", "main.py"]

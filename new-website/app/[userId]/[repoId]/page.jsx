@@ -18,6 +18,8 @@ import axios from "axios";
 export default function Repository({ params }) {
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [selectedFolders, setSelectedFolders] = useState([]);
+  const [youtubeUrl, setYoutubeUrl] = useState("");
+  const [roboflowUrl, setRoboflowUrl] = useState("");
 
   const handleFileChange = (event) => {
     const files = event.target.files;
@@ -39,14 +41,17 @@ export default function Repository({ params }) {
     });
 
     const response = await axios.get(
-      `https://fqk4k22rqc.execute-api.us-east-1.amazonaws.com/${params.userId}/${params.repoId}/dataset/upload`,
+      `https://fqk4k22rqc.execute-api.us-east-1.amazonaws.com/${params.userId}/${params.repoId}/dataset/upload`
+    );
+
+    /*
+    ,
       {
         headers: {
           files: fileList,
         },
       }
-    );
-
+    */
     const responseJson = response.data;
     const { presigned_urls } = responseJson;
     const combinedFiles = [...selectedFiles, ...selectedFolders];
@@ -66,6 +71,33 @@ export default function Repository({ params }) {
     set(selectedFiles, []);
     set(selectedFolders, []);
   };
+
+  const handleYoutube = async () => {
+    try {
+      const response = await axios.get(
+        `https://fqk4k22rqc.execute-api.us-east-1.amazonaws.com/${params.userId}/${params.repoId}/dataset/upload`,
+        {
+          headers: {
+            youtube_url: youtubeUrl,
+          }
+        }
+      );
+      console.log(response);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const handleRoboflow = async () => {
+    const response = await axios.get(
+      `https://fqk4k22rqc.execute-api.us-east-1.amazonaws.com/${params.userId}/${params.repoId}/dataset/upload`,
+      {
+        headers: {
+          roboflow_url: roboflowUrl,
+        },
+      }
+    );
+  }
 
   return (
     <main className="flex min-h-[calc(100vh_-_theme(spacing.16))] flex-1 flex-col gap-4 bg-muted/40 p-4 md:gap-8 md:p-10">
@@ -103,11 +135,7 @@ export default function Repository({ params }) {
             </Card>
             <div className="grid w-full max-w-sm items-center gap-1.5">
               <Label htmlFor="picture">Picture</Label>
-              <Input id="picture" type="file" />
-            </div>
-            <div className="flex w-full max-w-sm items-center space-x-2">
-              <Input type="roboflowurl" placeholder="Roboflow Url" />
-              <Button type="submit">Upload</Button>
+              <Input id="picture" type="file" accept="image/jpeg, image/jpg, image/png, image/webp" />
             </div>
           </TabsContent>
           <TabsContent value="dataset">
@@ -116,6 +144,7 @@ export default function Repository({ params }) {
               <input
                 id="file-upload"
                 type="file"
+                accept="image/jpeg, image/jpg, image/png, image/webp"
                 multiple
                 onChange={handleFileChange}
                 style={{ display: "none" }}
@@ -154,6 +183,15 @@ export default function Repository({ params }) {
               </div>
             )}
             <Button onClick={handleUpload}>Upload</Button>
+
+            <div className="flex w-full max-w-sm items-center space-x-2">
+              <Input type="youtubeurl" value={youtubeUrl} onChange={(e) => setYoutubeUrl(e.target.value)} placeholder="Youtube Url" />
+              <Button type="submit" onClick={handleYoutube}>Upload</Button>
+            </div>
+            <div className="flex w-full max-w-sm items-center space-x-2">
+              <Input type="roboflowurl" value={roboflowUrl} onChange={(e) => setRoboflowUrl(e.target.value)} placeholder="Roboflow Url" />
+              <Button type="submit" onClick={handleRoboflow}>Upload</Button>
+            </div>
           </TabsContent>
           <TabsContent value="models">models</TabsContent>
           <TabsContent value="settings">settings</TabsContent>

@@ -8,7 +8,7 @@ use lambda_http::{run, service_fn, Error, Request, Response, RequestExt};
 use lambda_http::Body as LambdaBody;
 use rusoto_core::Region;
 use rusoto_s3::{PutObjectRequest, util::PreSignedRequest};
-use rusoto_dynamodb::{DynamoDb, DynamoDbClient, PutItemInput, AttributeValue};
+use rusoto_dynamodb::{DynamoDb, DynamoDbClient, PutItemInput, AttributeValue, ScanInput};
 use rusoto_secretsmanager::{SecretsManager, SecretsManagerClient, GetSecretValueRequest};
 use rusoto_ecs::{Ecs, EcsClient, RunTaskRequest, NetworkConfiguration, AwsVpcConfiguration};
 use rusoto_credential::{DefaultCredentialsProvider, ProvideAwsCredentials};
@@ -36,12 +36,21 @@ async fn function_handler(event: Request) -> Result<Response<LambdaBody>, Error>
         .get("roboflow_url")
         .and_then(|value| value.to_str().ok())
         .unwrap_or("no_roboflow_url_provided");
+    let youtube_url = headers
+        .get("youtube_url")
+        .and_then(|value| value.to_str().ok())
+        .unwrap_or("no_youtube_url_provided");
     let files = headers
         .get("files")
         .and_then(|value| value.to_str().ok())
         .unwrap_or("no_files_provided");
-    
+    let upload_id = headers
+        .get("upload_id")
+        .and_then(|value| value.to_str().ok())
+        .unwrap_or("no_upload_id_provided");    
+
     if files != "no_files_provided" {
+        println!("direct upload presigned urls");
         let bucket_name = "datasetcolab2";
         let dataset_id = generate_random_combination();
         let mut return_urls: Vec<String> = Vec::new();
@@ -75,8 +84,13 @@ async fn function_handler(event: Request) -> Result<Response<LambdaBody>, Error>
         let dynamodb_client = DynamoDbClient::new(Region::default());
         let table_name = "upload";
         let mut item = HashMap::new();
+
         item.insert("id".to_string(), AttributeValue {
             s: Some(dataset_id.to_string()),
+            ..Default::default()
+        });
+        item.insert("upload_type".to_string(), AttributeValue {
+            s: Some("direct".to_string()),
             ..Default::default()
         });
         item.insert("status".to_string(), AttributeValue {
@@ -98,7 +112,84 @@ async fn function_handler(event: Request) -> Result<Response<LambdaBody>, Error>
                 "presigned_urls": return_urls
             }).to_string()))
             .map_err(Box::new)?);
-    } else if roboflow_url == "no_roboflow_url_provided" {
+    } else if upload_id != "no_upload_id_provided" {
+        println!("direct upload ecs instance");
+        let ecs_client = EcsClient::new(Region::default());
+        let ecs_request = RunTaskRequest {
+            cluster: Some("dataset-upload-cluster".to_string()),
+            task_definition: "dataset-upload-task".to_string(),
+            launch_type: Some("FARGATE".to_string()),
+            network_configuration: Some(NetworkConfiguration {
+                awsvpc_configuration: Some(AwsVpcConfiguration {
+                    subnets: vec!["subnet-0ce18eca13acc78cd".to_string()],
+                    assign_public_ip: Some("ENABLED".to_string()),
+                    ..Default::default()
+                }),
+                ..Default::default()
+            }),
+            ..Default::default()
+        };
+        let ecs_response = ecs_client.run_task(ecs_request).await.unwrap();
+        println!("ecs_response {:?}", ecs_response);
+    
+        let task_arn = ecs_response.tasks.unwrap().get(0).and_then(|task| task.task_arn.clone()).unwrap_or("".to_string());
+        let task_id = task_arn.split("/").last().unwrap_or("").to_string();
+        println!("task_id {:?}", task_id);
+
+        let dynamodb_client = DynamoDbClient::new(Region::default());
+        let table_name = "upload";
+        let mut scan_input = ScanInput::default();
+        scan_input.table_name = table_name.to_string();
+        scan_input.expression_attribute_values = Some({
+            let mut attribute_values = HashMap::new();
+            attribute_values.insert(":id".to_string(), AttributeValue {
+                s: Some(upload_id.to_string()),
+                ..Default::default()
+            });
+            attribute_values
+        });
+        scan_input.filter_expression = Some("id = :id".to_string());
+
+        let scan_result = dynamodb_client.scan(scan_input).await?;
+        let items = scan_result.items.unwrap_or_default();
+        let mut item = items.get(0).unwrap_or(&HashMap::new()).clone();
+
+        item.insert("id".to_string(), AttributeValue {
+            s: Some(upload_id.to_string()),
+            ..Default::default()
+        });
+        item.insert("task_id".to_string(), AttributeValue {
+            s: Some(task_id.to_string()),
+            ..Default::default()
+        });
+        item.insert("user_name".to_string(), AttributeValue {
+            s: Some(user_name.to_string()),
+            ..Default::default()
+        });
+        item.insert("repository_name".to_string(), AttributeValue {
+            s: Some(repository_name.to_string()),
+            ..Default::default()
+        });
+        item.insert("status".to_string(), AttributeValue {
+            s: Some("ecs_instance_started".to_string()),
+            ..Default::default()
+        });
+        let put_item_input = PutItemInput {
+            table_name: table_name.to_string(),
+            item: item,
+            ..Default::default()
+        };
+        dynamodb_client.put_item(put_item_input).await?;
+
+        return Ok(Response::builder()
+            .status(200)
+            .header("content-type", "application/json")
+            .body(LambdaBody::from(serde_json::json!({
+                "task_id": task_id
+            }).to_string()))
+            .map_err(Box::new)?);
+    } else if roboflow_url != "no_roboflow_url_provided" {
+        println!("roboflow upload");
         let api_key = get_roboflow_secret().await?;
         let (workspace, project) = parse_roboflow_url(roboflow_url);
     
@@ -144,7 +235,12 @@ async fn function_handler(event: Request) -> Result<Response<LambdaBody>, Error>
         let dynamodb_client = DynamoDbClient::new(Region::default());
         let table_name = "upload";
         let mut item = HashMap::new();
+
         item.insert("id".to_string(), AttributeValue {
+            s: Some(task_id.to_string()),
+            ..Default::default()
+        });
+        item.insert("task_id".to_string(), AttributeValue {
             s: Some(task_id.to_string()),
             ..Default::default()
         });
@@ -152,8 +248,16 @@ async fn function_handler(event: Request) -> Result<Response<LambdaBody>, Error>
             s: Some(export_link.to_string()),
             ..Default::default()
         });
-        item.insert("file_key".to_string(), AttributeValue {
-            s: Some(format!("{}/{}/datasets/{}/", user_name, repository_name, task_id)),
+        item.insert("user_name".to_string(), AttributeValue {
+            s: Some(user_name.to_string()),
+            ..Default::default()
+        });
+        item.insert("repository_name".to_string(), AttributeValue {
+            s: Some(repository_name.to_string()),
+            ..Default::default()
+        });
+        item.insert("upload_type".to_string(), AttributeValue {
+            s: Some("roboflow".to_string()),
             ..Default::default()
         });
         item.insert("status".to_string(), AttributeValue {
@@ -172,11 +276,82 @@ async fn function_handler(event: Request) -> Result<Response<LambdaBody>, Error>
             .status(200)
             .header("content-type", "application/json")
             .body(LambdaBody::from(serde_json::json!({
+                "task_id": task_id
+            }).to_string()))
+            .map_err(Box::new)?);
+    } else if youtube_url != "no_youtube_url_provided" {
+        println!("youtube upload");
+        let ecs_client = EcsClient::new(Region::default());
+        let ecs_request = RunTaskRequest {
+            cluster: Some("dataset-upload-cluster".to_string()),
+            task_definition: "dataset-upload-task".to_string(),
+            launch_type: Some("FARGATE".to_string()),
+            network_configuration: Some(NetworkConfiguration {
+                awsvpc_configuration: Some(AwsVpcConfiguration {
+                    subnets: vec!["subnet-0ce18eca13acc78cd".to_string()],
+                    assign_public_ip: Some("ENABLED".to_string()),
+                    ..Default::default()
+                }),
+                ..Default::default()
+            }),
+            ..Default::default()
+        };
+        let ecs_response = ecs_client.run_task(ecs_request).await.unwrap();
+        println!("ecs_response {:?}", ecs_response);
+    
+        let task_arn = ecs_response.tasks.unwrap().get(0).and_then(|task| task.task_arn.clone()).unwrap_or("".to_string());
+        let task_id = task_arn.split("/").last().unwrap_or("").to_string();
+        println!("task_id {:?}", task_id);
+
+        let dynamodb_client = DynamoDbClient::new(Region::default());
+        let table_name = "upload";
+        let mut item = HashMap::new();
+
+        item.insert("id".to_string(), AttributeValue {
+            s: Some(task_id.to_string()),
+            ..Default::default()
+        });
+        item.insert("task_id".to_string(), AttributeValue {
+            s: Some(task_id.to_string()),
+            ..Default::default()
+        });
+        item.insert("youtube_url".to_string(), AttributeValue {
+            s: Some(youtube_url.to_string()),
+            ..Default::default()
+        });
+        item.insert("user_name".to_string(), AttributeValue {
+            s: Some(user_name.to_string()),
+            ..Default::default()
+        });
+        item.insert("repository_name".to_string(), AttributeValue {
+            s: Some(repository_name.to_string()),
+            ..Default::default()
+        });
+        item.insert("upload_type".to_string(), AttributeValue {
+            s: Some("youtube".to_string()),
+            ..Default::default()
+        });
+        item.insert("status".to_string(), AttributeValue {
+            s: Some("ecs_instance_started".to_string()),
+            ..Default::default()
+        });
+        let put_item_input = PutItemInput {
+            table_name: table_name.to_string(),
+            item: item,
+            ..Default::default()
+        };
+        dynamodb_client.put_item(put_item_input).await?;
+
+        return Ok(Response::builder()
+            .status(200)
+            .header("content-type", "application/json")
+            .body(LambdaBody::from(serde_json::json!({
                 "task_id": task_id,
-                "export_size": export_size,
             }).to_string()))
             .map_err(Box::new)?);
     } else {
+        println!("no valid upload type");
+        
         return Ok(Response::builder()
             .status(400)
             .body("Bad Request".into())

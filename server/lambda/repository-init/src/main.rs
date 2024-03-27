@@ -48,9 +48,15 @@ async fn function_handler(event: Request) -> Result<Response<LambdaBody>, Error>
         key: format!("{}downloads/", folder_key),
         ..Default::default()
     };
+    let put_object_request_uploads = PutObjectRequest {
+        bucket: bucket.to_string(),
+        key: format!("{}uploads/", folder_key),
+        ..Default::default()
+    };
     s3_client.put_object(put_object_request_datasets).await?;
     s3_client.put_object(put_object_request_models).await?;
     s3_client.put_object(put_object_request_downloads).await?;
+    s3_client.put_object(put_object_request_uploads).await?;
     let dynamodb_client = DynamoDbClient::new(Region::default());
     let table_name = "repositories";
     let current_time = SystemTime::now()
